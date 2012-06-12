@@ -1,5 +1,6 @@
 import argparse
 import pickle
+import os
 
 import random
 from random import random as rand
@@ -55,7 +56,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     p = Poisson(words_per_doc)
     
     alpha = [alpha] * num_topics
-    beta = [beta] * num_topics
+    beta = [beta] * vocab_size
 
     if plsi:
         word_dist = [normalize([rand() for w in range(vocab_size)])
@@ -97,7 +98,9 @@ def write(data, args):
     
     Writes three files, one containing the generated data, one containing the
     model used to generate the data, and one containing the options given at
-    the command line. Also dumps to a pickle file for future reading.
+    the command line. Also dumps to a pickle file for future reading in python.
+    The files can be found in a directory with the options used to generate the
+    data.
     
     Returns:
         none, but writes three text files and one pickle file
@@ -119,12 +122,32 @@ def write(data, args):
         document*topic distributions
     """
     docs, words, topics = data
-    with open('output/documents-out', 'w') as f:
+    
+    dir = 'output/'
+    dir += "k" + str(args.k) + "."
+    dir += "n" + str(args.n) + "."
+    dir += "l" + str(args.l) + "."
+    dir += "m" + str(args.m) + "."
+    if not args.plsi:
+        dir += "a" + str(args.a) + "."
+        dir += "b" + str(args.b) + "."
+    if args.s != 0:
+        dir += "s" + str(args.s) + "."
+    if args.plsi:
+        dir += "plsi"
+    if dir[-1] == '.':
+        dir = dir[:-1]
+    try:
+        os.mkdir(dir)
+    except:
+        print "overwriting existing data in directory:", dir, "...",
+    
+    with open(dir + '/documents-out', 'w') as f:
         for doc in docs:
             for word in doc:
                 f.write(str(word) + " ")
             f.write('\n')
-    with open('output/documents_model-out', 'w') as f:
+    with open(dir + '/documents_model-out', 'w') as f:
         for topic in words:
             for word in topic:
                 f.write(str(word) + " ")
@@ -134,16 +157,20 @@ def write(data, args):
             for topic in doc:
                 f.write(str(topic) + " ")
             f.write('\n')
-    with open('output/documents_options-out', 'w') as f:
+    with open(dir + '/documents_options-out', 'w') as f:
         f.write("python documents.py ")
         f.write("-k " + str(args.k) + " ")
         f.write("-n " + str(args.n) + " ")
         f.write("-l " + str(args.l) + " ")
         f.write("-m " + str(args.m) + " ")
-        f.write("-s " + str(args.s) + " ")
+        if not args.plsi:
+            f.write("-a " + str(args.a) + " ")
+            f.write("-b " + str(args.b) + " ")
+        if args.s != 0:
+            f.write("-s " + str(args.s) + " ")
         if args.plsi:
             f.write(str("-plsi"))
-    with open('output/results.pickle', 'w') as f:
+    with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, words, topics], f)
 
 def main():
@@ -179,7 +206,7 @@ def main():
     print "n    = ", args.n, "(number of documents)"
     print "l    = ", args.l, "(average number of words)"
     print "m    = ", args.m, "(size of vocabulary)"
-    if args.plsi:
+    if not args.plsi:
         print "a    = ", args.a, "(topics dirichlet parameter)"
         print "b    = ", args.b, "(words dirichlet parameter)"
     print "s    = ", args.s, "(noise probability)"

@@ -190,7 +190,7 @@ def count(words):
     word_count["unique"] = unique_words
     return word_count
 
-def plot_dist(types, color='b', labels=None, bottom=0):
+def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
     """Plots a distribution as a bar graph.
     
     Given a distribution, plots a bar graph. Each bar is an element in the
@@ -202,6 +202,8 @@ def plot_dist(types, color='b', labels=None, bottom=0):
     Returns:
         none, but plots the distribution
     """
+    if clear == None:
+        clf()
     offset = 0
     width = 0.01
     if labels == None:
@@ -216,12 +218,13 @@ def plot_dists(types, color='b', labels=None, scale=0):
     
     TODO: scale y-axis so labels make sense
     """
+    clf()
     bottom = 0
     for type in types:
         if len(type) > 100:
             plot(type + bottom)
         else:
-            plot_dist(type, color, labels, bottom)
+            plot_dist(type, color, labels, bottom, "don't clear")
         if scale == 1.0:
             to_add = scale
         else:
@@ -229,6 +232,7 @@ def plot_dists(types, color='b', labels=None, scale=0):
         bottom += to_add
 
 def plot_hist(words, vocab_size, color='b'):
+    clf()
     hist(words, range(vocab_size + 1), color=color)
     
 def perplexity(docs, probabilities, indices=None):
