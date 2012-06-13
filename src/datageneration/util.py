@@ -235,13 +235,13 @@ def plot_hist(words, vocab_size, color='b'):
     clf()
     hist(words, range(vocab_size + 1), color=color)
     
-def perplexity(docs, probabilities, indices=None):
+def perplexity(docs, probabilities, indices=None, holdout=0.7):
     if indices == None:
         indices = range(len(docs))
     numerator, denominator = 0.0, 0.0
     for i in indices:
         p = 0
-        words = int(len(docs[i]) * 0.7)
+        words = int(len(docs[i]) * holdout)
         for word in docs[i][:words]:
             p += np.log(probabilities[i, word])
         numerator += p
@@ -271,7 +271,7 @@ def get_probabilities(pickle_file):
         probabilities = rgamma * rbeta
     else:
         with open(pickle_file, 'r') as f:
-            docs, words, topics = pickle.load(f)
+            docs, doc_topics, words, topics = pickle.load(f)
         probabilities = np.matrix(topics) * np.matrix(words)
     
     return probabilities
