@@ -31,25 +31,40 @@ public class Lda extends ClusteringTest {
 	private Map<PaperAbstract, Integer> trainingIndices;
 	private Map<PaperAbstract, Integer> testIndices;
 	//flag to take true parameters (only for synthesized data)
-	private static boolean CHEAT;
+	private boolean trainCheat;
+	private boolean testCheat;
 	private List<PredictionPaper> testDocs;
+	
+	public Lda(String variant) {
+		super(variant);
+		if (variant.equals("ldaTrained")) {
+			this.trainCheat = true;
+			this.testCheat = false;
+		} else if (variant.equals("ldaCheat")) {
+			this.trainCheat = true;
+			this.testCheat = true;
+		} else {
+			this.trainCheat = false;
+			this.testCheat = false;
+		}
+	}
 
-	public Lda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
+	public Lda(String variant, List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
-		super("Lda");
+		this(variant);
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
 		this.numTopics=numTopics;
 	}
 
-	public Lda(List<TrainingPaper> trainingSet, 
+	public Lda(String variant, List<TrainingPaper> trainingSet, 
 			Indexer<String> wordIndexer,
 			Terms terms, 
 			int numTopics, 
 			Map<PaperAbstract, Integer> trainingIndices,
 			Map<PaperAbstract, Integer> testIndices) {
-		this(trainingSet, wordIndexer, terms, numTopics);
+		this(variant, trainingSet, wordIndexer, terms, numTopics);
 		this.trainingIndices = trainingIndices;
 		this.testIndices = testIndices;
 		train();
@@ -60,9 +75,8 @@ public class Lda extends ClusteringTest {
 	 * parameter (in this case, all alphas to the dirichlet are equal)
 	 */
 	private void train() {
-		CHEAT = false; 	//CHANGE TO false WHEN TRAINING ON REAL DATA
 		double[][] betaMatrix = null;
-		if (CHEAT) {
+		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
 			betaMatrix = getRealBeta("src/datageneration/output/" + 
 					"documents_model-out");
@@ -101,8 +115,7 @@ public class Lda extends ClusteringTest {
 	public double[][] predict(List<PredictionPaper> testDocs){
 		this.testDocs = testDocs;
 		double[][] result = null;
-		CHEAT = false;	//CHANGE TO false WHEN TESTING ON REAL DATA
-		if (CHEAT) {
+		if (testCheat) {
 			System.out.println("we are cheating and using true parameters " +
 					"for prediction");	
 			double[][] gammasMatrix = getRealGamma("src/datageneration/output/"
@@ -372,7 +385,7 @@ public class Lda extends ClusteringTest {
 	 * @return the perplexity for testDocs
 	 */
 	public double getPerplexity() {
-		if (CHEAT) {
+		if (trainCheat) {
 			double[][] betaMatrix = getRealBeta("src/datageneration/output/documents_model-out");
 			double[][] gammaMatrix = getRealGamma("src/datageneration/output/documents_model-out");
 			SimpleMatrix realBetas = new SimpleMatrix(betaMatrix);

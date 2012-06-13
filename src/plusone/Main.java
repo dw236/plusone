@@ -255,12 +255,36 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				lda = new Lda(trainingSet, wordIndexer, terms, dimensions[dk],
+				lda = new Lda("Lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 
 			}
 			ldaPerplexity = lda.getPerplexity();
+		}
+		//LDA, cheats on training but not testing
+		Lda ldaTrained = null;
+		if (testIsEnabled("ldaTrained")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				ldaTrained = new Lda("LdaTrained", trainingSet, wordIndexer, terms, dimensions[dk],
+						trainingIndices, testIndices);
+				runClusteringMethod(ldaTrained, ks, size, true);
+
+			}
+		}
+		//LDA, cheats in both training and testing
+		Lda ldaCheat = null;
+		if (testIsEnabled("ldaCheat")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				ldaCheat = new Lda("LdaCheat", trainingSet, wordIndexer, terms, dimensions[dk],
+						trainingIndices, testIndices);
+				runClusteringMethod(ldaCheat, ks, size, true);
+
+			}
 		}
 		// KNNSVDish
 		int[] closest_k_svdish = parseIntList(System.getProperty("plusone.closestKSVDishValues", 
