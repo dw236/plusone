@@ -21,10 +21,10 @@ import org.json.*;
  */
 public class MakeJSON {
 	public static void main(String[] args) throws IOException, JSONException {
-    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter( args[0] + ".json" ) ) );
+    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter("data/" + args[0] + ".json" ) ) );
 		
     	//Location of the file
-    	String thisfile = args[0];
+    	String thisfile = "src/datageneration/output/" + args[0];
 		//Set to true if each item has a corresponding score, false otherwise
 		boolean regression = false;
 		if (args[1].equals("true")) {

@@ -15,11 +15,11 @@ lda/*
 .classpath
 .py*
 bin/*
-*-out
 *.aux
 *.pdf
 *.log
 *.pyc
 data/experiment*
 data/out2.json
-*.pickle
+src/datageneration/*
+data/documents-out.json

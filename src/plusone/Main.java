@@ -57,7 +57,8 @@ public class Main {
 	private static MetadataLogger metadataLogger;
 	private static Random randGen;
 
-	private Map<PaperAbstract, Integer> indices;
+	private HashMap<PaperAbstract, Integer> trainingIndices;
+	private Map<PaperAbstract, Integer> testIndices;
 	private Map<String,Results>[] allResults;
 	// Document sets
 	public List<TrainingPaper> trainingSet;
@@ -83,9 +84,10 @@ public class Main {
 		for (int i = 0; i < documents.size(); i ++) {
 			if (documents.get(i).getGroup()==testGroup) {
 				testingSet.add((PredictionPaper)documents.get(i));
-				indices.put(documents.get(i), i);
+				testIndices.put(documents.get(i), i);
 			} else {
 				trainingSet.add((TrainingPaper)documents.get(i));
+				trainingIndices.put(documents.get(i), i);
 			}
 		}
 		
@@ -254,7 +256,7 @@ public class Main {
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				lda = new Lda(trainingSet, wordIndexer, terms, dimensions[dk],
-						indices);
+						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 
 			}
@@ -621,7 +623,8 @@ public class Main {
 		for (PaperAbstract paper:dataset.getDocuments())
 			paper.setGroup(randGen.nextInt(FOLD));
 
-		main.indices = new HashMap<PaperAbstract, Integer>();
+		main.trainingIndices = new HashMap<PaperAbstract, Integer>();
+		main.testIndices = new HashMap<PaperAbstract, Integer>();
 		main.runExperiments(experimentPath);
 		/* These values can be set on the command line.  For example, to set
 		 * testWordPercents to {0.4,0.5}, pass the command-line argument

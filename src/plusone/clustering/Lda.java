@@ -28,7 +28,8 @@ public class Lda extends ClusteringTest {
 	private int numTopics;
 	private SimpleMatrix beta;
 	private SimpleMatrix gammas;
-	private Map<PaperAbstract, Integer> indices;
+	private Map<PaperAbstract, Integer> trainingIndices;
+	private Map<PaperAbstract, Integer> testIndices;
 	//flag to take true parameters (only for synthesized data)
 	private static boolean CHEAT;
 	private List<PredictionPaper> testDocs;
@@ -40,13 +41,18 @@ public class Lda extends ClusteringTest {
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
 		this.numTopics=numTopics;
-		train();
 	}
 
-	public Lda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
-			Terms terms, int numTopics, Map<PaperAbstract, Integer> indices) {
+	public Lda(List<TrainingPaper> trainingSet, 
+			Indexer<String> wordIndexer,
+			Terms terms, 
+			int numTopics, 
+			Map<PaperAbstract, Integer> trainingIndices,
+			Map<PaperAbstract, Integer> testIndices) {
 		this(trainingSet, wordIndexer, terms, numTopics);
-		this.indices = indices;
+		this.trainingIndices = trainingIndices;
+		this.testIndices = testIndices;
+		train();
 	}
 
 	/**
@@ -54,12 +60,13 @@ public class Lda extends ClusteringTest {
 	 * parameter (in this case, all alphas to the dirichlet are equal)
 	 */
 	private void train() {
-		CHEAT = true; 	//CHANGE TO false WHEN TRAINING ON REAL DATA
+		CHEAT = false; 	//CHANGE TO false WHEN TRAINING ON REAL DATA
 		double[][] betaMatrix = null;
 		if (CHEAT) {
 			System.out.println("We are cheating and using the true beta");
 			betaMatrix = getRealBeta("src/datageneration/output/" + 
 					"documents_model-out");
+			cheat();
 		} else {
 			try {
 				new File("lda").mkdir();
@@ -94,7 +101,7 @@ public class Lda extends ClusteringTest {
 	public double[][] predict(List<PredictionPaper> testDocs){
 		this.testDocs = testDocs;
 		double[][] result = null;
-		//CHEAT = false;	//CHANGE TO false WHEN TESTING ON REAL DATA
+		CHEAT = false;	//CHANGE TO false WHEN TESTING ON REAL DATA
 		if (CHEAT) {
 			System.out.println("we are cheating and using true parameters " +
 					"for prediction");	
@@ -106,7 +113,7 @@ public class Lda extends ClusteringTest {
 			
 			int row = 0;
 			for (PredictionPaper doc : testDocs) {
-				int paperIndex = indices.get(doc);
+				int paperIndex = testIndices.get(doc);
 				int col = 0;
 				for (col = 0; col < probabilities.numCols(); col++) {
 					result[row][col] = probabilities.get(paperIndex, col);
@@ -191,30 +198,37 @@ public class Lda extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
-	private void implantRealBeta(double[][] betaMatrix, String filename) {
-		System.out.print("Replacing trained betas with true betas...");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-		for (int row = 0; row < betaMatrix.length; row++) {
-			for (int col = 0; col < betaMatrix[row].length; col++) {
-				fileWriter.write(Math.log(betaMatrix[row][col]) + " ");
+	private void cheat() {
+		System.out.print("replacing trained beta with real beta...");
+		Utils.runCommand("cp src/datageneration/output/final.beta " +
+				"lda", false);
+		System.out.println("done.");
+		
+		System.out.print("replacing trained gammas with real gammas...");
+		try {
+			FileInputStream fstream = new FileInputStream("src/" +
+					"datageneration/output/final.gamma");
+			PlusoneFileWriter fileWriter = new PlusoneFileWriter("lda/" +
+					"final.gamma");
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			
+			int index = 0;
+			while ((strLine = br.readLine()) != null) {
+				if (trainingIndices.containsKey(index)) {
+					fileWriter.write(strLine);
+				}
 			}
-			fileWriter.write("\n");
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		fileWriter.close();
-		System.out.println("done");
-	}
-	
-	private void implantRealGamma(double[][] gammaMatrix, String filename) {
-		System.out.print("Replacing trained betas with true betas...");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-		for (int row = 0; row < gammaMatrix.length; row++) {
-			for (int col = 0; col < gammaMatrix[row].length; col++) {
-				fileWriter.write(gammaMatrix[row][col] + " ");
-			}
-			fileWriter.write("\n");
-		}
-		fileWriter.close();
-		System.out.println("done");
+		System.out.println("done.");
+		
+		System.out.print("replacing trained alpha with real alpha...");
+		Utils.runCommand("cp src/datageneration/output/final.other " +
+				"lda", false);
+		System.out.println("done.");
 	}
 	
 	/**
@@ -368,7 +382,7 @@ public class Lda extends ClusteringTest {
 			double numerator = 0, denominator = 0;
 			for (int i=0; i<testDocs.size(); i++) {
 				double docProb = 0;
-				int row = indices.get(testDocs.get(i));
+				int row = testIndices.get(testDocs.get(i));
 				for (Integer j : ((PaperAbstract)testDocs.get(i)).getTrainingWords()) {
 					int tf = ((PaperAbstract)testDocs.get(i)).getTrainingTf(j);
 					docProb += tf*Math.log(probMatrix.get(row, j));

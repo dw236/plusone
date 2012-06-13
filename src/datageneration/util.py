@@ -208,8 +208,8 @@ def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
     width = 0.01
     if labels == None:
         labels = range(len(types))
-    for type in types:
-        bar(offset, type, width, bottom, color=color)
+    for dist in types:
+        bar(offset, dist, width, bottom, color=color)
         offset += width
     xticks(np.arange(width / 2, width * len(types), .01), labels)
 
@@ -220,20 +220,22 @@ def plot_dists(types, color='b', labels=None, scale=0):
     """
     clf()
     bottom = 0
-    for type in types:
-        if len(type) > 100:
-            plot(type + bottom)
+    for dist in types:
+        if len(dist) > 100:
+            plot(dist + bottom)
         else:
-            plot_dist(type, color, labels, bottom, "don't clear")
+            plot_dist(dist, color, labels, bottom, "don't clear")
         if scale == 1.0:
             to_add = scale
         else:
-            to_add = max(type) * 1.1
+            to_add = max(dist) * 1.1
         bottom += to_add
 
-def plot_hist(words, vocab_size, color='b'):
-    clf()
-    hist(words, range(vocab_size + 1), color=color)
+def show_dists(dists):
+    for dist in dists:
+        plot_dist(dist)
+        if raw_input('q to quit...') == 'q':
+            break
     
 def perplexity(docs, probabilities, indices=None, holdout=0.7):
     if indices == None:
@@ -275,3 +277,33 @@ def get_probabilities(pickle_file):
         probabilities = np.matrix(topics) * np.matrix(words)
     
     return probabilities
+
+
+"""
+IGNORE THESE FUNCTIONS--THEY ARE FOR LDA.java TO CHEAT AND ARE STILL QUITE
+HACKY
+"""
+def write_cheats(data, alpha):
+    docs, doc_topics, words, topics = data
+    
+    with open('output/final.gamma', 'w') as f:
+        gammas = [count(topic) for topic in doc_topics]
+        for doc in range(len(docs)):
+            for topic in range(len(topics[0])):
+                if topic in gammas[doc]:
+                    f.write(str(gammas[doc][topic] + 0.1) + " ")
+                else:
+                    f.write("0 ")
+            f.write('\n') 
+    with open('output/final.other', 'w') as f:
+        num_topics = len(words)
+        num_terms = len(topics)
+        to_write = "num_topics " + str(num_topics) + "\n" 
+        to_write += "num_terms " + str(num_terms) + "\n" 
+        to_write += "alpha " + str(alpha) + "\n"  
+        f.write(to_write)
+    with open('output/final.beta', 'w') as f:
+        for topic in words:
+            for word in topic:
+                f.write(str(word) + " ")
+            f.write('\n')
