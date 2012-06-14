@@ -20,6 +20,7 @@ import plusone.clustering.Baseline;
 import plusone.clustering.ClusteringTest;
 import plusone.clustering.CommonNeighbors;
 import plusone.clustering.DTRandomWalkPredictor;
+import plusone.clustering.Hlda;
 import plusone.clustering.KNN;
 import plusone.clustering.KNNLocalSVDish;
 import plusone.clustering.KNNWithCitation;
@@ -283,6 +284,18 @@ public class Main {
 				ldaCheat = new Lda("ldaCheat", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
+
+			}
+		}
+		
+		//HLDA
+		Hlda hlda = null;
+		if (testIsEnabled("hlda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				hlda = new Hlda(trainingSet, wordIndexer, terms);
+				runClusteringMethod(hlda, ks, size, true);
 
 			}
 		}

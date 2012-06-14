@@ -150,7 +150,6 @@ public class DatasetJSON {
     	} catch (Exception e) {
     		System.out.println("Couldn't initialize indexer for pre-indexed files");
     	}
-    	System.out.println("Max index is " + maxIndex);
     	for (int i = 0; i < maxIndex; i++) {
     		this.wordIndexer.fastAddAndGetIndex(i  +"");
     	}

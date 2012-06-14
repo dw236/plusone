@@ -65,6 +65,7 @@ args=\
  -Dplusone.enableTest.lda=true \
  -Dplusone.enableTest.ldaTrained=true \
  -Dplusone.enableTest.ldaCheat=true \
+ -Dplusone.enableTest.hlda=true \
  -Dplusone.enableTest.knnc=false \
  -Dplusone.enableTest.knn=true \
  -Dplusone.enableTest.knnrw=false \
