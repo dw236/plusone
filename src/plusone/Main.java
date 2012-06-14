@@ -255,7 +255,7 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				lda = new Lda("Lda", trainingSet, wordIndexer, terms, dimensions[dk],
+				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 
@@ -268,7 +268,7 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				ldaTrained = new Lda("LdaTrained", trainingSet, wordIndexer, terms, dimensions[dk],
+				ldaTrained = new Lda("ldaTrained", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
 
@@ -280,7 +280,7 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				ldaCheat = new Lda("LdaCheat", trainingSet, wordIndexer, terms, dimensions[dk],
+				ldaCheat = new Lda("ldaCheat", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
 
