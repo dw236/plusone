@@ -10,7 +10,7 @@ def parse(filename, show):
     names = []
     scores = []
     for test in data[TEST]:
-        for key in test.keys():
+        for key in sorted(test.keys(), cmp=(lambda x,y: cmp(test[x], test[y]))):
             names.append(str(key))
             scores.append(test[key]['Predicted_Mean'])
     util.plot_dist(scores, labels=names)

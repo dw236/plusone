@@ -291,7 +291,7 @@ def write_cheats(data, alpha):
         for doc in range(len(docs)):
             for topic in range(len(topics[0])):
                 if topic in gammas[doc]:
-                    f.write(str(gammas[doc][topic] + 0.1) + " ")
+                    f.write(str(gammas[doc][topic] + alpha) + " ")
                 else:
                     f.write("0 ")
             f.write('\n') 
@@ -305,5 +305,5 @@ def write_cheats(data, alpha):
     with open('output/final.beta', 'w') as f:
         for topic in words:
             for word in topic:
-                f.write(str(word) + " ")
+                f.write(str(np.log(word + 1e-323)) + " ")
             f.write('\n')

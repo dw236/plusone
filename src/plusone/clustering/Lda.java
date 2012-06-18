@@ -37,10 +37,10 @@ public class Lda extends ClusteringTest {
 	
 	public Lda(String variant) {
 		super(variant);
-		if (variant.equals("ldaTrained")) {
+		if (variant.equals("ldaT")) {
 			this.trainCheat = true;
 			this.testCheat = false;
-		} else if (variant.equals("ldaCheat")) {
+		} else if (variant.equals("ldaC")) {
 			this.trainCheat = true;
 			this.testCheat = true;
 		} else {
@@ -221,18 +221,21 @@ public class Lda extends ClusteringTest {
 		try {
 			FileInputStream fstream = new FileInputStream("src/" +
 					"datageneration/output/final.gamma");
-			PlusoneFileWriter fileWriter = new PlusoneFileWriter("lda/" +
-					"final.gamma");
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
+			PlusoneFileWriter fileWriter = new PlusoneFileWriter("lda/" +
+					"final.gamma");
 			
 			int index = 0;
 			while ((strLine = br.readLine()) != null) {
-				if (trainingIndices.containsKey(index)) {
+				if (trainingIndices.containsValue(index)) {
 					fileWriter.write(strLine);
 				}
+				index++;
 			}
+			
+			fileWriter.close();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
