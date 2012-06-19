@@ -86,7 +86,8 @@ public class DatasetJSON {
 		}
     }
 
-    /** This method is to be called in order to construct a datasetJSON
+    /**
+     * This method is to be called in order to construct a datasetJSON
      * 
      * @param filename The path to the JSON file being loaded
      * @return a DatasetJSON with its document, wordIndexer, and paperIndexer fields instantiated with the information contained in the JSON

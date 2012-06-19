@@ -186,7 +186,7 @@ def write(data, args):
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics], f)
     os.system("cp " + dir + "/* output")
-    util.write_cheats(data)
+    util.write_cheats(data, args.a)
 
 def main():
     parser = argparse.ArgumentParser(description="Document generator. Default\

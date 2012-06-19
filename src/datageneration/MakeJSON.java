@@ -21,6 +21,7 @@ import org.json.*;
  */
 public class MakeJSON {
 	public static void main(String[] args) throws IOException, JSONException {
+		System.out.print("Making JSON from " + args[0] + "...");
     	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter("data/" + args[0] + ".json" ) ) );
 		
     	//Location of the file
@@ -128,6 +129,7 @@ public class MakeJSON {
 	    	out.println( json.toString() );
 	    	out.close();
 		}
+		System.out.println("Done!");
 	}
 	
 	private static File preprocess(String filepath) throws IOException {

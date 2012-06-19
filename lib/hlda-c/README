@@ -1,3 +1,9 @@
+Compilation: Type 'make' in a shell.
+
+Run this program with the command "./main gibbs [corpus] [settings] [out]" where the corpus is in the same format as in lda-c, settings should be settings-d4.txt, and out
+is an existing directory for output.
+This program can also be run with "./main heldout [train] [test] [settings] [out]" where train and test are two copora in the same format as in lda-c, settings should be settings-d5.txt, and out is an existing directory for output.
+===
 This code implements hierarchical LDA with a fixed depth tree and a
 stick breaking prior on the depth weights.  An infinite-depth tree can
 be approximated by setting the depth to be very high.  This code

@@ -294,8 +294,8 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				//hlda = new Hlda(trainingSet, wordIndexer, terms);
-				//runClusteringMethod(hlda, ks, size, true);
+				hlda = new Hlda(trainingSet, wordIndexer, terms);
+				runClusteringMethod(hlda, ks, size, true);
 
 			}
 		}
