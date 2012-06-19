@@ -60,7 +60,7 @@ def get_cdf(dist):
     for i in range(len(dist)):
         total += dist[i]
         cdf.append(total)
-    return cdf
+    return np.array(cdf)
 
 def sample(cdf):
     """Takes a distribution and samples from it. 
@@ -236,7 +236,19 @@ def show_dists(dists):
         plot_dist(dist)
         if raw_input('q to quit...') == 'q':
             break
-    
+
+def plot_cdfs(dists):
+    clf()
+    dists = [get_cdf(sorted(dist, reverse=1)) for dist in dists]
+    bottom = 0
+    for dist in dists:
+        plot([bottom] * len(dist), 'black')
+        plot(np.insert((1 - dist), 0, 1) + bottom)
+        bottom += 1
+
+"""
+THESE FUNCTIONS ARE FOR LDA.java TO CHEAT AND ARE STILL QUITE HACKY
+"""
 def perplexity(docs, probabilities, indices=None, holdout=0.7):
     if indices == None:
         indices = range(len(docs))
@@ -273,16 +285,11 @@ def get_probabilities(pickle_file):
         probabilities = rgamma * rbeta
     else:
         with open(pickle_file, 'r') as f:
-            docs, doc_topics, words, topics = pickle.load(f)
+            docs, doc_topics, words, topics, args = pickle.load(f)
         probabilities = np.matrix(topics) * np.matrix(words)
     
     return probabilities
 
-
-"""
-IGNORE THESE FUNCTIONS--THEY ARE FOR LDA.java TO CHEAT AND ARE STILL QUITE
-HACKY
-"""
 def write_cheats(data, alpha):
     docs, doc_topics, words, topics = data
     
@@ -303,7 +310,8 @@ def write_cheats(data, alpha):
         to_write += "alpha " + str(alpha) + "\n"  
         f.write(to_write)
     with open('output/final.beta', 'w') as f:
+        noise = 1e-323
         for topic in words:
             for word in topic:
-                f.write(str(np.log(word + 1e-323)) + " ")
+                f.write(str(np.log(word + noise)) + " ")
             f.write('\n')

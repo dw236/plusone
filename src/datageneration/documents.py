@@ -184,9 +184,11 @@ def write(data, args):
         if args.plsi:
             f.write(str("-plsi"))
     with open(dir + '/results.pickle', 'w') as f:
-        pickle.dump([docs, doc_topics, words, topics], f)
+        pickle.dump([docs, doc_topics, words, topics, args], f)
     os.system("cp " + dir + "/* output")
-    util.write_cheats(data, args.a)
+    if not args.plsi:
+        print "writing cheats for lda...",
+        util.write_cheats(data, args.a)
 
 def main():
     parser = argparse.ArgumentParser(description="Document generator. Default\
@@ -239,7 +241,7 @@ def main():
         print "writing data to file...",
         write(data, args)
         print "done"
-    return data
+    return data, args
 
 if __name__ == '__main__':
-    docs, doc_topics, words, topics = main()
+    (docs, doc_topics, words, topics), args = main()
