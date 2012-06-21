@@ -15,7 +15,7 @@ hlda/*
 .project
 .classpath
 .py*
-bin/*
+bin
 *.aux
 *.pdf
 *.log
