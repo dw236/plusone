@@ -3,13 +3,13 @@
 export basedir=$PWD
 
 #Number of topics
-klist=(4)
+klist=(15)
 #Number of docs
-nlist=(20)
+nlist=(500)
 #Number of words per document
-llist=(50)
+llist=(30)
 #Vocab size
-mlist=(30 40 50 60 70)
+mlist=(500)
 #Alpha
 alist=(0.1)
 #Beta
@@ -81,7 +81,7 @@ do
                         datageneration/MakeJSON documents-out false
 
                         #Run the test
-                        ./test data/documents-out.json
+                        ./test data/documents-out.json true
                     done
                 done
             done
@@ -93,6 +93,6 @@ if $graph; then
     cd $basedir
     for f in data/experiment*.json;
     do
-        python parse_output.py $f
+        python parse_output.py -s $f
     done
 fi

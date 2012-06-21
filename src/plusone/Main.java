@@ -66,6 +66,8 @@ public class Main {
 	public List<PredictionPaper> testingSet;
 	
 	private double ldaPerplexity;
+	
+	private static boolean synthetic;
 
 	private static int FOLD; // cross validation parameter
 	private static DatasetJSON dataset;
@@ -645,6 +647,8 @@ public class Main {
 
 		long randSeed = 
 				new Long(System.getProperty("plusone.randomSeed", "0"));
+		
+		synthetic = Boolean.getBoolean("plusone.synthetic");
 
 		randGen = new Random(randSeed);
 		metadataLogger = new MetadataLogger();

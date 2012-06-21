@@ -25,10 +25,18 @@ echo $userdata
 #   cd $basedir
 #fi
 
-out_dir=.
+#flag for synthetic data
+synthetic=false
 if [ "$2" ];then
-    out_dir=$2
+    synthetic=$2
 fi
+
+out_dir=.
+if [ "$3" ];then
+    out_dir=$3
+fi
+
+
 #mkdir $out_dir || exit
 echo Output will go in data
 
@@ -39,6 +47,7 @@ args=\
  -Dplusone.crossValidation.run=false \
  -Dplusone.testWordPercents=0.3 \
  -Dplusone.trainPercents=0.9\
+ -Dplusone.synthetic=$synthetic \
  -Dplusone.kValues=3 \
  -Dplusone.closestKValues=5,10,15 \
  -Dplusone.closestKSVDishValues=5,10,25,50,100,250,500 \
@@ -63,8 +72,8 @@ args=\
  -Dplusone.lda.dimensions=15
  -Dplusone.enableTest.localCO=false \
  -Dplusone.enableTest.lda=true \
- -Dplusone.enableTest.ldaTrained=true \
- -Dplusone.enableTest.ldaCheat=true \
+ -Dplusone.enableTest.ldaTrained=$synthetic \
+ -Dplusone.enableTest.ldaCheat=$synthetic \
  -Dplusone.enableTest.hlda=false \
  -Dplusone.enableTest.knnc=false \
  -Dplusone.enableTest.knn=true \
