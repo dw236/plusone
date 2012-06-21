@@ -194,23 +194,13 @@ def write(data, args):
         if args.plsi:
             f.write(str("-plsi"))
     with open(dir + '/documents_other-out', 'w') as f:
-        word_cdfs = [util.get_cdf(sorted(dist, reverse=1)) for dist in words]
-        for topic in word_cdfs:
-            total = topic[1]
-            index = 1
-            while total < 0.8:
-                total += topic[index]
-                index += 1
-            f.write(str(index) + ' ')
-        f.write('\n')
-        for doc in topics:
-            sum_squares = sum([topic**2 for topic in doc])
-            f.write(str(sum_squares) + ' ')
-        f.write('\n')
+        sig_words = np.average(util.get_sig_words(words))
+        f.write(str(sig_words) + '\n')
+        sum_squares = np.average([sum([topic**2 for topic in doc]) \
+                                  for doc in topics])
+        f.write(str(sum_squares) + '\n')
         f.write(str(len(docs)) + '\n')
-        for doc in docs:
-            f.write(str(len(doc)) + ' ')
-        f.write('\n')
+        f.write(str(np.average([len(doc) for doc in docs])) + ' ')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
     os.system("cp " + dir + "/* output")

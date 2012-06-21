@@ -22,5 +22,6 @@ bin
 *.pyc
 data/experiment*
 data/out2.json
-src/datageneration/*
+src/datageneration/output/*
 data/documents-out.json
+src/datageneration/script.py

@@ -190,6 +190,14 @@ def count(words):
     word_count["unique"] = unique_words
     return word_count
 
+def get_sig_words(word_dists, amount=0.8):
+    word_cdfs = [get_cdf(sorted(dist, reverse=1)) for dist in word_dists]
+    sig_words = []
+    for topic in word_cdfs:
+        index = binary_search(topic, amount)
+        sig_words.append(index + 1)
+    return sig_words
+
 def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
     """Plots a distribution as a bar graph.
     
