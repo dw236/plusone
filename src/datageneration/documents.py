@@ -200,7 +200,7 @@ def write(data, args):
                                   for doc in topics])
         f.write(str(sum_squares) + '\n')
         f.write(str(len(docs)) + '\n')
-        f.write(str(np.average([len(doc) for doc in docs])) + ' ')
+        f.write(str(np.average([len(doc) for doc in docs])) + '\n')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
     os.system("cp " + dir + "/* output")
