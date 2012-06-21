@@ -1,19 +1,33 @@
 #!/bin/sh
 
-# compile using ant
-ant -f build.xml || exit
+export basedir=$PWD
 
-
+#Number of topics
 klist=(4)
+#Number of docs
 nlist=(20)
+#Number of words per document
 llist=(50)
-mlist=(30)
+#Vocab size
+mlist=(30 40 50 60 70)
+#Alpha
 alist=(0.1)
+#Beta
 blist=(0.01)
+#Flag for plotting output
+graph=false
 
-while getopts “k:n:l:m:a:b:” OPTION
+while getopts “hk:n:l:m:a:b:g” OPTION
 do
     case $OPTION in
+        h)
+            echo "Usage: ./run-batch [-h] [-g]"
+            echo "Optional arguments:"
+            echo "-h Show this help screen"
+            echo "-g Graph all experiment*.json files in data"
+            echo "To change the data generation parameters, edit run-batch"
+            exit 1
+            ;;
         k)
             klist=$OPTARG
             ;;
@@ -32,8 +46,14 @@ do
         b)
             blist=$OPTARG
             ;;
+        g)
+            graph=true
+            ;;
     esac
 done
+
+# compile using ant
+ant -f build.xml || exit
 
 #Iterate through every combination of parameters
 for k in "${klist[@]}";
@@ -53,11 +73,12 @@ do
                         python documents.py -w -k $k -n $n -l $l -m $m -a $a \
                         -b $b
                         cd output/k$k.n$n.l$l.m$m.a$a.b$b
-                        cp documents-out ../../../../data/
-                        cd ../../../../
+                        cp documents-out $basedir/data/
+                        cd $basedir
 
                         #Make a JSON out of the generated data
-                        java -classpath bin:lib/jars/json.jar datageneration/MakeJSON documents-out false
+                        java -classpath bin:lib/jars/json.jar \
+                        datageneration/MakeJSON documents-out false
 
                         #Run the test
                         ./test data/documents-out.json
@@ -67,3 +88,11 @@ do
         done
     done
 done
+
+if $graph; then
+    cd $basedir
+    for f in data/experiment*.json;
+    do
+        python parse_output.py $f
+    done
+fi

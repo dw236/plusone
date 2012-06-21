@@ -271,7 +271,6 @@ public class Main {
 				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
-
 			}
 			ldaPerplexity = lda.getPerplexity();
 		}
@@ -284,7 +283,6 @@ public class Main {
 				ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
-
 			}
 		}
 		//LDA, cheats in both training and testing
@@ -296,7 +294,6 @@ public class Main {
 				ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
-
 			}
 		}
 		
@@ -308,7 +305,6 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				hlda = new Hlda(trainingSet, wordIndexer, terms);
 				runClusteringMethod(hlda, ks, size, true);
-
 			}
 		}
 		// KNNSVDish
