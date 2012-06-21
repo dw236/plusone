@@ -408,7 +408,6 @@ public class Lda extends ClusteringTest {
 					denominator += ((PaperAbstract)testDocs.get(i)).getTrainingTf(j);
 				}
 			}
-			System.out.println(Math.exp(-1*numerator/denominator));
 			return Math.exp(-1*numerator/denominator);
 		} else {
 			FileInputStream filecontents = null;

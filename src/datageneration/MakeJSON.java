@@ -25,18 +25,22 @@ public class MakeJSON {
     	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter("data/" + args[0] + ".json" ) ) );
 		
     	//Location of the file
-    	String thisfile = "src/datageneration/output/" + args[0];
+    	String thisFile = "src/datageneration/output/" + args[0];
 		//Set to true if each item has a corresponding score, false otherwise
 		boolean regression = false;
 		if (args[1].equals("true")) {
 			regression = true;
 		}
 		File fixedFile = null;
-		try {
-			fixedFile = preprocess(thisfile.toString());
-		} catch (IOException e) {
-			System.out.println("Could not preprocess");
-			System.exit(1);
+		if (regression) {
+			try {
+				fixedFile = preprocess(thisFile.toString());
+			} catch (IOException e) {
+				System.out.println("Could not preprocess");
+				System.exit(1);
+			}
+		} else {
+			fixedFile = new File(thisFile.toString());
 		}
 		
 		Scanner lines = null;
@@ -50,7 +54,6 @@ public class MakeJSON {
 		if (regression) {
 		    HashMap<Integer,ArrayList<Pair>> hm = new HashMap<Integer,ArrayList<Pair>>();
 			int users = 0;
-			int itemCount = 0;
 			ArrayList<String> seenItems = new ArrayList<String>();
 			while (lines.hasNextLine()) {
 				String itemLine = lines.nextLine();
@@ -62,7 +65,6 @@ public class MakeJSON {
 					pairList.add(new Pair(Integer.parseInt(items[i]), Integer.parseInt(scores[i])));
 					if (!seenItems.contains(items[i])) {
 						seenItems.add(items[i]);
-						itemCount++;
 					}
 				}
 				hm.put(users, pairList);
@@ -93,7 +95,6 @@ public class MakeJSON {
 		} else {
 			HashMap<Integer,ArrayList<Integer>> hm = new HashMap<Integer,ArrayList<Integer>>();
 			int users = 0;
-			int itemCount = 0;
 			ArrayList<String> seenItems = new ArrayList<String>();
 			while (lines.hasNextLine()) {
 				String thisLine = lines.nextLine();
@@ -103,7 +104,6 @@ public class MakeJSON {
 					itemList.add(Integer.parseInt(s));
 					if (!seenItems.contains(s)) {
 						seenItems.add(s);
-						itemCount++;
 					}
 				}
 				hm.put(users, itemList);
@@ -132,6 +132,10 @@ public class MakeJSON {
 		System.out.println("Done!");
 	}
 	
+	/**
+	 * Prevents an item with a score of 0 from being added if this is a
+	 * regression task
+	 */
 	private static File preprocess(String filepath) throws IOException {
 		File f = new File("temporaryfilepleaseignore.txt");
 		f.deleteOnExit();

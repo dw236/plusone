@@ -108,6 +108,18 @@ public class Main {
 		for (PredictionPaper a : testingSet){
 			((PaperAbstract)a).generateTf(testWordPercent, null, true);
 		}
+		
+		//Find average number of non-heldout words in each of the test docs
+		double avgWordsPerTestDoc = 0.0;
+		for (PredictionPaper p : testingSet) {
+			for (Integer i : p.getTrainingWords()) {
+				avgWordsPerTestDoc += p.getTrainingTf(i);
+			}
+		}
+		
+		avgWordsPerTestDoc /= testingSet.size();
+		System.out.println("Average number of words per test doc:" + avgWordsPerTestDoc);
+
 		this.terms = new Terms(terms);
 		System.out.println("Data ready for experiment");
 	}

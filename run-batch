@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# compile using ant
+ant -f build.xml || exit
+
+for ((i = 0; i < 10; i++))
+do
+
+    #Generate a data file with given parameters
+    cd src/datageneration/
+    python documents.py -w -k $1 -n $2 -l $3 -m $4 -a $5 \
+    -b $6
+    cd output/k$1.n$2.l$3.m$4.a$5.b$6
+    cp documents-out ../../../../data/
+    cd ../../../../
+
+    #Make a JSON out of the generated data
+    java -classpath bin:lib/jars/json.jar datageneration/MakeJSON documents-out false
+
+    #Run the test
+    ./test data/documents-out.json
+done

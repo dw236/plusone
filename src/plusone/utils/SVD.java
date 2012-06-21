@@ -66,7 +66,7 @@ public class SVD {
 
 		this.train();
 
-		System.out.format("[SVD]] took %.3f seconds.\n",
+		System.out.format("[SVD] took %.3f seconds.\n",
 				(System.currentTimeMillis() - t1)/1000.0);
 	}
 
