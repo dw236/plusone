@@ -40,7 +40,7 @@ def generate_html(dir):
         #=======================================================================
         # write the algorithm names
         #=======================================================================
-        for algorithm in results[0][2]:
+        for algorithm in sorted(results[0][2]):
             f.write('\t\t<td>' + algorithm + '</td>\n')
         f.write('\t</tr>\n')
         #=======================================================================
@@ -53,7 +53,7 @@ def generate_html(dir):
                     f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
             for datum in result[4]:
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
-            for algorithm in result[2]:
+            for algorithm in sorted(result[2]):
                 score = result[2][algorithm]['Predicted_Mean']
                 f.write('\t\t<td>' + str(round(score, 2)) + '</td>\n')
             f.write('\t</tr>\n')
