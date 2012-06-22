@@ -17,22 +17,28 @@ def generate_html(dir):
     print "processed", files_found, "files"
     with open('data/test.html', 'w') as f:
         f.write('<table border="1">\n')
-        f.write('\t<th colspan="20">Experiments</th>\n')
+        f.write('\t<th colspan="100">Experiments</th>\n')
         names = True
         for result in results:
             f.write('\t<tr>\n')
             scores = []
             for algorithm in result[2]:
-                if names and len(result[2].keys()) == 8:
-                    f.write('\t\t<td>' + algorithm + '</td>\n')
-                elif not names and len(result[2].keys()) == 10:
-                    f.write('\t\t<td>' + algorithm + '</td>\n')
+                f.write('\t\t<td>' + algorithm + '</td>\n')
                 scores.append(result[2][algorithm]['Predicted_Mean'])
             f.write('\t</tr>\n')
-            names = False
             f.write('\t<tr>\n')
             for score in scores:
                 f.write('\t\t<td>' + str(round(score, 2)) + '</td>\n')
+            f.write('\t</tr>\n')
+            f.write('\t<tr>\n')
+            params = []
+            for param in result[3]:
+                f.write('\t\t<td>' + param + '</td>\n')
+                params.append(result[2][param])
+            f.write('\t</tr>\n')
+            f.write('\t<tr>\n')
+            for param in params:
+                f.write(f.write('\t\t<td>' + str(param) + '</td>\n'))
             f.write('\t</tr>\n')
 #            for name in result[0]:
 #                f.write('\t\t<td>' + name + '</td>\n')

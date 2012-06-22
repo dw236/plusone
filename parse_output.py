@@ -3,11 +3,15 @@ import argparse
 import src.datageneration.util as util
 
 TEST = 'tests'
+PARAMS = 'parameters'
 
 def parse(filename, table=False, show=False, external=True):
     """
     Assumes json file is of the form: 
-    dict with one entry 'tests', which is a one-element list of dicts.
+    dict with two entries: 'tests', which is a one-element list of dicts, and
+    'parameters', which is a dict of parameters used to generate the data
+    (only for synthetic datasets)
+    For 'tests':
     The inner dict has experiment names as the keys and dicts with various
     performance metrics as values
     
@@ -44,7 +48,7 @@ def parse(filename, table=False, show=False, external=True):
         else:
             util.savefig(filename + '.pdf')
     
-    return names, scores, data[TEST][0]
+    return names, scores, data[TEST][0], data[PARAMS]
 
 def make_table():
     with open('src/datageneration/output/documents_other-out', 'r') as f:
