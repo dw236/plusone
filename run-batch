@@ -11,20 +11,23 @@ llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.1 0.05 0.001)
+alist=(0.1 0.05 0.001 0.005 0.01)
 #Beta
-blist=(0.01 0.05 0.001)
+blist=(0.01 0.05 0.001 0.005 0.1)
 #Flag for plotting output
-graph=false
+plot=false
+#Flag for making table
+table=false
 
-while getopts “hk:n:l:m:a:b:g” OPTION
+while getopts “hk:n:l:m:a:b:gp” OPTION
 do
     case $OPTION in
         h)
-            echo "Usage: ./run-batch [-h] [-g]"
+            echo "Usage: ./run-batch [-h] [-p] [-g]"
             echo "Optional arguments:"
             echo "-h Show this help screen"
-            echo "-g Graph all experiment*.json files in data"
+            echo "-p Plot all experiment*.json files in data"
+            echo "-g Make an HTML table with the data"
             echo "To change the data generation parameters, edit run-batch"
             exit 1
             ;;
@@ -47,7 +50,10 @@ do
             blist=$OPTARG
             ;;
         g)
-            graph=true
+            table=true
+            ;;
+        p)
+            plot=true
             ;;
     esac
 done
@@ -87,7 +93,15 @@ do
     done
 done
 
-if $graph; then
+if $table; then
     cd $basedir
     python parse_batch.py data
+fi
+
+if $plot; then
+    cd $basedir
+    for f in data/experiment*.json;
+    do
+        python parse_output.py $f
+    done
 fi
