@@ -34,7 +34,7 @@ def generate_html(dir):
             params = []
             for param in result[3]:
                 f.write('\t\t<td>' + param + '</td>\n')
-                params.append(result[2][param])
+                params.append(result[3][param])
             f.write('\t</tr>\n')
             f.write('\t<tr>\n')
             for param in params:
