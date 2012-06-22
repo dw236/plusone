@@ -1,6 +1,7 @@
 import argparse
 import pickle
 import os
+import itertools
 
 import random
 from random import random as rand
@@ -134,6 +135,7 @@ def write(data, args):
             -sum of squares for each topic distribution (separated by spaces)
             -number of documents
             -words per document (separated by spaces)
+            -average of the dot product between word distributions by topic
         each value listed is separated a newline character
     results.pickle:
         file containing the documents, the topic*word distributions, and the
@@ -201,6 +203,9 @@ def write(data, args):
         f.write(str(sum_squares) + '\n')
         f.write(str(len(docs)) + '\n')
         f.write(str(np.average([len(doc) for doc in docs])) + '\n')
+        f.write(str(np.median([i[0].dot(i[1]) \
+                                for i in itertools.combinations(words, 2)])) +
+                '\n')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
     os.system("cp " + dir + "/* output")

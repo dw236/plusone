@@ -17,36 +17,38 @@ def generate_html(dir):
     print "processed", files_found, "files"
     with open('data/test.html', 'w') as f:
         f.write('<table border="1">\n')
-        f.write('\t<th colspan="100">Experiments</th>\n')
-        names = True
+        f.write('\t<th colspan="'+ str(len(results[0][3].keys()) + 
+                                       len(results[0][4].keys())) 
+                +'">Parameters</th>\n')
+        f.write('\t<th colspan="'+ str(len(results[0][2].keys())) 
+                +'">Experiments</th>\n')
+        #=======================================================================
+        # write the parameter names
+        #=======================================================================
+        f.write('\t<tr>\n')
+        for param in results[0][3]:
+            f.write('\t\t<td>' + param + '</td>\n')
+        for datum in results[0][4]:
+            f.write('\t\t<td>' + datum + '</td>\n')
+        #=======================================================================
+        # write the algorithm names
+        #=======================================================================
+        for algorithm in results[0][2]:
+            f.write('\t\t<td>' + algorithm + '</td>\n')
+        f.write('\t</tr>\n')
+        #=======================================================================
+        # write the numerical results
+        #=======================================================================
         for result in results:
             f.write('\t<tr>\n')
-            scores = []
+            for param in result[3]:
+                f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
+            for datum in result[4]:
+                f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
             for algorithm in result[2]:
-                f.write('\t\t<td>' + algorithm + '</td>\n')
-                scores.append(result[2][algorithm]['Predicted_Mean'])
-            f.write('\t</tr>\n')
-            f.write('\t<tr>\n')
-            for score in scores:
+                score = result[2][algorithm]['Predicted_Mean']
                 f.write('\t\t<td>' + str(round(score, 2)) + '</td>\n')
             f.write('\t</tr>\n')
-            f.write('\t<tr>\n')
-            params = []
-            for param in result[3]:
-                f.write('\t\t<td>' + param + '</td>\n')
-                params.append(result[3][param])
-            f.write('\t</tr>\n')
-            f.write('\t<tr>\n')
-            for param in params:
-                f.write('\t\t<td>' + str(param) + '</td>\n')
-            f.write('\t</tr>\n')
-#            for name in result[0]:
-#                f.write('\t\t<td>' + name + '</td>\n')
-#            f.write('\t</tr>\n')
-#            f.write('\t<tr>\n')
-#            for score in result[1]:
-#                f.write('\t\t<td>' + str(score) + '</td>\n')
-#            f.write('\t</tr>\n')
         f.write('</table>')
     return results
 

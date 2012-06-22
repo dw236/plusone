@@ -4,6 +4,7 @@ import src.datageneration.util as util
 
 TEST = 'tests'
 PARAMS = 'parameters'
+DATA = 'data'
 
 def parse(filename, table=False, show=False, external=True):
     """
@@ -48,7 +49,7 @@ def parse(filename, table=False, show=False, external=True):
         else:
             util.savefig(filename + '.pdf')
     
-    return names, scores, data[TEST][0], data[PARAMS]
+    return names, scores, data[TEST][0], data[PARAMS], data[DATA]
 
 def make_table():
     with open('src/datageneration/output/documents_other-out', 'r') as f:
