@@ -170,7 +170,7 @@ public class Main {
 		try {
 			String outName = null;
 			Double[] params = new Double[6];
-			Double[] data = new Double[4];
+			Double[] data = new Double[5];
 			if (synthetic) {
 				File documentsOptionsOut = new File(
 						"src/datageneration/output/documents_options-out");
@@ -216,6 +216,7 @@ public class Main {
 				dataList.put("sum_squares", data[1]);
 				dataList.put("num_docs", data[2]);
 				dataList.put("avg_words", data[3]);
+				dataList.put("median", data[4]);
 				json.put("data", dataList);
 			} else {
 				Date date = new Date();
