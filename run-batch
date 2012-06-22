@@ -72,8 +72,6 @@ do
                         cd src/datageneration/
                         python documents.py -w -k $k -n $n -l $l -m $m -a $a \
                         -b $b
-                        cd output/k$k.n$n.l$l.m$m.a$a.b$b
-                        cp documents-out $basedir/data/
                         cd $basedir
 
                         #Make a JSON out of the generated data
