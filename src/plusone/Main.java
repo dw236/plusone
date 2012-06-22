@@ -169,8 +169,10 @@ public class Main {
 
 		try {
 			String outName = null;
-			Double[] params = new Double[6];
-			Double[] data = new Double[5];
+			ArrayList<Double> params = new ArrayList<Double>();
+			ArrayList<String> paramNames = new ArrayList<String>();
+			ArrayList<Double> data = new ArrayList<Double>();
+			ArrayList<String> dataNames = new ArrayList<String>();
 			if (synthetic) {
 				File documentsOptionsOut = new File(
 						"src/datageneration/output/documents_options-out");
@@ -184,14 +186,20 @@ public class Main {
 					e.printStackTrace();
 				}
 				String[] parsedLine = line.nextLine().split(" ");
-				for (int i = 0; i < params.length; i++) {
-					params[i] = Double.parseDouble(parsedLine[3+2*i]);
+				for (int i = 0; i < (parsedLine.length-2)/2; i++) {
+					params.add(Double.parseDouble(parsedLine[3+2*i]));
+					paramNames.add(parsedLine[2+2*i].substring(1));
 				}
-				outName = "k" + (int)Math.floor(params[0]) + ".n"
-						+(int)Math.floor(params[1]) + ".l"
-						+ (int)Math.floor(params[2]) + ".m"
-						+ (int)Math.floor(params[3]) + ".a"
-						+ params[4] + ".b" + params[5];
+				StringBuffer tmpOutName = new StringBuffer();
+				for (int i = 0; i < params.size(); i++) {
+					if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+						tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
+					} else {
+						tmpOutName.append(paramNames.get(i)
+								+ (int)Math.floor(params.get(i)) + ".");
+					}
+				}
+				outName = tmpOutName.toString();
 				//Put the information from documents_other-out into data[]
 				Scanner lines = null;
 				try {
@@ -199,28 +207,29 @@ public class Main {
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
-				for (int i = 0; i < data.length; i++) {
-					data[i] = Double.parseDouble(lines.nextLine());
+				while (lines.hasNextLine()) {
+					String[] nameAndValue = lines.nextLine().split(" ");
+					dataNames.add(nameAndValue[0]);
+					data.add(Double.parseDouble(nameAndValue[1]));
 				}
 				JSONObject parameters = new JSONObject();
-				parameters.put("k", (int)Math.floor(params[0]));
-				parameters.put("n", (int)Math.floor(params[1]));
-				parameters.put("l", (int)Math.floor(params[2]));
-				parameters.put("m", (int)Math.floor(params[3]));
-				parameters.put("a", params[4]);
-				parameters.put("b", params[5]);
+				for (int i = 0; i < params.size(); i++) {
+					if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+						parameters.put(paramNames.get(i), params.get(i));
+					} else {
+						parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
+					}
+				}
 				json.put("parameters", parameters);
 				
 				JSONObject dataList = new JSONObject();
-				dataList.put("sig_words", data[0]);
-				dataList.put("sum_squares", data[1]);
-				dataList.put("num_docs", data[2]);
-				dataList.put("avg_words", data[3]);
-				dataList.put("median", data[4]);
+				for (int i = 0; i < data.size(); i++) {
+					dataList.put(dataNames.get(i), data.get(i));
+				}
 				json.put("data", dataList);
 			} else {
 				Date date = new Date();
-				outName = date.getTime() + "";
+				outName = date.getTime() + ".";
 			}
 			
 			
@@ -252,8 +261,8 @@ public class Main {
 			}
 			json.put("tests", tests);
 			
-			File out = new File("data", "experiment." + outName + ".json");
-			System.out.println("Wrote to data/experiment." + outName + ".json");
+			File out = new File("data", "experiment." + outName + "json");
+			System.out.println("Wrote to data/experiment." + outName + "json");
 	
 			PlusoneFileWriter writer = new PlusoneFileWriter(out);
 			writer.write(json.toString());
