@@ -16,10 +16,16 @@ def generate_html(dir):
             continue
     print "processed", files_found, "files"
     with open('data/test.html', 'w') as f:
+        universals = ['k', 'n', 'l', 'm']
+        hidden = ['a', 'b'] + universals
+        parameters = ""
+        for option in universals:
+            parameters += option + "=" + str(results[0][3][option]) + ", "
+        parameters = parameters[:-2]
         f.write('<table border="1">\n')
         f.write('\t<th colspan="'+ str(len(results[0][3].keys()) + 
                                        len(results[0][4].keys())) 
-                +'">Parameters</th>\n')
+                +'">Parameters ('+ parameters + ')</th>\n')
         f.write('\t<th colspan="'+ str(len(results[0][2].keys())) 
                 +'">Experiments</th>\n')
         #=======================================================================
@@ -27,7 +33,8 @@ def generate_html(dir):
         #=======================================================================
         f.write('\t<tr>\n')
         for param in results[0][3]:
-            f.write('\t\t<td>' + param + '</td>\n')
+            if param not in hidden:
+                f.write('\t\t<td>' + param + '</td>\n')
         for datum in results[0][4]:
             f.write('\t\t<td>' + datum + '</td>\n')
         #=======================================================================
@@ -42,7 +49,8 @@ def generate_html(dir):
         for result in results:
             f.write('\t<tr>\n')
             for param in result[3]:
-                f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
+                if param not in hidden:
+                    f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
             for datum in result[4]:
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
             for algorithm in result[2]:

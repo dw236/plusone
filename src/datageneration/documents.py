@@ -197,15 +197,13 @@ def write(data, args):
             f.write(str("-plsi"))
     with open(dir + '/documents_other-out', 'w') as f:
         sig_words = np.average(util.get_sig_words(words))
-        f.write(str(sig_words) + '\n')
+        f.write('sig words ' + str(sig_words) + '\n')
         sum_squares = np.average([sum([topic**2 for topic in doc]) \
                                   for doc in topics])
-        f.write(str(sum_squares) + '\n')
-        f.write(str(len(docs)) + '\n')
-        f.write(str(np.average([len(doc) for doc in docs])) + '\n')
-        f.write(str(np.median([i[0].dot(i[1]) \
-                                for i in itertools.combinations(words, 2)])) +
-                '\n')
+        f.write('sum_squares ' + str(sum_squares) + '\n')
+        med = np.median([i[0].dot(i[1]) \
+                                for i in itertools.combinations(words, 2)])
+        f.write('median ' + str(med) + '\n')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
     os.system("cp " + dir + "/* output")
