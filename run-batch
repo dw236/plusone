@@ -91,8 +91,5 @@ done
 
 if $graph; then
     cd $basedir
-    for f in data/experiment*.json;
-    do
-        python parse_output.py -s $f
-    done
+    python parse_batch.py data
 fi
