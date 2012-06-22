@@ -22,26 +22,30 @@ def generate_html(dir):
         for option in universals:
             parameters += option + "=" + str(results[0][3][option]) + ", "
         parameters = parameters[:-2]
+        f.write('<script src="sorttable.js"></script>\n')
         f.write('<table border="1">\n')
         f.write('\t<th colspan="'+ str(len(results[0][3].keys()) + 
-                                       len(results[0][4].keys())) 
-                +'">Parameters ('+ parameters + ')</th>\n')
+                                      len(results[0][4].keys()) - 
+                                      len(hidden)) 
+               +'">Parameters ('+ parameters + ')</th>\n')
         f.write('\t<th colspan="'+ str(len(results[0][2].keys())) 
-                +'">Experiments</th>\n')
+               +'">Experiments</th>\n')
+        f.write('</table>\n')
+        f.write('<table border="1" class="sortable">\n')
         #=======================================================================
         # write the parameter names
         #=======================================================================
         f.write('\t<tr>\n')
         for param in results[0][3]:
             if param not in hidden:
-                f.write('\t\t<td>' + param + '</td>\n')
+                f.write('\t\t<th>' + param + '</th>\n')
         for datum in results[0][4]:
-            f.write('\t\t<td>' + datum + '</td>\n')
+            f.write('\t\t<th>' + datum + '</th>\n')
         #=======================================================================
         # write the algorithm names
         #=======================================================================
         for algorithm in sorted(results[0][2]):
-            f.write('\t\t<td>' + algorithm + '</td>\n')
+            f.write('\t\t<th>' + algorithm + '</th>\n')
         f.write('\t</tr>\n')
         #=======================================================================
         # write the numerical results
