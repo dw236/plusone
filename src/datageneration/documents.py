@@ -197,7 +197,7 @@ def write(data, args):
             f.write(str("-plsi"))
     with open(dir + '/documents_other-out', 'w') as f:
         sig_words = np.average(util.get_sig_words(words))
-        f.write('sig words ' + str(sig_words) + '\n')
+        f.write('sig_words ' + str(sig_words) + '\n')
         sum_squares = np.average([sum([topic**2 for topic in doc]) \
                                   for doc in topics])
         f.write('sum_squares ' + str(sum_squares) + '\n')
