@@ -201,7 +201,8 @@ def write(data, args):
         sum_squares = np.average([sum([topic**2 for topic in doc]) \
                                   for doc in topics])
         f.write('sum_squares ' + str(round(sum_squares, 2)) + '\n')
-        med = np.median([i[0].dot(i[1]) \
+        med = np.median([i[0].dot(i[1]) / (np.sqrt(i[1].dot(i[1])) * \
+                                           np.sqrt(i[0].dot(i[0]))) \
                                 for i in itertools.combinations(words, 2)])
         if round(med, 2) == 0:
             med = format(med, ".2e")
