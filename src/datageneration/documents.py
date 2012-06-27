@@ -9,13 +9,14 @@ from random import sample as rsample
 
 import numpy as np
 from numpy.random.mtrand import dirichlet
+from numpy.random.mtrand import multivariate_normal as N
 
 import util
 from util import *
 
 def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
-                  alpha=0.001, beta=0.01, noise=-1, plsi=False):
-    """Generates documents according to plsi or lda
+                  alpha=0.001, beta=0.01, noise=-1, plsi=False, ctm=False):
+    """Generates documents according to plsi, ctm, or lda
     
     Args:
         num_topics: 
@@ -31,17 +32,21 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         ---------------------
         Assumes symmetric dirichlet distributions (ie all elements in the
         parameter vector have the same value)
-        ---------------------
+        
         alpha: 
             parameter to dirichlet distribution for topics
         beta: 
             parameter to dirichlet distribution for words
+        ---------------------
         noise: 
             given as a probability; each word will be replaced with a random
             word with noise probability
         plsi:
-            flag to determine which distribution to draw from,
-            a random distribution or a sample from a dirichlet distribution
+            flag to draw distributions according to plsi (ie random 
+            distributions)
+        ctm:
+            flag to draw distributions according to ctm (ie a multivariate
+            gaussian distribution) 
             
     Returns:
         docs:
@@ -57,12 +62,18 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
             the distribution over topics for each document;
             each row is the distribution for a different document
     """
+    mu = np.zeros(num_topics)
+    sigma = np.ones((num_topics, num_topics))
+    
+    if plsi and ctm:
+        print "plsi and ctm flags cannot both be active (returning None)"
+        return 
     p = Poisson(words_per_doc)
     
     alpha = [alpha] * num_topics
     beta = [beta] * vocab_size
 
-    if plsi:
+    if plsi or ctm:
         word_dist = [normalize([rand() for w in range(vocab_size)])
                      for t in range(num_topics)]
     else:
@@ -83,6 +94,9 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         doc = []
         if plsi:
             topic_dist = normalize([rand() for t in range(num_topics)])
+        elif ctm:
+            eta = N(mu, sigma)
+            topic_dist = np.exp(eta) / np.sum(np.exp(eta))
         else:
             topic_dist = dirichlet(alpha)
         topic_dists.append(topic_dist)
@@ -143,6 +157,10 @@ def write(data, args):
     """
     docs, doc_topics, words, topics = data
     
+    if args.plsi and args.ctm:
+        print "plsi and ctm flags cannot both be active (returning None)"
+        return None
+    
     dir = 'output/'
     dir += "k" + str(args.k) + "."
     dir += "n" + str(args.n) + "."
@@ -155,6 +173,8 @@ def write(data, args):
         dir += "s" + str(args.s) + "."
     if args.plsi:
         dir += "plsi"
+    if args.ctm:
+        dir += "ctm"
     if dir[-1] == '.':
         dir = dir[:-1]
     try:
@@ -240,8 +260,14 @@ def main():
                         randomly (0)")
     parser.add_argument('-plsi', action="store_true", default=False,
                         help="flag to use plsi instead of lda (false)")
+    parser.add_argument('-ctm', action="store_true", default=False,
+                        help="flag to use ctm instead of lda (false)")
     
     args = parser.parse_args()
+    
+    if args.plsi and args.ctm:
+        print "both -plsi and -ctm flags cannot be active (returning None)"
+        return None
     
     print ""
     print "generating documents with parameters:"
@@ -249,11 +275,12 @@ def main():
     print "n    = ", args.n, "(number of documents)"
     print "l    = ", args.l, "(average number of words)"
     print "m    = ", args.m, "(size of vocabulary)"
-    if not args.plsi:
+    if not args.plsi and not args.ctm:
         print "a    = ", args.a, "(topics dirichlet parameter)"
         print "b    = ", args.b, "(words dirichlet parameter)"
     print "s    = ", args.s, "(noise probability)"
-    print "plsi = ", args.plsi, "(whether to draw from plsi or lda model)"
+    print "plsi = ", args.plsi, "(whether to draw from plsi)"
+    print "ctm =  ", args.ctm, "(whether to draw from ctm)"
     print ""
     
     if args.s == 0:
@@ -262,7 +289,7 @@ def main():
         noise = args.s
     
     data = generate_docs(args.k, args.n, args.l, args.m, args.a, args.b,
-                         noise=noise, plsi=args.plsi)
+                         noise=noise, plsi=args.plsi, ctm=args.ctm)
     if args.w:
         print "writing data to file...",
         write(data, args)
