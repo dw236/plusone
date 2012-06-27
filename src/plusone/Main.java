@@ -175,7 +175,10 @@ public class Main {
 			ArrayList<String> paramNames = new ArrayList<String>();
 			ArrayList<Double> data = new ArrayList<Double>();
 			ArrayList<String> dataNames = new ArrayList<String>();
-			if (synthetic) {
+			JSONObject dataList = new JSONObject();
+			JSONObject parameters = new JSONObject();
+			//Deals with parameters/data. Somewhat messy at the moment
+			if (!generator.equals("")) {
 				File documentsOptionsOut = null, documentsOtherOut = null;
 				if (generator.equals("lda")) {
 					documentsOptionsOut = new File(
@@ -209,7 +212,6 @@ public class Main {
 					}
 				}
 				outName = tmpOutName.toString();
-				JSONObject dataList = new JSONObject();
 				if (generator.equals("lda")) {
 					//Put the information from documents_other-out into data[]
 					Scanner lines = null;
@@ -227,7 +229,6 @@ public class Main {
 						dataList.put(dataNames.get(i), data.get(i));
 					}
 				}
-				JSONObject parameters = new JSONObject();
 				for (int i = 0; i < params.size(); i++) {
 					if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
 						parameters.put(paramNames.get(i), params.get(i));
@@ -235,13 +236,12 @@ public class Main {
 						parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
 					}
 				}
-				json.put("parameters", parameters);
-				json.put("data", dataList);
 			} else {
 				Date date = new Date();
 				outName = date.getTime() + ".";
 			}
-			
+			json.put("parameters", parameters);
+			json.put("data", dataList);
 			
 			JSONArray tests = new JSONArray();
 			for (int i = 0; i < twpNames.length; i++) {
