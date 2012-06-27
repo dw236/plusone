@@ -8,6 +8,8 @@
 lib/lda-c-dist/data
 lda/*
 hlda/*
+ctm/*
+GibbsLDA/*
 /lib/*.jar
 /lib/jars/*.jar
 .DS_Store

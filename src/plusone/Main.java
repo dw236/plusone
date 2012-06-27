@@ -19,7 +19,9 @@ import plusone.utils.LocalCOSample;
 import plusone.clustering.Baseline;
 import plusone.clustering.ClusteringTest;
 import plusone.clustering.CommonNeighbors;
+import plusone.clustering.Ctm;
 import plusone.clustering.DTRandomWalkPredictor;
+import plusone.clustering.GibbsLda;
 import plusone.clustering.Hlda;
 import plusone.clustering.KNN;
 import plusone.clustering.KNNLocalSVDish;
@@ -375,6 +377,26 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				hlda = new Hlda(trainingSet, wordIndexer, terms);
 				runClusteringMethod(hlda, ks, size, true);
+			}
+		}
+		//GibbsLda
+		GibbsLda gibbs = null;
+		if (testIsEnabled("gibbsLda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(gibbs, ks, size, true);
+			}
+		}
+		//CTM
+		Ctm ctm = null;
+		if (testIsEnabled("ctm")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				ctm = new Ctm(trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(ctm, ks, size, true);
 			}
 		}
 		// KNNSVDish
