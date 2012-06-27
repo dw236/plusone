@@ -1,7 +1,10 @@
 """
-hierarchical LDA document generator (from journal version of paper: infinite trees)
-based on
-"The Nested Chinese Restaurant Process and Bayesian Nonparametric Inference of Topic Hierarchies"
+hierarchical LDA document generator (from journal version of paper: infinite 
+trees)
+
+Based on
+"The Nested Chinese Restaurant Process and Bayesian Nonparametric Inference of 
+Topic Hierarchies"
 by Blei, Griffiths and Jordan
 JACM 2010
 """
@@ -63,7 +66,8 @@ class Topic_node:
 
     def dump_indented(self, f, first_prefix, rest_prefix):
         f.write(first_prefix)
-        f.write(str(self.num_documents) + "; " + show_dist(self.word_dist) + "\n")
+        f.write(str(self.num_documents) + "; " + show_dist(self.word_dist) + 
+                "\n")
         child_first_prefix = rest_prefix + "+"
         child_rest_prefix = rest_prefix + "|"
         for child in self.children:
@@ -118,7 +122,9 @@ def generate_one_doc_with_hlda(topic_root, params):
         words.append(word)
     return words, stay_probs, path_indices
 
-def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size, topic_to_word_beta, topic_dist_m, topic_dist_pi, new_child_gamma):
+def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size, 
+                            topic_to_word_beta, topic_dist_m, topic_dist_pi, 
+                            new_child_gamma):
     params = {}
     params["topic_to_word_param"] = [topic_to_word_beta] * vocab_size
     params["words_per_doc_distribution"] = util.Poisson(words_per_doc)
@@ -177,8 +183,8 @@ def write(data, args):
         pickle.dump(data, f)
 
 def main():
-    parser = argparse.ArgumentParser(description="Document generator for hierarchical LDA. Default\
-    parameters are noted in parentheses.")
+    parser = argparse.ArgumentParser(description="Document generator for \
+    hierarchical LDA. Default parameters are noted in parentheses.")
     parser.add_argument('-w', action="store_true", default=False,
                         help="write flag (false)")
     parser.add_argument('-n', action="store", metavar='num_docs', type=int,
@@ -193,9 +199,11 @@ def main():
     parser.add_argument('-z', action="store", type=float, default=0.25,
                         help="mean probability of not descending to a child")
     parser.add_argument('-p', action="store", type=float, default=1.0,
-                        help="inflexibility in probability of not descending to a child")
+                        help="inflexibility in probability of not descending \
+                        to a child")
     parser.add_argument('-g', action="store", type=float, default=1.0,
-                        help="tendancy to create a new child (gamma in Chinese Restaurant Process)")
+                        help="tendancy to create a new child \
+                        (gamma in Chinese Restaurant Process)")
     
     args = parser.parse_args()
     
@@ -221,4 +229,4 @@ def main():
     return data
 
 if __name__ == '__main__':
-    docs = main()
+    documents, topic_root, topic_stay_probs, topic_paths = main()

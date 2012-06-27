@@ -29,3 +29,5 @@ data/documents-out.json
 src/datageneration/script.py
 
 data/test.html
+
+lib/ctm-dist/ctm
