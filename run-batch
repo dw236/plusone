@@ -88,14 +88,14 @@ do
                             datageneration/MakeJSON hldaj-documents-out false
 
                             #Run the test
-                            ./test data/hldaj-documents-out.json true $generator
+                            ./test data/hldaj-documents-out.json $generator
                             ;;
                         lda)
                             python documents.py -w -k $k -n $n -l $l -m $m -a $a \
                             -b $b
                             java -classpath bin:lib/jars/json.jar \
                             datageneration/MakeJSON documents-out false
-                            ./test data/documents-out.json true $generator
+                            ./test data/documents-out.json $generator
                             ;;
                         esac
                     done

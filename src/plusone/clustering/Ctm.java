@@ -146,7 +146,11 @@ public class Ctm extends ClusteringTest {
 		return results;
 	}
 
-	
+	/**
+	 * Identical to createLdaInput
+	 * @param filename
+	 * @param papers
+	 */
 	private void createCtmInput(String filename, List<TrainingPaper> papers){
 		System.out.print("creating ctm input in file: " + filename + " ... ");
 
@@ -166,6 +170,11 @@ public class Ctm extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
+	/**
+	 * Identical to createLdaInputTest
+	 * @param filename
+	 * @param papers
+	 */
 	private void createCtmInputTest(String filename, List<PredictionPaper> papers) {
 
 		System.out.print("creating ctm input in file: " + filename + " ... ");

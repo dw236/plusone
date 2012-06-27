@@ -190,7 +190,7 @@ public class Main {
 							"src/datageneration/output/hldaj-documents_options-out");
 				}
 						
-				//Put the information from documents_options-out into params[]
+				//Put the information from documents_options-out into params
 				Scanner line = null;
 				try {
 					line = new Scanner(new FileInputStream(documentsOptionsOut));
@@ -213,7 +213,7 @@ public class Main {
 				}
 				outName = tmpOutName.toString();
 				if (generator.equals("lda")) {
-					//Put the information from documents_other-out into data[]
+					//Put the information from documents_other-out into data
 					Scanner lines = null;
 					try {
 						lines = new Scanner(new FileInputStream(documentsOtherOut));
