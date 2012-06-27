@@ -72,7 +72,7 @@ public class Main {
 	
 	private double ldaPerplexity;
 	
-	private static boolean synthetic;
+	private static String generator;
 
 	private static int FOLD; // cross validation parameter
 	private static DatasetJSON dataset;
@@ -176,10 +176,17 @@ public class Main {
 			ArrayList<Double> data = new ArrayList<Double>();
 			ArrayList<String> dataNames = new ArrayList<String>();
 			if (synthetic) {
-				File documentsOptionsOut = new File(
-						"src/datageneration/output/documents_options-out");
-				File documentsOtherOut = new File(
-						"src/datageneration/output/documents_other-out");
+				File documentsOptionsOut = null, documentsOtherOut = null;
+				if (generator.equals("lda")) {
+					documentsOptionsOut = new File(
+							"src/datageneration/output/documents_options-out");
+					documentsOtherOut = new File(
+							"src/datageneration/output/documents_other-out");
+				} else if (generator.equals("hlda")) {
+					documentsOptionsOut = new File(
+							"src/datageneration/output/hldaj-documents_options-out");
+				}
+						
 				//Put the information from documents_options-out into params[]
 				Scanner line = null;
 				try {
@@ -202,17 +209,23 @@ public class Main {
 					}
 				}
 				outName = tmpOutName.toString();
-				//Put the information from documents_other-out into data[]
-				Scanner lines = null;
-				try {
-					lines = new Scanner(new FileInputStream(documentsOtherOut));
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				while (lines.hasNextLine()) {
-					String[] nameAndValue = lines.nextLine().split(" ");
-					dataNames.add(nameAndValue[0]);
-					data.add(Double.parseDouble(nameAndValue[1]));
+				JSONObject dataList = new JSONObject();
+				if (generator.equals("lda")) {
+					//Put the information from documents_other-out into data[]
+					Scanner lines = null;
+					try {
+						lines = new Scanner(new FileInputStream(documentsOtherOut));
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+					while (lines.hasNextLine()) {
+						String[] nameAndValue = lines.nextLine().split(" ");
+						dataNames.add(nameAndValue[0]);
+						data.add(Double.parseDouble(nameAndValue[1]));
+					}
+					for (int i = 0; i < data.size(); i++) {
+						dataList.put(dataNames.get(i), data.get(i));
+					}
 				}
 				JSONObject parameters = new JSONObject();
 				for (int i = 0; i < params.size(); i++) {
@@ -223,11 +236,6 @@ public class Main {
 					}
 				}
 				json.put("parameters", parameters);
-				
-				JSONObject dataList = new JSONObject();
-				for (int i = 0; i < data.size(); i++) {
-					dataList.put(dataNames.get(i), data.get(i));
-				}
 				json.put("data", dataList);
 			} else {
 				Date date = new Date();
@@ -737,8 +745,7 @@ public class Main {
 
 		long randSeed = 
 				new Long(System.getProperty("plusone.randomSeed", "0"));
-		
-		synthetic = Boolean.getBoolean("plusone.synthetic");
+		generator = System.getProperty("plusone.generator");
 
 		randGen = new Random(randSeed);
 		metadataLogger = new MetadataLogger();

@@ -25,10 +25,10 @@ echo $userdata
 #   cd $basedir
 #fi
 
-#flag for synthetic data
-synthetic=false
+#takes in name of generator for synthetic data
+generator=""
 if [ "$2" ];then
-    synthetic=$2
+    generator=$2
 fi
 
 out_dir=.
@@ -47,7 +47,7 @@ args=\
  -Dplusone.crossValidation.run=false \
  -Dplusone.testWordPercents=0.3 \
  -Dplusone.trainPercents=0.9\
- -Dplusone.synthetic=$synthetic \
+ -Dplusone.generator=$generator \
  -Dplusone.kValues=3 \
  -Dplusone.closestKValues=5,10,15 \
  -Dplusone.closestKSVDishValues=5,10,25,50,100,250,500 \
@@ -72,8 +72,8 @@ args=\
  -Dplusone.lda.dimensions=15
  -Dplusone.enableTest.localCO=false \
  -Dplusone.enableTest.lda=true \
- -Dplusone.enableTest.ldaTrained=$synthetic \
- -Dplusone.enableTest.ldaCheat=$synthetic \
+ -Dplusone.enableTest.ldaTrained=[$generator=="lda"] \
+ -Dplusone.enableTest.ldaCheat=[$generator=="lda"] \
  -Dplusone.enableTest.hlda=false \
  -Dplusone.enableTest.ctm=false \
  -Dplusone.enableTest.gibbsLda=false \

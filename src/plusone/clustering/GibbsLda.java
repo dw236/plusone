@@ -147,7 +147,7 @@ public class GibbsLda extends ClusteringTest {
 
 		for (TrainingPaper paper : papers) {
 			for (int word : paper.getTrainingWords()) {
-				fileWriter.write(word + "a ");
+				fileWriter.write(word+"");
 			}
 			fileWriter.write("\n");
 		}
