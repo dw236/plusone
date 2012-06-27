@@ -17,10 +17,11 @@ def generate_html(dir):
     print "processed", files_found, "files"
     with open('data/test.html', 'w') as f:
         universals = ['k', 'n', 'l', 'm']
-        hidden = ['a', 'b'] + universals
+        hidden = universals + ['a', 'b']
         parameters = ""
         for option in universals:
-            parameters += option + "=" + str(results[0][3][option]) + ", "
+            if results[0][3].has_key(option):
+                parameters += option + "=" + str(results[0][3][option]) + ", "
         parameters = parameters[:-2]
         f.write('<script src="sorttable.js"></script>\n')
         f.write('<table border="1">\n')

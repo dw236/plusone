@@ -213,11 +213,15 @@ public class Lda extends ClusteringTest {
 	
 	private void cheat() {
 		System.out.print("replacing trained beta with real beta...");
+		System.out.print("saving trained beta as 'trained_final.beta'...");
+		Utils.runCommand("mv lda/final.beta lda/trained_final.beta", false);
 		Utils.runCommand("cp src/datageneration/output/final.beta " +
 				"lda", false);
 		System.out.println("done.");
 		
 		System.out.print("replacing trained gammas with real gammas...");
+		System.out.print("saving trained gammas as 'trained_final.gamma'...");
+		Utils.runCommand("mv lda/final.gamma lda/trained_final.gamma", false);
 		try {
 			FileInputStream fstream = new FileInputStream("src/" +
 					"datageneration/output/final.gamma");
