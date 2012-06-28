@@ -3,6 +3,10 @@ import argparse
 import src.datageneration.util as util
 import parse_output
 
+#globals
+universals = ['k', 'n', 'l', 'm']
+hidden = universals + ['a', 'b']
+
 def generate_html(dir):
     filenames = os.listdir(dir)
     results = []
@@ -16,14 +20,17 @@ def generate_html(dir):
             continue
     print "processed", files_found, "files"
     with open('data/test.html', 'w') as f:
-        universals = ['k', 'n', 'l', 'm']
-        hidden = universals + ['a', 'b']
-        parameters = ""
-        for option in universals:
-            if results[0][3].has_key(option):
-                parameters += option + "=" + str(results[0][3][option]) + ", "
-        parameters = parameters[:-2]
         f.write('<script src="sorttable.js"></script>\n')
+        write_table(f, results)
+    return results
+
+def write_table(file_object, results):
+    parameters = "" 
+    for option in universals:
+        if results[0][3].has_key(option):
+            parameters += option + "=" + str(results[0][3][option]) + ", "
+    parameters = parameters[:-2]
+    with file_object as f:
         f.write('<table border="1">\n')
         f.write('\t<th colspan="'+ str(len(results[0][3].keys()) + 
                                       len(results[0][4].keys()) - 
@@ -63,7 +70,6 @@ def generate_html(dir):
                 f.write('\t\t<td>' + str(round(score, 2)) + '</td>\n')
             f.write('\t</tr>\n')
         f.write('</table>')
-    return results
 
 def main():
     parser = argparse.ArgumentParser(description="reads all json files in a \
