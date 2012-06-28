@@ -6,21 +6,24 @@ TEST = 'tests'
 PARAMS = 'parameters'
 DATA = 'data'
 
-def parse(filename, table=False, show=False, external=True):
-    """
+def parse(filename, show=False, external=True):
+    """@TODO
     Assumes json file is of the form: 
-    dict with two entries: 'tests', which is a one-element list of dicts, and
-    'parameters', which is a dict of parameters used to generate the data
-    (only for synthetic datasets)
+    dict with three entries: 'tests', which is a one-element list of dicts,
+    'parameters', which is a dict of parameters used to generate the data,
+    and 'data', a dict of relevant statistics regarding the model used to
+    generate the data.
+    In the case of real data, 'parameters' and 'data' will be empty dicts.
+    
     For 'tests':
     The inner dict has experiment names as the keys and dicts with various
     performance metrics as values
     
     Args:
         external:
-            flag for whether this function is being called from the command 
-            line (set this to False if you want to call it from another python
-            script)
+            flag for whether this function is being called directly from 
+            the command line (ie it is being called by main() below); 
+            set this to False if you want to call it from anywhere else
     
     """
     with open(filename, 'r') as f:
@@ -34,14 +37,13 @@ def parse(filename, table=False, show=False, external=True):
     
     if external:
         util.plot_dist(scores, labels=names)
-        if table:
-            """so hacky I don't even want to talk about it"""
-            data_info = make_table()
-            sig_words, sum_squares, num_docs, avg_words = data_info
-            util.plot(0, label='sig_words: ' + str(round(sig_words, 2)))
-            util.plot(0, label='sum_squares: ' + str(round(sum_squares, 2)))
-            util.plot(0, label='num_docs: ' + str(int(num_docs)))
-            util.plot(0, label='avg_words: ' + str(round(avg_words, 2)))
+        if data[DATA]:
+            sig_words = data[DATA]['sig_words'] 
+            sum_squares = data[DATA]['sum_squares']
+            median = data[DATA]['median']
+            util.plot(0, label='sig_words: ' + str(sig_words))
+            util.plot(0, label='sum_squares: ' + str(sum_squares))
+            util.plot(0, label='median: ' + str(median))
             util.legend(loc='best')
            
         if show:
@@ -51,19 +53,11 @@ def parse(filename, table=False, show=False, external=True):
     
     return names, scores, data[TEST][0], data[PARAMS], data[DATA]
 
-def make_table():
-    with open('src/datageneration/output/documents_other-out', 'r') as f:
-        data = f.readlines()
-    data = [float(line.strip(' \n')) for line in data]
-    return data
-
 def main():
     parser = argparse.ArgumentParser(description="reads a json file and plots\
     its constituent data")
     parser.add_argument('f', metavar='filename', action="store", 
                         help="json file to be read")
-    parser.add_argument('-s', action="store_true", default=False, 
-                        help="flag for if synthetic data was used")
     parser.add_argument('-q', action="store_true", default=False, 
                         help="flag to suppress writing to file")
     
@@ -72,7 +66,7 @@ def main():
     if args.q:
         print "not writing to file and instead displaying plot with console"
         
-    return parse(args.f, args.s, args.q)
+    return parse(args.f, show=args.q)
 
 if __name__ == '__main__':
     data = main()

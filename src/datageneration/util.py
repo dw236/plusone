@@ -191,6 +191,22 @@ def count(words):
     return word_count
 
 def get_sig_words(word_dists, amount=0.8):
+    """calculates the number of significant elements in a distribution
+    
+    Given a distribution, calculates the number of elements (sorted by
+    decreasing probability, so the most likely element is first) that comprise
+    a specified percentage of the cdf.
+    
+    Args:
+        word_dists:
+            a list of distributions
+        amount:
+            percentage of cdf to calculate significant elements
+            
+    Returns:
+        a list, where each element corresponds to how many elements in that
+        distribution contribute "amount" percent of the cdf in that distribution
+    """
     word_cdfs = [get_cdf(sorted(dist, reverse=1)) for dist in word_dists]
     sig_words = []
     for topic in word_cdfs:
@@ -275,6 +291,24 @@ def perplexity(docs, probabilities, indices=None, holdout=0.7):
     return perp
 
 def get_probabilities(pickle_file):
+    """Calculates the full NxM word distribution per document
+    
+    Given a file containing the model parameters used to generate a dataset,
+    calculates the probability for words in each document by multiplying the
+    topic distribution per document (a NxK matrix) by the word distribution
+    per topic (a KxM matrix).
+    
+    Args:
+        pickle_file:
+            Name of the file to load data from; if it is a .pickle file, unpacks
+            the relevant values and computes the resulting matrix. Otherwise,
+            assumes a text file reads the entries from it.
+    
+    Returns:
+        an NxM matrix, where each entry is the probability of a word given a
+        document (the document is specified by the row, and the word is
+        specified by the column) 
+    """
     if len(pickle_file) >= 6 and pickle_file[-6:] != "pickle":
         with open('src/datageneration/output/documents_model-out', 'r') as f:
             v = False
@@ -298,10 +332,30 @@ def get_probabilities(pickle_file):
     
     return probabilities
 
-def write_cheats(data, alpha):
+def write_cheats(data, alpha, dir):
+    """writes files that will help lda cheat (replaces the files in lda/)
+    
+    Writes the three files to replace the three that lda-c-dist creates 
+    after training and inference. Used to cheat by giving the prediction task
+    the true model parameters instead of the learned ones.
+    
+    Note: this code does not replace the files; it only creates the files so
+    that they can be used to replace lda's files later.
+    
+    Args:
+        data:
+            tuple containing all the information returned by 
+            documents.generate_documents
+        alpha:
+            parameter to the dirichlet controlling topic distributions
+        dir:
+            directory to write the files (to be copied later)
+    Returns:
+        none, but writes three files to be used later
+    """
     docs, doc_topics, words, topics = data
     
-    with open('output/final.gamma', 'w') as f:
+    with open(dir + '/final.gamma', 'w') as f:
         gammas = [count(topic) for topic in doc_topics]
         for doc in range(len(docs)):
             for topic in range(len(topics[0])):
@@ -310,14 +364,14 @@ def write_cheats(data, alpha):
                 else:
                     f.write("0 ")
             f.write('\n') 
-    with open('output/final.other', 'w') as f:
+    with open(dir + '/final.other', 'w') as f:
         num_topics = len(words)
         num_terms = len(topics)
         to_write = "num_topics " + str(num_topics) + "\n" 
         to_write += "num_terms " + str(num_terms) + "\n" 
         to_write += "alpha " + str(alpha) + "\n"  
         f.write(to_write)
-    with open('output/final.beta', 'w') as f:
+    with open(dir + '/final.beta', 'w') as f:
         noise = 1e-323
         for topic in words:
             for word in topic:

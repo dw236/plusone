@@ -126,6 +126,8 @@ def write(data, args):
     Also dumps to a pickle file for future reading in python.
     The files can be found in a directory with the options used to generate the
     data.
+    Lastly, copies files to outer-most directory for access by external methods.
+    @todo: write_cheats
     
     Returns:
         none, but writes four text files and one pickle file
@@ -147,9 +149,7 @@ def write(data, args):
             -number of words that constitute 80% of the cdf for each word 
             distribution by topic (separated by spaces)
             -sum of squares for each topic distribution (separated by spaces)
-            -number of documents
-            -words per document (separated by spaces)
-            -average of the dot product between word distributions by topic
+            -median of the cosine of pairwise word distributions (per topic)
         each value listed is separated a newline character
     results.pickle:
         file containing the documents, the topic*word distributions, and the
@@ -231,10 +231,10 @@ def write(data, args):
         f.write('median ' + str(med) + '\n')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
-    os.system("cp " + dir + "/* output")
     if not args.plsi:
         print "writing cheats for lda...",
-        util.write_cheats(data, args.a)
+        util.write_cheats(data, args.a, dir)
+    os.system("cp " + dir + "/* output")
 
 def main():
     parser = argparse.ArgumentParser(description="Document generator. Default\

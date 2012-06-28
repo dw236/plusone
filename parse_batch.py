@@ -4,8 +4,8 @@ import src.datageneration.util as util
 import parse_output
 
 #globals
-universals = ['k', 'n', 'l', 'm']
-hidden = universals + ['a', 'b']
+UNIVERSALS = ['k', 'n', 'l', 'm']
+HIDDEN = UNIVERSALS + ['a', 'b']
 
 def generate_html(dir):
     filenames = os.listdir(dir)
@@ -14,8 +14,9 @@ def generate_html(dir):
     for filename in filenames:
         if "experiment" in filename and filename[-5:] == ".json":
             files_found += 1
-            results.append(parse_output.parse(dir + '/' + filename, 
-                                              external=False))
+            #TODO: split different results into different lists
+            result = parse_output.parse(dir + '/' + filename, external=False)
+            results.append(result)
         else:
             continue
     print "processed", files_found, "files"
@@ -26,7 +27,7 @@ def generate_html(dir):
 
 def write_table(file_object, results):
     parameters = "" 
-    for option in universals:
+    for option in UNIVERSALS:
         if results[0][3].has_key(option):
             parameters += option + "=" + str(results[0][3][option]) + ", "
     parameters = parameters[:-2]
@@ -34,7 +35,7 @@ def write_table(file_object, results):
         f.write('<table border="1">\n')
         f.write('\t<th colspan="'+ str(len(results[0][3].keys()) + 
                                       len(results[0][4].keys()) - 
-                                      len(hidden)) 
+                                      len(HIDDEN)) 
                +'">Parameters ('+ parameters + ')</th>\n')
         f.write('\t<th colspan="'+ str(len(results[0][2].keys())) 
                +'">Experiments</th>\n')
@@ -45,7 +46,7 @@ def write_table(file_object, results):
         #=======================================================================
         f.write('\t<tr>\n')
         for param in results[0][3]:
-            if param not in hidden:
+            if param not in HIDDEN:
                 f.write('\t\t<th>' + param + '</th>\n')
         for datum in results[0][4]:
             f.write('\t\t<th>' + datum + '</th>\n')
@@ -61,7 +62,7 @@ def write_table(file_object, results):
         for result in results:
             f.write('\t<tr>\n')
             for param in result[3]:
-                if param not in hidden:
+                if param not in HIDDEN:
                     f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
             for datum in result[4]:
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
