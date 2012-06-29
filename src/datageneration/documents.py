@@ -8,7 +8,6 @@ from random import random as rand
 from random import sample as rsample
 
 import numpy as np
-from numpy.random.mtrand import poisson
 from numpy.random.mtrand import dirichlet
 from numpy.random.mtrand import multivariate_normal as N
 
@@ -16,7 +15,7 @@ import util
 from util import *
 
 def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
-                  alpha=0.001, beta=0.01, noise=-1, plsi=False, ctm=False):
+                  alpha=None, beta=None, noise=-1, plsi=False, ctm=False):
     """Generates documents according to plsi, ctm, or lda
     
     Args:
@@ -29,15 +28,27 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
             determines the average words in a documents
         vocab_size: 
             the number of words in the vocabulary
-        DIRICHLET PARAMETERS
+        DISTRIBUTION PARAMETERS
         ---------------------
-        Assumes symmetric dirichlet distributions (ie all elements in the
-        parameter vector have the same value)
+        depending on which model, alpha and beta are parameters to different
+        distributions
         
-        alpha: 
-            parameter to dirichlet distribution for topics
-        beta: 
-            parameter to dirichlet distribution for words
+        LDA: Assumes symmetric dirichlet distributions (ie all elements in the
+        parameter vector have the same value)
+            alpha: 
+                parameter to dirichlet distribution for topics
+            beta: 
+                parameter to dirichlet distribution for words
+            
+        PLSI:
+            alpha:
+                parameter to poisson distribution to determine the number of
+                topics per document (each topic will have uniform
+                probability; all other topics will have probability 0)
+            beta:
+                as alpha, but poisson distribution instead controls the number
+                of words per topic (each word will have uniform
+                probability; all other words will have probability 0)
         ---------------------
         noise: 
             given as a probability; each word will be replaced with a random
@@ -63,6 +74,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
             the distribution over topics for each document;
             each row is the distribution for a different document
     """
+    #@TODO: integrate ctm parameters (ie mu and sigma) into alpha and beta
     mu = np.zeros(num_topics)
     sigma = np.ones((num_topics, num_topics))
     
@@ -70,14 +82,16 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         print "plsi and ctm flags cannot both be active (returning None)"
         return None
     
-    alpha = [alpha] * num_topics
-    beta = [beta] * vocab_size
+    if not plsi and not ctm:
+        alpha = [alpha] * num_topics
+        beta = [beta] * vocab_size
 
     if plsi or ctm:
-        a = Poisson(alpha)
-        sig_words = a.sample()
-        word_dist = [normalize([rand() for w in range(vocab_size)])
+        sig_words = [rsample(range(vocab_size), util.poisson(beta, vocab_size))\
                      for t in range(num_topics)]
+        word_dist = [np.zeros(vocab_size) for t in range(num_topics)]
+        for i in range(num_topics):
+            word_dist[i][sig_words[i]] = 1.0 / len(sig_words[i])
     else:
         word_dist = [dirichlet(beta) for i in range(num_topics)]
     word_cdfs = []
@@ -92,10 +106,13 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     for i in range(num_docs):
         if doc_index % 100 == 0:
             print "reached document", doc_index
-        words_per_doc = poisson(words_per_doc)
+        words_per_doc = util.poisson(words_per_doc, vocab_size)
         doc = []
         if plsi:
-            topic_dist = normalize([rand() for t in range(num_topics)])
+            sig_topics = rsample(range(num_topics), 
+                                 util.poisson(alpha, num_topics))
+            topic_dist = np.zeros(num_topics)
+            topic_dist[sig_topics] = 1.0 / len(sig_topics)
         elif ctm:
             eta = N(mu, sigma)
             topic_dist = np.exp(eta) / np.sum(np.exp(eta))
@@ -128,8 +145,8 @@ def write(data, args):
     Also dumps to a pickle file for future reading in python.
     The files can be found in a directory with the options used to generate the
     data.
-    Lastly, copies files to outer-most directory for access by external methods.
-    @todo: write_cheats
+    Lastly, writes files to help lda cheat (see util.write_cheats), then copies
+    all files to outer-most directory for access by external methods.
     
     Returns:
         none, but writes four text files and one pickle file
@@ -168,9 +185,8 @@ def write(data, args):
     dir += "n" + str(args.n) + "."
     dir += "l" + str(args.l) + "."
     dir += "m" + str(args.m) + "."
-    if not args.plsi:
-        dir += "a" + str(args.a) + "."
-        dir += "b" + str(args.b) + "."
+    dir += "a" + str(args.a) + "."
+    dir += "b" + str(args.b) + "."
     if args.s != 0:
         dir += "s" + str(args.s) + "."
     if args.plsi:
@@ -244,19 +260,22 @@ def main():
     parser.add_argument('-w', action="store_true", default=False,
                         help="write flag (false)")
     parser.add_argument('-k', action="store", metavar='num_topics', type=int,
-                        default=4, help="number of latent topics (4)")
+                        default=10, help="number of latent topics (10)")
     parser.add_argument('-n', action="store", metavar='num_docs', type=int,
-                        default=20, help="number of documents to generate (20)")
+                        default=100, help="number of documents to generate \
+                        (100)")
     parser.add_argument('-l', action="store", type=int, default=50, 
                         help="average number of words per document (50)")
-    parser.add_argument('-m', action="store", type=int, default=30,
-                        help="size of the vocabulary (30)")
+    parser.add_argument('-m', action="store", type=int, default=100,
+                        help="size of the vocabulary (100)")
     parser.add_argument('-a', action="store", metavar='alpha', 
-                        type=float, default=0.1, 
-                        help="dirichlet parameter for topics (0.1)")
+                        type=float,  
+                        help="dirichlet parameter for topics (0.1 for lda, \
+                        3 for plsi)")
     parser.add_argument('-b', action="store", metavar='beta', 
-                        type=float, default=0.01, 
-                        help="dirichlet parameter for words (0.01)")
+                        type=float, 
+                        help="dirichlet parameter for words (0.01 for lda, \
+                        5 for plsi)")
     parser.add_argument('-s', action="store", metavar='noise', type=float, 
                         default=0, help="probability each word is generated\
                         randomly (0)")
@@ -271,6 +290,22 @@ def main():
         print "both -plsi and -ctm flags cannot be active (returning None)"
         return None
     
+    if args.plsi:
+        what_is_alpha = "(significant topics poisson parameter)"
+        what_is_beta = "(significant words poisson parameter)"
+        if args.a == None:
+            args.a = 3
+        if args.b == None:
+            args.b = 5
+    
+    if not args.plsi and not args.ctm:
+        what_is_alpha = "(topics dirichlet parameter)"
+        what_is_beta = "(words dirichlet parameter)"
+        if args.a == None:
+            args.a = 0.1
+        if args.b == None:
+            args.b = 0.01
+    
     print ""
     print "generating documents with parameters:"
     print "k    = ", args.k, "(number of topics)"
@@ -278,8 +313,8 @@ def main():
     print "l    = ", args.l, "(average number of words)"
     print "m    = ", args.m, "(size of vocabulary)"
     if not args.plsi and not args.ctm:
-        print "a    = ", args.a, "(topics dirichlet parameter)"
-        print "b    = ", args.b, "(words dirichlet parameter)"
+        print "a    = ", args.a, what_is_alpha
+        print "b    = ", args.b, what_is_beta
     print "s    = ", args.s, "(noise probability)"
     print "plsi = ", args.plsi, "(whether to draw from plsi)"
     print "ctm =  ", args.ctm, "(whether to draw from ctm)"

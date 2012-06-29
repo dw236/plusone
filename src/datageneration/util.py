@@ -1,8 +1,10 @@
 """Contains some useful classes and methods
 """
-import numpy as np
 import operator
 import pickle
+
+import numpy as np
+from numpy.random.mtrand import poisson as p
 
 import math
 from math import e
@@ -13,6 +15,25 @@ from random import random as rand
 
 import matplotlib
 from matplotlib.pyplot import *
+
+def poisson(l, max_val, min_val=1):
+    """samples a poisson distribution, but has a bounded max and min value
+    
+    Args:
+        l:
+            poisson parameter
+        max_val:
+            the maximum value that can be returned (if the sampled number is
+            higher than max_val, max_val is returned)
+        min_val:
+            the minimum value that can be returned (if the sampled number is
+            smaller than min_val, min_val is returned)
+    
+    Returns:
+        a sample p ~ Poisson(l), but is constrained to the range 
+        [min_val, max_val]
+    """
+    return max(1, min(p(l), max_val))
 
 def get_cdf(dist):
     """Calculates the cdf of a distribution.
@@ -289,9 +310,11 @@ def get_probabilities(pickle_file):
                     v = True
                     continue
                 if v:
-                    rgamma.append([float(word) for word in line.strip(' \n').split(' ')])
+                    rgamma.append([float(word) \
+                                   for word in line.strip(' \n').split(' ')])
                 else:
-                    rbeta.append([float(word) for word in line.strip(' \n').split(' ')])
+                    rbeta.append([float(word) \
+                                  for word in line.strip(' \n').split(' ')])
         rbeta = np.matrix(rbeta)
         rgamma = np.matrix(rgamma)
         probabilities = rgamma * rbeta

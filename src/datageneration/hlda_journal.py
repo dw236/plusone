@@ -131,7 +131,8 @@ def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size,
                             new_child_gamma):
     params = {}
     params["topic_to_word_param"] = [topic_to_word_beta] * vocab_size
-    params["words_per_doc_distribution"] = lambda: poisson(words_per_doc)
+    params["words_per_doc_distribution"] = lambda: util.poisson(words_per_doc,
+                                                                vocab_size)
     pta = topic_dist_m * topic_dist_pi
     ptb = topic_dist_pi - pta
     params["parent_topic_bias_sample"] = lambda: beta(pta, ptb)
