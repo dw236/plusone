@@ -1,7 +1,6 @@
 package plusone.clustering;
 
 import plusone.utils.Indexer;
-import plusone.utils.PaperAbstract;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 import plusone.utils.PlusoneFileWriter;
@@ -16,7 +15,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 import org.ejml.simple.SimpleMatrix;
@@ -197,7 +195,9 @@ public class GibbsLda extends ClusteringTest {
 		return Double.parseDouble(splitLine[1]);
 	}
 	
-	/** Maps each index of the returned array to the word it represents
+	/** 
+	 * Maps each index of the returned array to the word it represents.
+	 * wordIndexer.indexOf(wordMap.get(#)) changes from their index to ours
 	 * 
 	 * @param filename path to wordmap.txt
 	 * @return a map from each index as given by the GibbsLda code to each word as

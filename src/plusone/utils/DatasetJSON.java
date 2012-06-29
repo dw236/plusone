@@ -1,7 +1,6 @@
 package plusone.utils;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -130,7 +129,7 @@ public class DatasetJSON {
     
     /**
      * If we have pre-indexed files, initialize the indexer with those indices
-     * @param filename filename path to the JSON file (should be passed from loadDatasetFromPath)
+     * @param filename path to the JSON file (should be passed from loadDatasetFromPath)
      */
     private void initializeIndexer(String filename) {
     	int maxIndex = -1;

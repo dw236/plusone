@@ -1,7 +1,6 @@
 package plusone.clustering;
 
 import plusone.utils.Indexer;
-import plusone.utils.PaperAbstract;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 import plusone.utils.PlusoneFileWriter;
@@ -11,12 +10,9 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 import org.ejml.simple.SimpleMatrix;
 
@@ -148,8 +144,9 @@ public class Ctm extends ClusteringTest {
 
 	/**
 	 * Identical to createLdaInput
-	 * @param filename
-	 * @param papers
+	 * @param filename name of the file to be created (will be overwritten
+	 * 					if it already exists)
+	 * @param papers list of papers to be written to file
 	 */
 	private void createCtmInput(String filename, List<TrainingPaper> papers){
 		System.out.print("creating ctm input in file: " + filename + " ... ");
@@ -172,8 +169,9 @@ public class Ctm extends ClusteringTest {
 	
 	/**
 	 * Identical to createLdaInputTest
-	 * @param filename
-	 * @param papers
+	 * @param filename name of the file to be created (will be overwritten
+	 * 					if it already exists)
+	 * @param papers list of papers to be written to file
 	 */
 	private void createCtmInputTest(String filename, List<PredictionPaper> papers) {
 

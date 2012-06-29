@@ -5,7 +5,7 @@ import java.util.*;
 
 import org.json.*;
 
-/** Makes a JSON file corresponding to a file given by args[0]. If args[1] is "true",
+/** Makes a JSON file corresponding to a file given by data/args[0]. If args[1] is "true",
  *  the input will have the (integer) indices of items on each odd numbered line, with each item's score on the next even
  *  numbered line. If args[1] is "false", the each line of the input will correspond to a different document and each
  *  number will be the items in the document. Consider the input:
@@ -17,7 +17,7 @@ import org.json.*;
  *  second having 4 items {1, 7, 9, 20} with respective scores {1, 3, 4, 2}. If args[1] = false, this is parsed as having 4 documents, the first having
  *  items {1, 3, 4}, the second having items {2 (twice), 5}, etc.
  *  
- *  The JSON file is put into the plusone directory
+ *  The JSON file is put into the data directory
  */
 public class MakeJSON {
 	public static void main(String[] args) throws IOException, JSONException {
