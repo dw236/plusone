@@ -11,6 +11,7 @@ JACM 2010
 
 import argparse
 from numpy.random import beta
+from numpy.random.mtrand import poisson
 from numpy.random.mtrand import dirichlet
 import pickle
 from random import random as rand
@@ -42,19 +43,22 @@ class Topic_node:
         updates that child's num_documents, and returns the index of
         the child in self.children.
         """
-        r = rand() * self.num_documents_in_children + params["new_child_gamma"]
+        r = rand() * (self.num_documents_in_children 
+                      + params["new_child_gamma"])
 
         for i in range(len(self.children)):
             child = self.children[i]
             # Should we use child #i?
             if r < child.num_documents:
                 child.add_document()
+                self.num_documents_in_children += 1
                 return i
             r -= child.num_documents
 
         # Add a new child.
         node = Topic_node(params)
         node.add_document()
+        self.num_documents_in_children += 1
         self.children.append(node)
         return len(self.children) - 1
 
@@ -113,7 +117,7 @@ def generate_one_doc_with_hlda(topic_root, params):
     # conditioned on not using any of the parent nodes' topics.
     # Generated as needed.
     stay_probs = []
-    num_words = params["words_per_doc_distribution"].sample()
+    num_words = params["words_per_doc_distribution"]()
     words = []
     for i in range(num_words):
         topic_level = sample_topic_index(stay_probs, params)
@@ -127,7 +131,7 @@ def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size,
                             new_child_gamma):
     params = {}
     params["topic_to_word_param"] = [topic_to_word_beta] * vocab_size
-    params["words_per_doc_distribution"] = util.Poisson(words_per_doc)
+    params["words_per_doc_distribution"] = lambda: poisson(words_per_doc)
     pta = topic_dist_m * topic_dist_pi
     ptb = topic_dist_pi - pta
     params["parent_topic_bias_sample"] = lambda: beta(pta, ptb)
@@ -169,7 +173,8 @@ def write(data, args):
             for p, i in zip(ps, [None] + indices):
                 f.write(str(i) + ":" + str(p) + " ")
             f.write('\n')
-    tree.dump(open('output/hldaj-tree-out', 'w'))
+    with open('output/hldaj-tree-out', 'w') as f:
+        tree.dump(f)
     with open('output/hldaj-documents_options-out', 'w') as f:
         f.write("python documents.py ")
         f.write("-n " + str(args.n) + " ")

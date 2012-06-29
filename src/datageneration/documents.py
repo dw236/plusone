@@ -8,6 +8,7 @@ from random import random as rand
 from random import sample as rsample
 
 import numpy as np
+from numpy.random.mtrand import poisson
 from numpy.random.mtrand import dirichlet
 from numpy.random.mtrand import multivariate_normal as N
 
@@ -67,13 +68,14 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     
     if plsi and ctm:
         print "plsi and ctm flags cannot both be active (returning None)"
-        return 
-    p = Poisson(words_per_doc)
+        return None
     
     alpha = [alpha] * num_topics
     beta = [beta] * vocab_size
 
     if plsi or ctm:
+        a = Poisson(alpha)
+        sig_words = a.sample()
         word_dist = [normalize([rand() for w in range(vocab_size)])
                      for t in range(num_topics)]
     else:
@@ -90,7 +92,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     for i in range(num_docs):
         if doc_index % 100 == 0:
             print "reached document", doc_index
-        words_per_doc = p.sample()
+        words_per_doc = poisson(words_per_doc)
         doc = []
         if plsi:
             topic_dist = normalize([rand() for t in range(num_topics)])

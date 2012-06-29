@@ -64,7 +64,7 @@ public class Ctm extends ClusteringTest {
 	}
 
 	/**
-	 * Given a set of test documents, runs lda-c-dist inference to learn the
+	 * Given a set of test documents, runs ctm-dist inference to learn the
 	 * final gammas. Then, subtracts alpha from each gamma to find the expected
 	 * number of times each word appears per topic. Finally, multiplies each
 	 * gamma by beta to find the expected number of times a word appears for

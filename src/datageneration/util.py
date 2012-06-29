@@ -14,36 +14,6 @@ from random import random as rand
 import matplotlib
 from matplotlib.pyplot import *
 
-class Poisson(object):
-    """A class to represent a poisson distribution.
-    
-    Attributes:
-        lamb:
-            the parameter to the poisson distribution
-    Methods:
-        sample():
-            returns a sample from the distribution
-    """
-    def __init__(self, L=15):
-        self.lamb = L
-        
-    def sample(self):
-        """Samples the poisson distribution.
-        
-        Args:
-            none
-            
-        Returns:
-            a number sampled from the poisson distribution with parameter
-            self.lamb
-        """
-        L = e ** (-self.lamb)
-        k, p = 1, rand()
-        while p > L:
-            k += 1
-            p *= rand()
-        return k - 1
-
 def get_cdf(dist):
     """Calculates the cdf of a distribution.
     
