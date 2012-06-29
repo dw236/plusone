@@ -53,26 +53,24 @@ public class GibbsLda extends ClusteringTest {
 		String trainingData = "GibbsLDA/train.dat";
 
 		createGibbsLdaInput(trainingData, trainingSet);
-		Utils.runCommand("lib/GibbsLDA/src/lda -est -ntopics "
+		Utils.runCommand("lib/GibbsLDA/src/lda -est -alpha 0.001 -ntopics "
 				+ numTopics + " -dfile " + trainingData, true);
-
+		double[][] betaMatrix = readLdaResultFile("GibbsLDA/model-final.phi", 0, false);
+		beta = new SimpleMatrix(betaMatrix);
 	}
 	
 	@Override
-	//TODO: Fill this in correctly
 	public double[][] predict(List<PredictionPaper> testDocs){
-		HashMap<String,Integer> translation = readWordMap("GibbsLDA/wordmap.txt");
+		HashMap<Integer,String> translation = readWordMap("GibbsLDA/wordmap.txt");
 		double[][] result;
 		String testData = "test.dat";
 		
 		createGibbsLdaInputTest("GibbsLDA/" + testData, testDocs);
 		Utils.runCommand("lib/GibbsLDA/src/lda -inf -dir "
-				+ "GibbsLDA -model model-final -dfile " + testData, true);
+				+ "GibbsLDA -model model-final -dfile " + testData, false);
 		
-		double[][] betaMatrix = readLdaResultFile("GibbsLDA/test.dat.phi",
-				0, false);
-		double[][] gammasMatrix = readLdaResultFile("GibbsLDA/test.dat.theta", 0, false);
-		double alpha = readAlpha("GibbsLDA/test.dat.others");
+		double[][] gammasMatrix = readLdaResultFile("GibbsLDA/"+testData+".theta", 0, false);
+		double alpha = readAlpha("GibbsLDA/"+testData+".others");
 		
 		for (int i=0; i<gammasMatrix.length; i++) {
 			for (int j=0; j<gammasMatrix[i].length; j++) {
@@ -80,15 +78,14 @@ public class GibbsLda extends ClusteringTest {
 			}
 		}
 		gammas = new SimpleMatrix(gammasMatrix);
-		beta = new SimpleMatrix(betaMatrix);		
 		SimpleMatrix probabilities = gammas.mult(beta);
-		
+
 		result = new double[probabilities.numRows()]
-		                    [probabilities.numCols()];
+		                    [terms.size()];
 		for (int row=0; row<probabilities.numRows(); row++) {
 			for (int col=0; col<probabilities.numCols(); col++) {
-				System.out.println(probabilities.get(row, col));
-				result[row][col] = Math.exp(probabilities.get(row, col));
+				int realCol = wordIndexer.indexOf(translation.get(col));
+				result[row][realCol] = probabilities.get(row, col);
 			}
 		}
 		return result;
@@ -147,7 +144,9 @@ public class GibbsLda extends ClusteringTest {
 
 		for (TrainingPaper paper : papers) {
 			for (int word : paper.getTrainingWords()) {
-				fileWriter.write(word+"");
+				for (int i = 0; i < paper.getTrainingTf(word); i++) {
+					fileWriter.write(wordIndexer.get(word) + " ");
+				}
 			}
 			fileWriter.write("\n");
 		}
@@ -156,6 +155,7 @@ public class GibbsLda extends ClusteringTest {
 		
 		System.out.println("done.");
 	}
+	
 	private void createGibbsLdaInputTest(String filename, List<PredictionPaper> papers){
 		System.out.print("creating GibbsLDA input in file: " + filename + " ... ");
 
@@ -165,7 +165,9 @@ public class GibbsLda extends ClusteringTest {
 
 		for (PredictionPaper paper : papers) {
 			for (int word : paper.getTrainingWords()) {
-				fileWriter.write(word + "a ");
+				for (int i = 0; i < paper.getTrainingTf(word); i++) {
+					fileWriter.write(wordIndexer.get(word) + " ");
+				}
 			}
 			fileWriter.write("\n");
 		}
@@ -195,8 +197,14 @@ public class GibbsLda extends ClusteringTest {
 		return Double.parseDouble(splitLine[1]);
 	}
 	
-	private HashMap<String,Integer> readWordMap(String filename) {
-		HashMap<String,Integer> result = new HashMap<String,Integer>();
+	/** Maps each index of the returned array to the word it represents
+	 * 
+	 * @param filename path to wordmap.txt
+	 * @return a map from each index as given by the GibbsLda code to each word as
+	 * a string in its original dataset
+	 */
+	private HashMap<Integer,String> readWordMap(String filename) {
+		HashMap<Integer,String> result = new HashMap<Integer,String>();
 		FileInputStream filecontents = null;
 		try {
 			filecontents = new FileInputStream(filename);
@@ -208,7 +216,7 @@ public class GibbsLda extends ClusteringTest {
 		lines.nextLine();
 		while(lines.hasNextLine()) {
 			String[] index = lines.nextLine().split(" ");
-			result.put(index[0], Integer.parseInt(index[1]));
+			result.put(Integer.parseInt(index[1]), index[0]);
 		}
 		return result;
 	}
