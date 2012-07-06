@@ -321,7 +321,7 @@ public class Main {
 		LSI lsi;
 		if (testIsEnabled("lsi")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.svdDimensions", 
-					"1,5,10,20"));
+					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
@@ -334,10 +334,15 @@ public class Main {
 		PLSI plsi;
 		if (testIsEnabled("plsi")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.plsi.dimensions", 
-					"1,5,10,20"));
+					"10,30,50"));
 			plsi = new PLSI(trainingSet, terms.size());
 			for (int dk = 0; dk < dimensions.length; dk ++) {
+				long t1 = System.currentTimeMillis();
+				System.out.println("PLSI with " + dimensions[dk]+" topics starts model training");
 				plsi.train(dimensions[dk]);
+				System.out.println("model training took " +
+						(System.currentTimeMillis() - t1) / 1000.0 
+						+ " seconds.");
 				runClusteringMethod(plsi, ks, size, false);
 
 			}
@@ -346,7 +351,7 @@ public class Main {
 		Lda lda = null;
 		if (testIsEnabled("lda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
-					"20"));
+					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
