@@ -36,6 +36,12 @@ if [ "$3" ];then
     out_dir=$3
 fi
 
+ldaTrain=false
+case "$generator" in
+lda)
+    ldaTrain=true
+    ;;
+esac
 
 #mkdir $out_dir || exit
 echo Output will go in data
@@ -72,11 +78,11 @@ args=\
  -Dplusone.lda.dimensions=15
  -Dplusone.enableTest.localCO=false \
  -Dplusone.enableTest.lda=true \
- -Dplusone.enableTest.ldaTrained=[$generator=="lda"] \
- -Dplusone.enableTest.ldaCheat=[$generator=="lda"] \
+ -Dplusone.enableTest.ldaTrained=$ldaTrain \
+ -Dplusone.enableTest.ldaCheat=$ldaTrain \
  -Dplusone.enableTest.hlda=false \
- -Dplusone.enableTest.ctm=false \
- -Dplusone.enableTest.gibbsLda=false \
+ -Dplusone.enableTest.ctm=true \
+ -Dplusone.enableTest.gibbsLda=true \
  -Dplusone.enableTest.knnc=false \
  -Dplusone.enableTest.knn=true \
  -Dplusone.enableTest.knnrw=false \

@@ -78,7 +78,7 @@ public class Ctm extends ClusteringTest {
 				+ "ctm/test.dat ctm/final ctm/holdout lib/ctm-dist/inf-settings.txt"
 				, false);
 		
-		double[][] gammasMatrix = readCtmFile("ctm/holdout-lambda.dat",
+		double[][] gammasMatrix = readCtmFile("ctm/holdout-phi-sum.dat",
 				testDocs.size(), numTopics, false);
 		gammas = new SimpleMatrix(gammasMatrix);
 		SimpleMatrix probabilities = gammas.mult(beta);
@@ -95,7 +95,7 @@ public class Ctm extends ClusteringTest {
 	
 	
 	/**
-	 * Takes a file output by lda-c-dist and stores it in a matrix.
+	 * Takes a file output by ctm-dist and stores it in a matrix.
 	 * 
 	 * @param filename	file to be read
 	 * @param start		TODO use for start (typically 0)

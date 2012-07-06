@@ -3,7 +3,7 @@
 export basedir=$PWD
 
 #Generator
-generator="hlda"
+generator="lda"
 #Number of topics
 klist=(15)
 #Number of docs
@@ -13,7 +13,7 @@ llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.01)
+alist=(0.001 0.01 0.1)
 #Beta
 blist=(0.001 0.01 0.1)
 #Flag for plotting output
@@ -76,10 +76,10 @@ do
                 do
                     for b in "${blist[@]}";
                     do
-                        #Generate a data file with given parameters
                         cd src/datageneration/
                         case "$generator" in
                         hlda)
+                            #Generate a data file with given parameters
                             python hlda_journal.py -w -n $n -l $l -m $m -b $b
                             cd $basedir
 
@@ -91,10 +91,16 @@ do
                             ./test data/hldaj-documents-out.json $generator
                             ;;
                         lda)
+                            #Generate a data file with given parameters
                             python documents.py -w -k $k -n $n -l $l -m $m -a $a \
                             -b $b
+                            cd $basedir
+
+                            #Make a JSON out of the generated data
                             java -classpath bin:lib/jars/json.jar \
-                            datageneration/MakeJSON documents-out false
+                            datageneration/MakeJSON documents-out $generator
+
+                            #Run the test
                             ./test data/documents-out.json $generator
                             ;;
                         esac
