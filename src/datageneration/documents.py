@@ -106,7 +106,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     for i in range(num_docs):
         if doc_index % 100 == 0:
             print "reached document", doc_index
-        words_per_doc = util.poisson(words_per_doc, vocab_size)
+        words_per_doc = util.poisson(words_per_doc)
         doc = []
         if plsi:
             sig_topics = rsample(range(num_topics), 
@@ -166,8 +166,13 @@ def write(data, args):
     documents_other-out:
         file containing the following: 
             -number of words that constitute 80% of the cdf for each word 
-            distribution by topic (separated by spaces)
-            -sum of squares for each topic distribution (separated by spaces)
+            distribution by topic (averaged across topics)
+            -sum of squares for each word distribution by topic (averaged
+            across topics)
+            -number of topics that constitute 80% of the cdf for each topic 
+            distribution by document (averaged across documents)
+            -sum of squares for each topic distribution by document (averaged
+            across documents)
             -median of the cosine of pairwise word distributions (per topic)
         each value listed is separated a newline character
     results.pickle:
@@ -236,9 +241,17 @@ def write(data, args):
     with open(dir + '/documents_other-out', 'w') as f:
         sig_words = np.average(util.get_sig_words(words))
         f.write('sig_words ' + str(round(sig_words, 2)) + '\n')
-        sum_squares = np.average([sum([topic**2 for topic in doc]) \
+        sum_squares_words = np.average([sum([word**2 for word in topic]) \
+                                  for topic in words])
+        f.write('sum_squares_words ' + str(round(sum_squares_words, 2)) + '\n')
+        
+        sig_topics = np.average(util.get_sig_words(topics))
+        f.write('sig_topics ' + str(round(sig_topics, 2)) + '\n')
+        sum_squares_topics = np.average([sum([topic**2 for topic in doc]) \
                                   for doc in topics])
-        f.write('sum_squares ' + str(round(sum_squares, 2)) + '\n')
+        f.write('sum_squares_topics ' + str(round(sum_squares_topics, 
+                                                  2)) + '\n')
+        
         med = np.median([i[0].dot(i[1]) / (np.sqrt(i[1].dot(i[1])) * \
                                            np.sqrt(i[0].dot(i[0]))) \
                                 for i in itertools.combinations(words, 2)])
@@ -249,7 +262,7 @@ def write(data, args):
         f.write('median ' + str(med) + '\n')
     with open(dir + '/results.pickle', 'w') as f:
         pickle.dump([docs, doc_topics, words, topics, args], f)
-    if not args.plsi:
+    if not args.plsi and not args.ctm:
         print "writing cheats for lda...",
         util.write_cheats(data, args.a, dir)
     os.system("cp " + dir + "/* output")

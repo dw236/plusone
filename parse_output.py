@@ -38,12 +38,8 @@ def parse(filename, show=False, external=True):
     if external:
         util.plot_dist(scores, labels=names)
         if data[DATA]:
-            sig_words = data[DATA]['sig_words'] 
-            sum_squares = data[DATA]['sum_squares']
-            median = data[DATA]['median']
-            util.plot(0, label='sig_words: ' + str(sig_words))
-            util.plot(0, label='sum_squares: ' + str(sum_squares))
-            util.plot(0, label='median: ' + str(median))
+            for datum in data[DATA]:
+                util.plot(0, label=str(datum) + " " + str(data[DATA][datum]))
             util.legend(loc='best')
            
         if show:
