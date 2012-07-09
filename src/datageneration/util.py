@@ -16,7 +16,7 @@ from random import random as rand
 import matplotlib
 from matplotlib.pyplot import *
 
-def poisson(l, max_val, min_val=1):
+def poisson(l, max_val=None, min_val=1):
     """samples a poisson distribution, but has a bounded max and min value
     
     Args:
@@ -25,6 +25,7 @@ def poisson(l, max_val, min_val=1):
         max_val:
             the maximum value that can be returned (if the sampled number is
             higher than max_val, max_val is returned)
+            if no max_val is given, does not cap the max value
         min_val:
             the minimum value that can be returned (if the sampled number is
             smaller than min_val, min_val is returned)
@@ -33,7 +34,10 @@ def poisson(l, max_val, min_val=1):
         a sample p ~ Poisson(l), but is constrained to the range 
         [min_val, max_val]
     """
-    return max(1, min(p(l), max_val))
+    if max_val == None:
+        return max(1, p(l))
+    else:
+        return max(1, min(p(l), max_val))
 
 def get_cdf(dist):
     """Calculates the cdf of a distribution.
@@ -370,3 +374,29 @@ def write_cheats(data, alpha, dir):
             for word in topic:
                 f.write(str(np.log(word + noise)) + " ")
             f.write('\n')
+
+"""for HLDA--still hacky"""
+def display_children(tree, parent="root"):
+    print "topic", tree.topic_number, "[parent:", str(parent) + "]"
+    for child in tree.children:
+        if len(child.children) == 0:
+            print "topic", child.topic_number, "(leaf)", "[parent:", \
+            str(tree.topic_number) + "]"
+        else:
+            display_children(child, tree.topic_number)
+            
+def stick_break(probs):
+    probabilities = [probs[0]]
+    for i in range(1, len(probs)):
+        probabilities.append(probs[i] * np.product([(1 - p) \
+                                                    for p in probs[:i]]))
+    #add probability for "other"
+    probabilities.append(1 - np.sum(probabilities))
+    return probabilities
+
+def show_path(tree, path_indices):
+    topic_indices = [tree.topic_number]
+    for index in path_indices:
+        topic_indices.append(tree.children[index].topic_number)
+        tree = tree.children[index]
+    return topic_indices
