@@ -33,24 +33,28 @@ public class Utils {
 	System.out.println("Running command: " + command);
 	try {
 	    Process p = Runtime.getRuntime().exec(command);
-	    if (streamOutput) {
 		BufferedReader stdInput = 
 		    new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    
 		BufferedReader stdError = 
 		    new BufferedReader(new InputStreamReader(p.getErrorStream()));
-		System.out.println("Here is the standard output of the command:\n");
+		if (streamOutput)
+			System.out.println("Here is the standard output of the command:\n");
 		String s;
 		while ((s = stdInput.readLine()) != null) {
-		    System.out.println(s);
+			if (streamOutput) {
+				System.out.println(s);
+			}
 		}
             
 		// read any errors from the attempted command
-		System.out.println("Here is the standard error of the command (if any):\n");
+		if (streamOutput)
+			System.out.println("Here is the standard error of the command (if any):\n");
 		while ((s = stdError.readLine()) != null) {
-		    System.out.println(s);
+			if (streamOutput) {
+				System.out.println(s);
+			}
 		}
-	    }
 	    p.waitFor();
 	}
 	catch (Exception e) {

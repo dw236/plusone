@@ -180,7 +180,7 @@ public class Main {
 			//Deals with parameters/data. Somewhat messy at the moment
 			if (!generator.equals("")) {
 				File documentsOptionsOut = null, documentsOtherOut = null;
-				if (generator.equals("lda")) {
+				if (generator.equals("lda") || generator.equals("ctm")) {
 					documentsOptionsOut = new File(
 							"src/datageneration/output/documents_options-out");
 					documentsOtherOut = new File(
@@ -212,7 +212,7 @@ public class Main {
 					}
 				}
 				outName = tmpOutName.toString();
-				if (generator.equals("lda")) {
+				if (generator.equals("lda") || generator.equals("ctm")) {
 					//Put the information from documents_other-out into data
 					Scanner lines = null;
 					try {

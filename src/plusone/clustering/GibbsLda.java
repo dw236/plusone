@@ -52,7 +52,7 @@ public class GibbsLda extends ClusteringTest {
 
 		createGibbsLdaInput(trainingData, trainingSet);
 		Utils.runCommand("lib/GibbsLDA/src/lda -est -alpha 0.001 -ntopics "
-				+ numTopics + " -dfile " + trainingData, true);
+				+ numTopics + " -dfile " + trainingData, false);//
 		double[][] betaMatrix = readLdaResultFile("GibbsLDA/model-final.phi", 0, false);
 		beta = new SimpleMatrix(betaMatrix);
 	}

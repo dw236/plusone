@@ -3,19 +3,19 @@
 export basedir=$PWD
 
 #Generator
-generator="lda"
+generator="ctm"
 #Number of topics
-klist=(15)
+klist=(30)
 #Number of docs
-nlist=(500)
+nlist=(50)
 #Number of words per document
 llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.001 0.01 0.1)
+alist=(0.001 0.01 0.05)
 #Beta
-blist=(0.001 0.01 0.1)
+blist=(0.001 0.01 0.05)
 #Flag for plotting output
 plot=false
 #Flag for making table
@@ -88,7 +88,7 @@ do
                             datageneration/MakeJSON hldaj-documents-out false
 
                             #Run the test
-                            ./test data/hldaj-documents-out.json $generator
+                            ./test data/hldaj-documents-out.json $generator $k
                             ;;
                         lda)
                             #Generate a data file with given parameters
@@ -101,7 +101,20 @@ do
                             datageneration/MakeJSON documents-out $generator
 
                             #Run the test
-                            ./test data/documents-out.json $generator
+                            ./test data/documents-out.json $generator $k
+                            ;;
+                        ctm)
+                            #Generate a data file with given parameters
+                            python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                            -b $b -ctm
+                            cd $basedir
+
+                            #Make a JSON out of the generated data
+                            java -classpath bin:lib/jars/json.jar \
+                            datageneration/MakeJSON documents-out $generator
+
+                            #Run the test
+                            ./test data/documents-out.json $generator $k
                             ;;
                         esac
                     done
