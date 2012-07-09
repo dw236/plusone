@@ -101,23 +101,64 @@ def write_table(f, results):
         best_score = max(scores)
         worst_score = min(scores)
         median_score = np.median(scores)
-        print median_score
         for algorithm in sorted(result[2]):
             score = result[2][algorithm]['Predicted_Mean']
             #highlight the best and worst score
-            best = ''
-            worst = ''
-            median = ''
+            color = Color()
             if round(score, 2) == round(best_score, 2):
-                best = ' bgcolor=#00FF00'
+                color.add('g', 0xff)
             if round(score, 2) == round(worst_score, 2):
-                worst = ' bgcolor=#FF0000'
-            if abs(score - median_score) < 0.02:
-                median = ' bgcolor=#FFFF00'
-            f.write('\t\t<td ' + best + worst + median + '>' +
+                color.add('r', 0xff)
+            if round(score, 2) == round(median_score, 2):
+                color.add('r', 0xff)
+                color.add('g', 0xff)
+            f.write('\t\t<td ' + str(color) + '>' +
                     str(round(score, 2)) + '</td>\n')
         f.write('\t</tr>\n')
     f.write('</table>')
+
+class Color(object):
+    """class to handle colors for table cells
+    """
+    def __init__(self, r=0, g=0, b=0):
+        self.r = r
+        self.g = g
+        self.b = b
+    
+    def white(self):
+        self.r = 0
+        self.g = 0
+        self.b = 0
+    
+    def add(self, color, amount):
+        def smooth(color, amount):
+            if color + amount > 255:
+                self.white()
+                return 255
+            else:
+                return color + amount
+        if color in ['r', 'red']:
+            self.r = smooth(self.r, amount)
+        elif color in ['g', 'green']:
+            self.g = smooth(self.g, amount)
+        elif color in ['b', 'blue']:
+            self.b = smooth(self.b, amount)
+        else:
+            print "unrecognized color:", color
+            
+    def __str__(self):
+        """html attribute 'bgcolor' with appropriate color
+        """
+        def string(color):
+            if color == 0:
+                return '00'
+            else:
+                return hex(color)[2:]
+        color = ''
+        if self.r or self.g or self.b:
+            color = 'bgcolor=#'
+            color += string(self.r) + string(self.g) +string(self.b)
+        return color 
 
 def main():
     parser = argparse.ArgumentParser(description="reads all json files in a \
