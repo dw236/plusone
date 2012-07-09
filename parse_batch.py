@@ -2,10 +2,12 @@ import os
 import argparse
 import src.datageneration.util as util
 import parse_output
+import numpy as np
 
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
-HIDDEN = UNIVERSALS + ['a', 'b']
+HIDDEN = UNIVERSALS + ['a', 'b'] \
+                    + ['median', 'sum_squares_words', 'sum_squares_topics']
 
 def generate_html(dir):
     filenames = os.listdir(dir)
@@ -37,8 +39,6 @@ def write_table(file_object, results):
                                       len(results[0][4].keys()) - 
                                       len(HIDDEN)) 
                +'">Parameters ('+ parameters + ')</th>\n')
-        f.write('\t<th colspan="'+ str(len(results[0][2].keys())) 
-               +'">Experiments</th>\n')
         f.write('</table>\n')
         f.write('<table border="1" class="sortable">\n')
         #=======================================================================
@@ -48,8 +48,10 @@ def write_table(file_object, results):
         for param in results[0][3]:
             if param not in HIDDEN:
                 f.write('\t\t<th>' + param + '</th>\n')
+        #relevant statistics for data
         for datum in results[0][4]:
-            f.write('\t\t<th>' + datum + '</th>\n')
+            if datum not in HIDDEN:
+                f.write('\t\t<th>' + datum + '</th>\n')
         #=======================================================================
         # write the algorithm names
         #=======================================================================
@@ -65,10 +67,27 @@ def write_table(file_object, results):
                 if param not in HIDDEN:
                     f.write('\t\t<td>' + str(result[3][param]) + '</td>\n')
             for datum in result[4]:
-                f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
+                if datum not in HIDDEN:
+                    f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
+            scores = [result[2][algorithm]['Predicted_Mean'] \
+                      for algorithm in sorted(result[2])]
+            best_score = max(scores)
+            worst_score = min(scores)
+            median_score = np.median(scores)
             for algorithm in sorted(result[2]):
                 score = result[2][algorithm]['Predicted_Mean']
-                f.write('\t\t<td>' + str(round(score, 2)) + '</td>\n')
+                #highlight the best and worst score
+                best = ''
+                worst = ''
+                median = ''
+                if round(score, 2) == round(best_score, 2):
+                    best = ' bgcolor=#00FF00'
+                if round(score, 2) == round(worst_score, 2):
+                    worst = ' bgcolor=#FF0000'
+                if abs(score - median_score) < 0.01:
+                    median = ' bgcolor=#FFFF00'
+                f.write('\t\t<td ' + best + worst + median + '>' +
+                        str(round(score, 2)) + '</td>\n')
             f.write('\t</tr>\n')
         f.write('</table>')
 

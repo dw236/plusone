@@ -3,19 +3,19 @@
 export basedir=$PWD
 
 #Generator
-generator="ctm"
+generator="lda"
 #Number of topics
-klist=(30)
+klist=(15)
 #Number of docs
-nlist=(50)
+nlist=(500)
 #Number of words per document
 llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.001 0.01 0.05)
+alist=(0.01 0.05 0.1)
 #Beta
-blist=(0.001 0.01 0.05)
+blist=(0.001 0.01 0.05 0.1)
 #Flag for plotting output
 plot=false
 #Flag for making table
