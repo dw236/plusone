@@ -180,16 +180,12 @@ public class Main {
 			//Deals with parameters/data. Somewhat messy at the moment
 			if (!generator.equals("")) {
 				File documentsOptionsOut = null, documentsOtherOut = null;
-				if (generator.equals("lda") || generator.equals("ctm")) {
-					documentsOptionsOut = new File(
-							"src/datageneration/output/documents_options-out");
+				documentsOptionsOut = new File(
+						"src/datageneration/output/documents_options-out");
+				if (!generator.equals("hlda")) {
 					documentsOtherOut = new File(
-							"src/datageneration/output/documents_other-out");
-				} else if (generator.equals("hlda")) {
-					documentsOptionsOut = new File(
-							"src/datageneration/output/hldaj-documents_options-out");
+							"src/datageneration/output/documents_other-out");				
 				}
-						
 				//Put the information from documents_options-out into params
 				Scanner line = null;
 				try {
@@ -212,7 +208,7 @@ public class Main {
 					}
 				}
 				outName = tmpOutName.toString();
-				if (generator.equals("lda") || generator.equals("ctm")) {
+				if (documentsOtherOut != null) {
 					//Put the information from documents_other-out into data
 					Scanner lines = null;
 					try {

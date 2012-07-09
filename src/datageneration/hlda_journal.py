@@ -8,6 +8,7 @@ Topic Hierarchies"
 by Blei, Griffiths and Jordan
 JACM 2010
 """
+import os
 
 import argparse
 from numpy.random import beta
@@ -174,20 +175,34 @@ def write(data, args):
         file containing the documents and the topic tree
     """
     docs, tree, topic_stay_probs, topic_paths, topics, levels = data
-    with open('output/hldaj-documents-out', 'w') as f:
+    dir = 'output/'
+    dir += "n" + str(args.n) + "."
+    dir += "l" + str(args.l) + "."
+    dir += "m" + str(args.m) + "."
+    dir += "b" + str(args.b) + "."
+    dir += "z" + str(args.z) + "."
+    dir += "p" + str(args.p) + "."
+    dir += "g" + str(args.g) + "."
+    dir += "hlda"
+    try:
+        os.mkdir(dir)
+    except:
+       print "overwriting existing data in directory:", dir, "...",
+
+    with open(dir + '/documents-out', 'w') as f:
         for doc in docs:
             for word in doc:
                 f.write(str(word) + " ")
             f.write('\n')
-    with open('output/hldaj-stay-probs-out', 'w') as f:
+    with open(dir + '/stay-probs-out', 'w') as f:
         for ps, indices in zip(topic_stay_probs, topic_paths):
             for p, i in zip(ps, ["root"] + indices):
                 f.write(str(i) + ":" + str(p) + " ")
             f.write('\n')
-    with open('output/hldaj-tree-out', 'w') as f:
+    with open(dir + '/tree-out', 'w') as f:
         tree.dump(f)
-    with open('output/hldaj-documents_options-out', 'w') as f:
-        f.write("python documents.py ")
+    with open(dir + '/documents_options-out', 'w') as f:
+        f.write("python hlda_journal.py ")
         f.write("-n " + str(args.n) + " ")
         f.write("-l " + str(args.l) + " ")
         f.write("-m " + str(args.m) + " ")
@@ -195,8 +210,9 @@ def write(data, args):
         f.write("-z " + str(args.z) + " ")
         f.write("-p " + str(args.p) + " ")
         f.write("-g " + str(args.g) + " ")
-    with open('output/hldaj-results.pickle', 'w') as f:
+    with open(dir + '/results.pickle', 'w') as f:
         pickle.dump(data, f)
+    os.system("cp " + dir + "/* output")
 
 def main():
     parser = argparse.ArgumentParser(description="Document generator for \

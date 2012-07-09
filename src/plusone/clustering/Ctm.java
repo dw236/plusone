@@ -53,7 +53,7 @@ public class Ctm extends ClusteringTest {
 		createCtmInput(trainingData, trainingSet);
 		Utils.runCommand("lib/ctm-dist/ctm est " + trainingData
 				+ " " + numTopics + " rand ctm "
-				+ "lib/ctm-dist/settings.txt", false);//
+				+ "lib/ctm-dist/settings.txt", false);
 		double[][] betaMatrix = readCtmFile("ctm/final-log-beta.dat",
 				numTopics, terms.size(), true);
 		beta = new SimpleMatrix(betaMatrix);
