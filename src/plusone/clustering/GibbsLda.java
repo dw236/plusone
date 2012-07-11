@@ -1,6 +1,7 @@
 package plusone.clustering;
 
 import plusone.utils.Indexer;
+import plusone.utils.PaperAbstract;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 import plusone.utils.PlusoneFileWriter;
@@ -27,7 +28,7 @@ public class GibbsLda extends ClusteringTest {
 	private SimpleMatrix beta;
 	private SimpleMatrix gammas;
 	private int numTopics;
-	
+
 	public GibbsLda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
 		super("GibbsLda");
@@ -219,5 +220,5 @@ public class GibbsLda extends ClusteringTest {
 			result.put(Integer.parseInt(index[1]), index[0]);
 		}
 		return result;
-	}
+	}	
 }

@@ -1,6 +1,7 @@
 package plusone.clustering;
 
 import plusone.utils.Indexer;
+import plusone.utils.PaperAbstract;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 import plusone.utils.PlusoneFileWriter;
@@ -10,9 +11,11 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.ejml.simple.SimpleMatrix;
 
@@ -71,6 +74,7 @@ public class Ctm extends ClusteringTest {
 	 */
 	@Override
 	public double[][] predict(List<PredictionPaper> testDocs){
+		this.testDocs = testDocs;
 		String testData = "ctm/test.dat";
 
 		createCtmInputTest(testData, testDocs);
@@ -90,6 +94,7 @@ public class Ctm extends ClusteringTest {
 				result[row][col] = probabilities.get(row, col);
 			}
 		}
+		System.out.println("Ctm perplexity is " + getPerplexity());
 		return result;
 	}
 	
@@ -191,5 +196,31 @@ public class Ctm extends ClusteringTest {
 		fileWriter.close();
 		
 		System.out.println("done.");
+	}
+	
+	/**
+	 * Returns the perplexity for the test set. Can only be run after the predict method.
+	 * 
+	 * @return the perplexity for testDocs
+	 */
+	public double getPerplexity() {
+		FileInputStream filecontents = null;
+		try {
+			filecontents = new FileInputStream("ctm/holdout-ctm-lhood.dat");
+		} catch (FileNotFoundException e) {
+			System.out.println("Could not locate output-lda-lhood");
+			System.exit(1);
+		}
+		Scanner logLhoods = new Scanner(filecontents);
+
+		double numerator = 0, denominator = 0;
+		for (int i=0; i<testDocs.size(); i++) {
+			numerator += Double.parseDouble(logLhoods.nextLine());
+			for (int j=0; j<terms.size(); j++) {
+				denominator += ((PaperAbstract)testDocs.get(i)).getTestingTf(j);
+			}
+		}
+
+		return Math.exp(-1*numerator/denominator);
 	}
 }

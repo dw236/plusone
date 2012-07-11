@@ -161,6 +161,7 @@ public class Lda extends ClusteringTest {
 				}
 			}
 		}
+		System.out.println("Lda perplexity is " + getPerplexity());
 		return result;
 	}
 
@@ -388,7 +389,6 @@ public class Lda extends ClusteringTest {
 	/**
 	 * Returns the perplexity for the test set. Can only be run after the predict method.
 	 * 
-	 * @param testDocs the testing documents
 	 * @return the perplexity for testDocs
 	 */
 	public double getPerplexity() {
