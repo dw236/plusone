@@ -36,10 +36,13 @@ def parse(filename, show=False, external=True):
             scores.append(test[key]['Predicted_Mean'])
     
     if external:
+        util.figure(figsize=(12,7))
         util.plot_dist(scores, labels=names)
         if data[DATA]:
             for datum in data[DATA]:
-                util.plot(0, label=str(datum) + " " + str(data[DATA][datum]))
+                if datum == 'sig_words' or datum == 'sig_topics':
+                    util.plot(0, label=str(datum) + " " 
+                              + str(data[DATA][datum]))
             util.legend(loc='best')
            
         if show:

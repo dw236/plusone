@@ -9,7 +9,7 @@ UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
                     + ['median', 'sum_squares_words', 'sum_squares_topics']
 
-def generate_html(dir):
+def generate_html(dir, overwrite=False):
     filenames = os.listdir(dir)
     results = []
     files_found = 0
@@ -22,7 +22,9 @@ def generate_html(dir):
         else:
             continue
     print "processed", files_found, "files"
-    with open('data/test.html', 'w') as f:
+    
+    overwrite = 'w' if overwrite else 'a'
+    with open('data/test.html', overwrite) as f:
         f.write('<script src="sorttable.js"></script>\n')
         for result in results:
             write_table(f, result)
@@ -105,17 +107,27 @@ def write_table(f, results):
             score = result[2][algorithm]['Predicted_Mean']
             #highlight the best and worst score
             color = Color()
+            to_bold = False
             if round(score, 2) == round(best_score, 2):
                 color.add('g', 0xff)
+                to_bold = True
             if round(score, 2) == round(worst_score, 2):
-                color.add('r', 0xff)
+                color.add('r', 0xFF)
+                color.add('g', 0x04)
+                to_bold = True
             if round(score, 2) == round(median_score, 2):
                 color.add('r', 0xff)
                 color.add('g', 0xff)
             f.write('\t\t<td ' + str(color) + '>' +
-                    str(round(score, 2)) + '</td>\n')
+                    bold(str(round(score, 2)), to_bold) + '</td>\n')
         f.write('\t</tr>\n')
     f.write('</table>')
+
+def bold(string, flag=True):
+    if flag:
+        return '<b>' + string + '</b>'
+    else:
+        return string
 
 class Color(object):
     """class to handle colors for table cells
@@ -165,11 +177,15 @@ def main():
     directory and writes an html table displaying results")
     parser.add_argument('f', metavar='directory', action="store", 
                         help="directory containing json files to be read")
+    parser.add_argument('-o', action="store_true", default=False,
+                        help="flag to overwrite existing table")
     
     args = parser.parse_args()
     print "reading experiment files from directory:", args.f
+    if args.o:
+        print "overwriting existing table with new results"
     
-    return generate_html(args.f)
+    return generate_html(args.f, args.o)
 
 if __name__ == '__main__':
     results = main()

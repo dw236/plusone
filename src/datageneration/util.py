@@ -2,9 +2,11 @@
 """
 import operator
 import pickle
+import time
 
 import numpy as np
 from numpy.random.mtrand import poisson as p
+from numpy.random.mtrand import dirichlet
 
 import math
 from math import e
@@ -400,3 +402,28 @@ def show_path(tree, path_indices):
         topic_indices.append(tree.children[index].topic_number)
         tree = tree.children[index]
     return topic_indices
+
+class Dirichlet_Test(object):
+    def __init__(self, alpha):
+        self.alpha = alpha
+        self.d = np.zeros(len(alpha))
+        self.total = 0
+    def test(self, times):
+        how_long = time.time()
+        for i in range(times):
+            self.d += dirichlet(self.alpha)
+            self.total += 1
+        print "time:", time.time() - how_long, "seconds"
+    def reset(self):
+        self.d = np.zeros(len(self.alpha))
+        self.total = 0
+    def __str__(self):
+        if self.total == 0:
+            return str(self.d)
+        else:
+            return str(self.d / self.total)
+    def get_d(self):
+        if self.total == 0:
+            return self.d
+        else:
+            return self.d / self.total
