@@ -1,4 +1,4 @@
-package datageneration;
+package datasets;
 
 import java.io.*;
 import java.util.*;
@@ -31,8 +31,6 @@ public class MovieLensRegression {
 	    }
 
 	    JSONObject json = new JSONObject();
-    	json.put( "num_users", hm.keySet().size() );
-    	json.put( "num_items", movies.size() );
     	
     	JSONArray docs = new JSONArray();
 

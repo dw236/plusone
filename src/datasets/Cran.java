@@ -1,4 +1,4 @@
-package datageneration;
+package datasets;
 
 import java.io.BufferedWriter;
 import java.io.File;
