@@ -5,6 +5,7 @@ import src.datageneration.util as util
 TEST = 'tests'
 PARAMS = 'parameters'
 DATA = 'data'
+HIDDEN = ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
 
 def parse(filename, show=False, external=True):
     """@TODO
@@ -32,8 +33,9 @@ def parse(filename, show=False, external=True):
     scores = []
     for test in data[TEST]:
         for key in sorted(test.keys(), cmp=(lambda x,y: cmp(test[x], test[y]))):
-            names.append(str(key))
-            scores.append(test[key]['Predicted_Mean'])
+            if key not in HIDDEN:
+                names.append(str(key))
+                scores.append(test[key]['Predicted_Mean'])
     
     if external:
         util.figure(figsize=(12,7))

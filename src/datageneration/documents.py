@@ -15,7 +15,8 @@ import util
 from util import *
 
 def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
-                  alpha=None, beta=None, noise=-1, plsi=False, ctm=False):
+                  alpha=None, beta=None, noise=-1, plsi=False, ctm=False, 
+                  pareto=False):
     """Generates documents according to plsi, ctm, or lda
     
     Args:
@@ -59,6 +60,9 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         ctm:
             flag to draw distributions according to ctm (ie a multivariate
             gaussian distribution) 
+        pareto:
+            flag to make dirichlet distribution pareto (ie for the dirichlet
+            parameter, set each alpha_i = alpha / alpha_i)
             
     Returns:
         docs:
@@ -83,7 +87,10 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         return None
     
     if not plsi and not ctm:
-        alpha = [alpha] * num_topics
+        if pareto:
+            alpha = [alpha / i for i in range(1, num_topics + 1)]
+        else:
+            alpha = [alpha] * num_topics
         beta = [beta] * vocab_size
 
     if plsi or ctm:
@@ -283,11 +290,11 @@ def main():
                         help="size of the vocabulary (100)")
     parser.add_argument('-a', action="store", metavar='alpha', 
                         type=float,  
-                        help="dirichlet parameter for topics (0.1 for lda, \
+                        help="parameter for topics (0.1 for lda, \
                         3 for plsi)")
     parser.add_argument('-b', action="store", metavar='beta', 
                         type=float, 
-                        help="dirichlet parameter for words (0.01 for lda, \
+                        help="parameter for words (0.01 for lda, \
                         5 for plsi)")
     parser.add_argument('-s', action="store", metavar='noise', type=float, 
                         default=0, help="probability each word is generated\
@@ -296,6 +303,9 @@ def main():
                         help="flag to use plsi instead of lda (false)")
     parser.add_argument('-ctm', action="store_true", default=False,
                         help="flag to use ctm instead of lda (false)")
+    parser.add_argument('-p', action="store_true", default=False,
+                        help="flag to make dirichlet pareto--must use\
+                        lda (false)")
     
     args = parser.parse_args()
     
@@ -321,16 +331,17 @@ def main():
     
     print ""
     print "generating documents with parameters:"
-    print "k    = ", args.k, "(number of topics)"
-    print "n    = ", args.n, "(number of documents)"
-    print "l    = ", args.l, "(average number of words)"
-    print "m    = ", args.m, "(size of vocabulary)"
+    print "k    =  ", args.k, "(number of topics)"
+    print "n    =  ", args.n, "(number of documents)"
+    print "l    =  ", args.l, "(average number of words)"
+    print "m    =  ", args.m, "(size of vocabulary)"
     if not args.plsi and not args.ctm:
-        print "a    = ", args.a, what_is_alpha
-        print "b    = ", args.b, what_is_beta
-    print "s    = ", args.s, "(noise probability)"
-    print "plsi = ", args.plsi, "(whether to draw from plsi)"
-    print "ctm =  ", args.ctm, "(whether to draw from ctm)"
+        print "a    =  ", args.a, what_is_alpha
+        print "b    =  ", args.b, what_is_beta
+    print "s    =  ", args.s, "(noise probability)"
+    print "plsi =  ", args.plsi, "(whether to draw from plsi)"
+    print "ctm =   ", args.ctm, "(whether to draw from ctm)"
+    print "pareto= ", args.p, "(whether to make alpha pareto)" 
     print ""
     
     if args.s == 0:

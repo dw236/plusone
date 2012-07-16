@@ -7,7 +7,9 @@ import numpy as np
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
-                    + ['median', 'sum_squares_words', 'sum_squares_topics']
+                    + ['median', 'sum_squares_words', 'sum_squares_topics'] \
+                    + ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
+CHEAT = ['ldaC15', 'ldaT15']
 
 def generate_html(dir, overwrite=False):
     filenames = os.listdir(dir)
@@ -38,13 +40,13 @@ def add_result(results, new_result):
         for option in UNIVERSALS:
             result_has_option = result[0][3].has_key(option)
             new_result_has_option = new_result[3].has_key(option)
-            result_option = result[0][3][option]
-            new_result_option = new_result[3][option]
             if result_has_option and new_result_has_option:
+                result_option = result[0][3][option]
+                new_result_option = new_result[3][option]
                 if  result_option != new_result_option:
                     all_true = False
                     break
-            elif result_has_option != new_result_option:
+            elif result_has_option != new_result_has_option:
                 all_true = False
                 break
         if all_true:
@@ -85,7 +87,8 @@ def write_table(f, results):
     # write the algorithm names
     #=======================================================================
     for algorithm in sorted(results[0][2]):
-        f.write('\t\t<th>' + algorithm + '</th>\n')
+        if algorithm not in HIDDEN:
+            f.write('\t\t<th>' + algorithm + '</th>\n')
     f.write('\t</tr>\n')
     #=======================================================================
     # write the numerical results
@@ -100,26 +103,36 @@ def write_table(f, results):
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
         scores = [result[2][algorithm]['Predicted_Mean'] \
                   for algorithm in sorted(result[2])]
-        best_score = max(scores)
+        if any([algorithm in CHEAT for algorithm in result[2]]):
+            best_score_no_cheats = max(scores[:-2]) #ASSUMES ldaC15 and ldaT15 ARE LAST
+        else:
+            best_score_no_cheats = max(scores)
+        best_cheating = max(scores) #best score, including cheating algorithms
         worst_score = min(scores)
         median_score = np.median(scores)
         for algorithm in sorted(result[2]):
-            score = result[2][algorithm]['Predicted_Mean']
-            #highlight the best and worst score
-            color = Color()
-            to_bold = False
-            if round(score, 2) == round(best_score, 2):
-                color.add('g', 0xff)
-                to_bold = True
-            if round(score, 2) == round(worst_score, 2):
-                color.add('r', 0xFF)
-                color.add('g', 0x04)
-                to_bold = True
-            if round(score, 2) == round(median_score, 2):
-                color.add('r', 0xff)
-                color.add('g', 0xff)
-            f.write('\t\t<td ' + str(color) + '>' +
-                    bold(str(round(score, 2)), to_bold) + '</td>\n')
+            if algorithm not in HIDDEN:
+                score = result[2][algorithm]['Predicted_Mean']
+                #highlight the best and worst score
+                color = Color()
+                to_bold = False
+                if round(score, 2) == round(best_score_no_cheats, 2) or \
+                   round(score, 2) == round(best_cheating, 2):
+                    if algorithm in CHEAT:
+                        color.add('b', 0xFF)
+                        color.add('g', 0x06)
+                    else:
+                        color.add('g', 0xff)
+                    to_bold = True
+                if round(score, 2) == round(worst_score, 2):
+                    color.add('r', 0xFF)
+                    color.add('g', 0x04)
+                    to_bold = True
+                if round(score, 2) == round(median_score, 2):
+                    color.add('r', 0xff)
+                    color.add('g', 0xff)
+                f.write('\t\t<td ' + str(color) + '>' +
+                        bold(str(round(score, 2)), to_bold) + '</td>\n')
         f.write('\t</tr>\n')
     f.write('</table>')
 
@@ -174,11 +187,12 @@ class Color(object):
 
 def main():
     parser = argparse.ArgumentParser(description="reads all json files in a \
-    directory and writes an html table displaying results")
+    directory and writes an html table displaying results (default values are \
+    in parentheses)")
     parser.add_argument('f', metavar='directory', action="store", 
                         help="directory containing json files to be read")
     parser.add_argument('-o', action="store_true", default=False,
-                        help="flag to overwrite existing table")
+                        help="flag to overwrite existing table (False)")
     
     args = parser.parse_args()
     print "reading experiment files from directory:", args.f
