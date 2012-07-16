@@ -11,47 +11,79 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Cran {
+public class Classic4 {
 
 	/**
-	 * Makes a json from the cran dataset at
+	 * Makes a json from the datasets at
 	 * http://www.dataminingresearch.com/index.php/2010/09/classic3-classic4-datasets/
-	 * Replace all instances of "cran" in the source with "cacm", "cisi", or "med" 
-	 * and change the number of iterations in the first for loop to run
-	 * this program on another dataset
+	 * Put the classic folder obtained at that website in plusone/data/
+	 * args[0] corresponds to the dataset being processed (cacm, cisi, cran, or med).
+	 * if args[1] is true, stop words will be excluded, if args[1] is false, every word
+	 * is included.
 	 * 
-	 * @param args unused
+	 * @param args the dataset being processed and a stop word flag
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws Throwable {
 		File input;
-    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter( "cran.json" ) ) );
-    	ArrayList<String> stopWords = makeStopWords();
+		Dataset ds = null;
+		//Set the dataset with args[0]
+		for (Dataset d : Dataset.values()) {
+			if (args[0].equals(d.toString())) {
+				ds = d;
+			}
+		}
+		if (ds == null) {
+			System.err.println("Usage: java Classic4 {cacm|cisi|cran|med} {true|false}");
+			System.exit(1);
+		}
+		System.out.print("Making json from " + ds.toString() + "...");
+    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter("data/" 
+    		+ ds.toString() + ".json" ) ) );
+    	ArrayList<String> stopWords = new ArrayList<String>();
+    	if (Boolean.parseBoolean(args[1])) {
+    		stopWords = makeStopWords();
+    	}
+    	int numFiles = 0;
+    	switch (ds) {
+    		case cacm:
+    			numFiles = 3204;
+    			break;
+    		case cisi:
+    			numFiles = 1460;
+    			break;
+    		case cran:
+    			numFiles = 1400;
+    			break;
+    		case med:
+    			numFiles = 1033;
+    			break;
+    	}
+    	
 		HashMap<Integer, ArrayList<String>> hm = new HashMap<Integer,ArrayList<String>>();
-		for (int i = 1; i <= 1400; i++) {
+		for (int i = 1; i <= numFiles; i++) {
 			boolean beginning = true;
 			ArrayList<String> thisDoc = new ArrayList<String>();
 			if (i < 10)
-				input = new File("data/classic/cran.00000" + i);
+				input = new File("data/classic/" + ds.toString() + ".00000" + i);
 			else if (i < 100)
-				input = new File("data/classic/cran.0000" + i);
+				input = new File("data/classic/" + ds.toString() + ".0000" + i);
 			else if (i < 1000)
-				input = new File("data/classic/cran.000" + i);
+				input = new File("data/classic/" + ds.toString() + ".000" + i);
 			else
-				input = new File("data/classic/cran.00" + i);
+				input = new File("data/classic/" + ds.toString() + ".00" + i);
 			Scanner in = null;
 			try {
 				in = new Scanner(input);
 				while (in.hasNext()) {
 					String word = in.next();
-					/* NOTE: COMMENT OUT THIS NEXT WHILE LOOP IF NOT ACTUALLY
-					 * MAKING A JSON FROM THE CRAN DATASET.
-					 */
-					while(beginning) {
-						if (word.equals(".")) {
-							beginning = false;
+					if (ds == Dataset.cran) {
+						while(beginning) {
+							if (word.equals(".")) {
+								beginning = false;
+							}
+							word = in.next();
 						}
-						word = in.next();
 					}
 					if (!stopWords.contains(word.toLowerCase()))
 						thisDoc.add(word);
@@ -84,7 +116,10 @@ public class Cran {
     	json.put( "users", docs );
     	out.println( json.toString() );
     	out.close();
+    	System.out.println("done!");
 	}
+	
+	public enum Dataset {cacm, cisi, cran, med}
 	
 	private static ArrayList<String> makeStopWords() throws Throwable {
 		ArrayList<String> result = new ArrayList<String>();
