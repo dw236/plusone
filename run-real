@@ -1,0 +1,25 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Number of topics
+klist=(5 10 15 20 25 30 35 40 45 50)
+#Datasets to use
+datalist=("cacm.json" "cisi.json" "cran.json" "med.json")
+#Flag to make html table
+table=true
+
+#Iterate through every combination of parameters
+for k in "${klist[@]}";
+do
+    for d in "${datalist[@]}";
+    do
+        #Run the test
+        ./test data/$d "" $k
+    done
+done
+
+if $table; then
+    cd $basedir
+    python parse_batch.py data
+fi
