@@ -59,6 +59,8 @@ public class Main {
 	private static Indexer<PaperAbstract> paperIndexer;
 
 	private static Terms terms;
+	
+	private static String dataFile;
 
 	private static MetadataLogger metadataLogger;
 	private static Random randGen;
@@ -71,6 +73,8 @@ public class Main {
 	public List<PredictionPaper> testingSet;
 	
 	private double ldaPerplexity;
+	
+	private static int numTopics;
 	
 	private static String generator;
 
@@ -233,8 +237,10 @@ public class Main {
 					}
 				}
 			} else {
-				Date date = new Date();
-				outName = date.getTime() + ".";
+				String shortFile = dataFile.split("/")[1];
+				outName = "k." + numTopics + "."
+						+ shortFile.substring(0,shortFile.length()-4);
+				parameters.put("k", numTopics);
 			}
 			json.put("parameters", parameters);
 			json.put("data", dataList);
@@ -737,9 +743,9 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		String data_file = System.getProperty("plusone.dataFile", "med.out");
+		dataFile = System.getProperty("plusone.dataFile", "med.out");
 
-		if (!new File(data_file).exists()) {
+		if (!new File(dataFile).exists()) {
 			System.out.println("Data file does not exist.");
 			System.exit(0);
 		}
@@ -747,6 +753,7 @@ public class Main {
 		long randSeed = 
 				new Long(System.getProperty("plusone.randomSeed", "0"));
 		generator = System.getProperty("plusone.generator");
+		numTopics = Integer.parseInt(System.getProperty("plusone.lda.dimensions"));
 
 		randGen = new Random(randSeed);
 		metadataLogger = new MetadataLogger();
@@ -759,9 +766,9 @@ public class Main {
 		String experimentPath = System.getProperty("plusone.outPath", 
 				"experiment");
 
-		load_data(data_file);
+		load_data(dataFile);
 		//main.splitByTrainPercent(trainPercent, dataset.getDocuments());
-		System.out.println("data file " + data_file);
+		System.out.println("data file " + dataFile);
 		//System.out.println("train percent " + trainPercent);
 		//System.out.println("test word percent " + testWordPercent);
 		System.out.println("Number of Documents: "+ dataset.getDocuments().size());
