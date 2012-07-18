@@ -10,19 +10,7 @@ import org.json.*;
 
 public class DatasetJSON {
 
-    class Paper {
-		Map<Integer,Integer> abstractWords;
-		Integer index;
-		Integer group;
-	
-		public Paper(Integer index, Map<Integer,Integer> abstractWords) {
-		    this.abstractWords = abstractWords;
-		    this.index = index;
-		}
-    }
-
     /* Member fields. */
-	public String[] itemindex, userindex;
 	public HashMap<Integer,Integer>[] users;
 	
     List<PaperAbstract> documents = new ArrayList<PaperAbstract>();
@@ -31,8 +19,7 @@ public class DatasetJSON {
     Indexer<String> wordIndexer = new Indexer<String>();
     public Indexer<String> getWordIndexer() { return wordIndexer; }
 
-    private Indexer<PaperAbstract> paperIndexer = 
-	new Indexer<PaperAbstract>();
+    private Indexer<PaperAbstract> paperIndexer = new Indexer<PaperAbstract>();
     public Indexer<PaperAbstract> getPaperIndexer() { return paperIndexer; }
 
     /** Reads in the JSON file and fills in documents, wordIndexer, and
@@ -52,10 +39,12 @@ public class DatasetJSON {
 			}
 			
 			int index = 0;
+			JSONObject user;
 			JSONArray items = null, scores = null;
+			HashMap<Integer, Integer> tf = null;
 			for( int i = 0; i < users.length(); i++ ) {
-				JSONObject user = users.getJSONObject( i );
-				HashMap<Integer, Integer> tf = new HashMap<Integer, Integer>();
+				user = users.getJSONObject( i );
+				tf = new HashMap<Integer, Integer>();
 				items = user.getJSONArray( "items" );
 				try	{
 					//If successful, this is a regression file
@@ -105,13 +94,13 @@ public class DatasetJSON {
      * @return
      */
     private boolean isIndexed(String filename) {
+    	JSONObject user; JSONArray items;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-	    	JSONObject json = new JSONObject( in.readLine() );
-			JSONArray users = json.getJSONArray( "users" );
+			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" );
 			for (int i = 0; i < users.length(); i++) {
-				JSONObject user = users.getJSONObject( i );
-				JSONArray items = user.getJSONArray( "items" );
+				user = users.getJSONObject( i );
+				items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					try {
 						int unused = new Integer(items.getString(j));
@@ -133,13 +122,15 @@ public class DatasetJSON {
      */
     private void initializeIndexer(String filename) {
     	int maxIndex = -1;
+    	JSONArray users, items;
+    	JSONObject user;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
 	    	JSONObject json = new JSONObject( in.readLine() );
-			JSONArray users = json.getJSONArray( "users" );
+			users = json.getJSONArray( "users" );
 			for (int i = 0; i < users.length(); i++) {
-				JSONObject user = users.getJSONObject( i );
-				JSONArray items = user.getJSONArray( "items" );
+				 user = users.getJSONObject( i );
+				 items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					if (Integer.parseInt(items.getString(j)) > maxIndex) {
 						maxIndex = Integer.parseInt(items.getString(j));
