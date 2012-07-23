@@ -9,7 +9,7 @@ UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
                     + ['median', 'sum_squares_words', 'sum_squares_topics'] \
                     + ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
-CHEAT = ['ldaC15', 'ldaT15']
+CHEAT = ['ldaC', 'ldaT']
 
 def generate_html(dir, overwrite=False):
     filenames = os.listdir(dir)
@@ -103,11 +103,12 @@ def write_table(f, results):
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
         scores = [result[2][algorithm]['Predicted_Mean'] \
                   for algorithm in sorted(result[2])]
-        if any([algorithm in CHEAT for algorithm in result[2]]):
+        if any([any([cheat in algorithm for cheat in CHEAT]) \
+                for algorithm in result[2]]):
             best_score_no_cheats = max(scores[:-2]) #ASSUMES ldaC15 and ldaT15 ARE LAST
         else:
             best_score_no_cheats = max(scores)
-        best_cheating = max(scores) #best score, including cheating algorithms
+        best_cheating = max(scores[-2:]) #best score of cheating algorithms
         worst_score = min(scores)
         median_score = np.median(scores)
         for algorithm in sorted(result[2]):
@@ -116,19 +117,20 @@ def write_table(f, results):
                 #highlight the best and worst score
                 color = Color()
                 to_bold = False
-                if round(score, 2) == round(best_score_no_cheats, 2) or \
-                   round(score, 2) == round(best_cheating, 2):
-                    if algorithm in CHEAT:
-                        color.add('b', 0xFF)
-                        color.add('g', 0x06)
-                    else:
-                        color.add('g', 0xff)
+                if round(score, 2) == round(best_score_no_cheats, 2) \
+                and not any([cheat in algorithm for cheat in CHEAT]):
+                    color.add('g', 0xff)
+                    to_bold = True 
+                elif round(score, 2) == round(best_cheating, 2) \
+                and any([cheat in algorithm for cheat in CHEAT]):
+                    color.add('b', 0xFF)
+                    color.add('g', 0x06)
                     to_bold = True
-                if round(score, 2) == round(worst_score, 2):
+                elif round(score, 2) == round(worst_score, 2):
                     color.add('r', 0xFF)
                     color.add('g', 0x04)
                     to_bold = True
-                if round(score, 2) == round(median_score, 2):
+                elif round(score, 2) == round(median_score, 2):
                     color.add('r', 0xff)
                     color.add('g', 0xff)
                 f.write('\t\t<td ' + str(color) + '>' +
