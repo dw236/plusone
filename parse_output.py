@@ -5,7 +5,7 @@ import src.datageneration.util as util
 TEST = 'tests'
 PARAMS = 'parameters'
 DATA = 'data'
-HIDDEN = ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
+HIDDEN = []#['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
 
 def parse(filename, show=False, external=True):
     """@TODO
