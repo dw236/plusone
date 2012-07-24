@@ -99,10 +99,11 @@ public class SVD {
 
 		boolean converge = false;
 		while (!converge){
+			double[] subtract = new double[k+1];
 			xnorm = dotProduct(x, x);
 			if (xnorm <= 0.0001)
 				break;
-
+			
 			for (int i = 0; i < k; i ++)
 				subtract[i] = dotProduct(mu[i], x);
 
@@ -123,7 +124,7 @@ public class SVD {
 			if (ynorm <= 0.0001)
 				break;
 
-			double[] subtract = new double[k+1];
+			
 			for (int i = 0; i < k; i ++){
 				subtract[i] = dotProduct(beta[i], y);
 			}
