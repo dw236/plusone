@@ -5,9 +5,9 @@ export basedir=$PWD
 #Generator
 generator="lda"
 #Number of topics for generation
-kGenlist=(10 15 20)
+kGenlist=(15)
 #Number of topics for estimation
-kEstlist=(15 20 25)
+kEstlist=(10 15 20 30 40)
 #Number of docs
 nlist=(500)
 #Number of words per document
@@ -15,15 +15,40 @@ llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.01)
+alist=(0.01 0.075 0.4 4.0) #1, 2, 5, 10
 #Beta
-blist=(0.001)
+blist=(0.0001 0.1 1.0 4.0) #1, 50, 200, 300
 #Flag for plotting output
 plot=false
 #Flag for making table
 table=false
 #Flag to use data already in datageneration/output
 old=false
+
+while getopts “hgpo” OPTION
+do
+    case $OPTION in
+        h)
+            echo "Usage: ./run-batch [-h] [-p] [-g] [-o]"
+            echo "Optional arguments:"
+            echo "-h Show this help screen"
+            echo "-p Plot all experiment*.json files in data"
+            echo "-g Make an HTML table with the data"
+            echo "-o Use previously generated data with the parameters in run-batch instead of making new data"
+            echo "To change the data generation parameters, edit run-batch"
+            exit 1
+            ;;
+        g)
+            table=true
+            ;;
+        p)
+            plot=true
+            ;;
+        o)
+            old=true
+            ;;
+    esac
+done
 
 # compile using ant
 ant -f build.xml || exit

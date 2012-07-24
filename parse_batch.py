@@ -8,8 +8,11 @@ import numpy as np
 UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
                     + ['median', 'sum_squares_words', 'sum_squares_topics'] \
-                    + ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
+                    #+ ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
 CHEAT = ['ldaC', 'ldaT']
+
+class Algorithms(object):
+    algorithms = UNIVERSALS
 
 def generate_html(dir, overwrite=False):
     filenames = os.listdir(dir)
@@ -35,25 +38,38 @@ def generate_html(dir, overwrite=False):
     return results
 
 def add_result(results, new_result):
+    Algorithms.algorithms = set(list(Algorithms.algorithms) 
+                                + new_result[2].keys())
     for result in results:
-        all_true = True
-        for option in UNIVERSALS:
-            result_has_option = result[0][3].has_key(option)
-            new_result_has_option = new_result[3].has_key(option)
-            if result_has_option and new_result_has_option:
-                result_option = result[0][3][option]
-                new_result_option = new_result[3][option]
-                if  result_option != new_result_option:
-                    all_true = False
-                    break
-            elif result_has_option != new_result_has_option:
-                all_true = False
-                break
+        params_true = check_all(result, new_result)
+        algs_true = check_all(result, new_result, 2)
+        all_true = params_true and algs_true
         if all_true:
             result.append(new_result)
             return results
     results.append([new_result])
     return results
+
+def check_all(result, new_result, index=None):
+    if index == None:
+        index = 3
+        all_true = True
+        for option in UNIVERSALS:
+                result_has_option = result[0][index].has_key(option)
+                new_result_has_option = new_result[index].has_key(option)
+                if result_has_option and new_result_has_option:
+                    result_option = result[0][index][option]
+                    new_result_option = new_result[index][option]
+                    if  result_option != new_result_option:
+                        all_true = False
+                        break
+                elif result_has_option != new_result_has_option:
+                    all_true = False
+                    break
+    else:
+        all_true = (set(result[0][index].keys()) 
+                    == set(new_result[index].keys()))
+    return all_true
 
 def write_table(f, results):
     """
