@@ -28,8 +28,8 @@ public class Ctm extends ClusteringTest {
 	private SimpleMatrix beta;
 	private SimpleMatrix gammas;
 	private List<PredictionPaper> testDocs;
-	
 
+	
 	public Ctm(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
 		super("Ctm");
@@ -81,12 +81,12 @@ public class Ctm extends ClusteringTest {
 		Utils.runCommand("lib/ctm-dist/ctm inf "
 				+ "ctm/test.dat ctm/final ctm/holdout lib/ctm-dist/inf-settings.txt"
 				, false);
-		
+
 		double[][] gammasMatrix = readCtmFile("ctm/holdout-phi-sum.dat",
 				testDocs.size(), numTopics, false);
 		gammas = new SimpleMatrix(gammasMatrix);
 		SimpleMatrix probabilities = gammas.mult(beta);
-		
+
 		double[][] result = new double[probabilities.numRows()]
 		                    [probabilities.numCols()];
 		for (int row=0; row<probabilities.numRows(); row++) {
@@ -97,8 +97,8 @@ public class Ctm extends ClusteringTest {
 		System.out.println("Ctm perplexity is " + getPerplexity());
 		return result;
 	}
-	
-	
+
+
 	/**
 	 * Takes a file output by ctm-dist and stores it in a matrix.
 	 * 
@@ -111,7 +111,7 @@ public class Ctm extends ClusteringTest {
 			int cols, boolean exp) {
 		List<String[]> gammas = new ArrayList<String[]>();
 		double[][] results = null;
-		
+
 		try {
 			FileInputStream fstream = new FileInputStream(filename);
 			DataInputStream in = new DataInputStream(fstream);
@@ -160,7 +160,7 @@ public class Ctm extends ClusteringTest {
 
 		for (TrainingPaper paper : papers) {
 			fileWriter.write(paper.getTrainingWords().size() + " ");
-			
+
 			for (int word : paper.getTrainingWords()) {
 				fileWriter.write(word + ":" + paper.getTrainingTf(word) + " ");
 			}
@@ -168,10 +168,10 @@ public class Ctm extends ClusteringTest {
 		}
 
 		fileWriter.close();
-		
+
 		System.out.println("done.");
 	}
-	
+
 	/**
 	 * Identical to createLdaInputTest
 	 * @param filename name of the file to be created (will be overwritten
@@ -186,7 +186,7 @@ public class Ctm extends ClusteringTest {
 
 		for (PredictionPaper paper : papers) {
 			fileWriter.write(paper.getTrainingWords().size() + " ");
-			
+
 			for (int word : paper.getTrainingWords()) {
 				fileWriter.write(word + ":" + paper.getTrainingTf(word) + " ");
 			}
@@ -194,10 +194,10 @@ public class Ctm extends ClusteringTest {
 		}
 
 		fileWriter.close();
-		
+
 		System.out.println("done.");
 	}
-	
+
 	/**
 	 * Returns the perplexity for the test set. Can only be run after the predict method.
 	 * 

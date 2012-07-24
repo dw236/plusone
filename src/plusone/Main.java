@@ -274,6 +274,11 @@ public class Main {
 			json.put("tests", tests);
 			
 			File out = new File("data", "experiment." + outName + "json");
+			while (out.exists()) {
+				outName = new String(outName.concat("0."));
+				System.out.println("Now naming it " + outName);
+				out = new File("data", "experiment." + outName + "json");
+			}
 			System.out.println("Wrote to data/experiment." + outName + "json");
 	
 			PlusoneFileWriter writer = new PlusoneFileWriter(out);
