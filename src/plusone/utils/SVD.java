@@ -99,25 +99,6 @@ public class SVD {
 
 		boolean converge = false;
 		while (!converge){
-			ynorm = dotProduct(y, y);
-
-			if (ynorm <= 0.0001)
-				break;
-
-			double[] subtract = new double[k+1];
-			for (int i = 0; i < k; i ++){
-				subtract[i] = dotProduct(beta[i], y);
-			}
-			for (int i = 0; i < x.length; i ++){
-				double value = 0;
-				for (Entry t : DocTerm[i]) {
-					value += t.value * y[t.termID];
-				}
-				for (int j = 0; j < k; j ++)
-					value -= mu[j][i] * sigma[j] * subtract[j];
-				x[i] = value / ynorm;
-			}
-
 			xnorm = dotProduct(x, x);
 			if (xnorm <= 0.0001)
 				break;
@@ -136,6 +117,24 @@ public class SVD {
 					value -= beta[j][i] * sigma[j] * subtract[j];
 
 				y[i] = value / xnorm;
+			}
+			ynorm = dotProduct(y, y);
+
+			if (ynorm <= 0.0001)
+				break;
+
+			double[] subtract = new double[k+1];
+			for (int i = 0; i < k; i ++){
+				subtract[i] = dotProduct(beta[i], y);
+			}
+			for (int i = 0; i < x.length; i ++){
+				double value = 0;
+				for (Entry t : DocTerm[i]) {
+					value += t.value * y[t.termID];
+				}
+				for (int j = 0; j < k; j ++)
+					value -= mu[j][i] * sigma[j] * subtract[j];
+				x[i] = value / ynorm;
 			}
 
 			double temp = dotProduct(x, x) * dotProduct(y, y);
