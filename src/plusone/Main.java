@@ -236,7 +236,7 @@ public class Main {
 						parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
 					}
 				}
-			} else {
+			} else { //Real data
 				String shortFile = dataFile.split("/")[1];
 				outName = "k." + numTopics + "."
 						+ shortFile.substring(0,shortFile.length()-4);
@@ -276,7 +276,6 @@ public class Main {
 			File out = new File("data", "experiment." + outName + "json");
 			while (out.exists()) {
 				outName = new String(outName.concat("0."));
-				System.out.println("Now naming it " + outName);
 				out = new File("data", "experiment." + outName + "json");
 			}
 			System.out.println("Wrote to data/experiment." + outName + "json");

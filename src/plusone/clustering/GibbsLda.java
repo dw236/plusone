@@ -31,7 +31,7 @@ public class GibbsLda extends ClusteringTest {
 
 	public GibbsLda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
-		super("GibbsLda");
+		super("GibbsLda" + numTopics);
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
