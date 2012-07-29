@@ -21,7 +21,6 @@ def generate_html(dir, overwrite=False):
     for filename in filenames:
         if "experiment" in filename and filename[-5:] == ".json":
             files_found += 1
-            #TODO: split different results into different lists
             result = parse_output.parse(dir + '/' + filename, external=False)
             results = add_result(results, result)
         else:
@@ -152,7 +151,7 @@ def write_table(f, results):
                 f.write('\t\t<td ' + str(color) + '>' +
                         bold(str(round(score, 2)), to_bold) + '</td>\n')
         f.write('\t</tr>\n')
-    f.write('</table>')
+    f.write('</table>\n')
 
 def bold(string, flag=True):
     if flag:
