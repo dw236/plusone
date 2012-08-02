@@ -6,7 +6,8 @@ export basedir=$PWD
 klist=(20 30 40 50)
 #Datasets to use
 #datalist=("cacm.json" "cisi.json" "cran.json" "med.json" "kos.json" "nips.json")
-datalist=("kos.json" "nips.json")
+#datalist=("kos.json" "nips.json")
+datalist=("stackoverflow.1000.data.json")
 #Flag to make html table
 table=true
 

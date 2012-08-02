@@ -1,5 +1,6 @@
 package plusone.utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,27 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 
 		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
 			norm += entry.getValue() * entry.getValue();
+		}
+		norm = Math.sqrt(norm);
+	}
+	
+	/**
+	 * A specialized version of generateTf for tagged data
+	 * 
+	 * @param tagMap Map from the paper's index to the wordIndexer's indices for its tags
+	 */
+	public void generateTagTf(HashMap<Integer, ArrayList<Integer>> tagMap) {
+		Random randGen = Main.getRandomGenerator();
+		trainingTf = new HashMap<Integer, Integer>();
+		testingTf = new HashMap<Integer, Integer>();
+		
+		for (Integer word : tf.keySet()) {
+			if (tagMap.get(index).contains(word)) {
+				testingTf.put(word, tf.get(word));
+			} else {
+				trainingTf.put(word, tf.get(word));
+				norm += tf.get(word) * tf.get(word);
+			}
 		}
 		norm = Math.sqrt(norm);
 	}

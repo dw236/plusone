@@ -80,9 +80,14 @@ public class Main {
 
 	private static int FOLD; // cross validation parameter
 	private static DatasetJSON dataset;
+	
+	private static boolean tagged;
+	private static HashMap<Integer, ArrayList<Integer>> tagMap;
 
 	public static void load_data(String filename) {
 		dataset = DatasetJSON.loadDatasetFromPath(filename);
+		tagged = dataset.isTagged(filename);
+		tagMap = dataset.getTagMap();
 		wordIndexer = dataset.getWordIndexer();
 		paperIndexer = dataset.getPaperIndexer();
 	}
@@ -93,13 +98,25 @@ public class Main {
 		// split into training documents and testing documents
 		trainingSet=new ArrayList<TrainingPaper>();
 		testingSet = new ArrayList<PredictionPaper>();
+
 		for (int i = 0; i < documents.size(); i ++) {
-			if (documents.get(i).getGroup()==testGroup) {
-				testingSet.add((PredictionPaper)documents.get(i));
-				testIndices.put(documents.get(i), i);
+			if (tagged) {
+				//Because documents.get(i).getIndex() == i
+				if (tagMap.keySet().contains(i)) {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				} else {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				}
 			} else {
-				trainingSet.add((TrainingPaper)documents.get(i));
-				trainingIndices.put(documents.get(i), i);
+				if (documents.get(i).getGroup()==testGroup) {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				} else {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				}
 			}
 		}
 		
@@ -112,12 +129,22 @@ public class Main {
 			terms[i] = new Terms.Term(i);
 		}
 
-		for (TrainingPaper a : trainingSet){
-			((PaperAbstract)a).generateTf(testWordPercent, terms, false);
-		}
-
-		for (PredictionPaper a : testingSet){
-			((PaperAbstract)a).generateTf(testWordPercent, null, true);
+		if (tagged) {
+			for (TrainingPaper a : trainingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, terms, false);
+			}
+	
+			for (PredictionPaper a : testingSet){
+				((PaperAbstract)a).generateTagTf(tagMap);
+			}
+		} else {
+			for (TrainingPaper a : trainingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, terms, false);
+			}
+	
+			for (PredictionPaper a : testingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, null, true);
+			}
 		}
 		
 		//Find average number of non-heldout words in each of the test docs

@@ -21,6 +21,11 @@ public class DatasetJSON {
 
     private Indexer<PaperAbstract> paperIndexer = new Indexer<PaperAbstract>();
     public Indexer<PaperAbstract> getPaperIndexer() { return paperIndexer; }
+    
+    //Map from the paper's index to the wordIndexer's indices for its tags 
+    private HashMap<Integer, ArrayList<Integer>> tagMap =
+    		new HashMap<Integer, ArrayList<Integer>>();
+    public HashMap<Integer, ArrayList<Integer>> getTagMap() { return tagMap; }
 
     /** Reads in the JSON file and fills in documents, wordIndexer, and
      * paperIndexer appropriately. Will automatically change its behavior when
@@ -40,7 +45,7 @@ public class DatasetJSON {
 			
 			int index = 0;
 			JSONObject user;
-			JSONArray items = null, scores = null;
+			JSONArray items = null, scores = null, tags = null;
 			HashMap<Integer, Integer> tf = null;
 			for( int i = 0; i < users.length(); i++ ) {
 				user = users.getJSONObject( i );
@@ -52,6 +57,11 @@ public class DatasetJSON {
 				} catch (JSONException e) {
 					scores = null;
 				}
+				try	{
+					tags = user.getJSONArray( "tags" );
+				} catch (JSONException e) {
+					tags = null;
+				}
 
 				for( int j = 0; j < items.length(); j++ ) {
 					String jthItem = items.getString( j );
@@ -59,13 +69,27 @@ public class DatasetJSON {
 						if ( !tf.keySet().contains(this.wordIndexer.fastIndexOf(jthItem))) {
 							tf.put( this.wordIndexer.fastAddAndGetIndex(jthItem), 1 );
 						} else {
-							tf.put( this.wordIndexer.fastIndexOf(jthItem), tf.get( this.wordIndexer.fastIndexOf(jthItem) ) + 1 );
+							tf.put( this.wordIndexer.fastIndexOf(jthItem), 
+									tf.get( this.wordIndexer.fastIndexOf(jthItem) ) + 1 );
 						}
 					} else {
 						tf.put( this.wordIndexer.fastAddAndGetIndex(jthItem), scores.getInt( j ) );
 					}
 				}
 				PaperAbstract p = new PaperAbstract(index++, null, null, tf);
+				if (tags != null) {
+					ArrayList<Integer> tagsList = new ArrayList<Integer>();
+					for (int j = 0; j < tags.length(); j++) {
+						if ( !tf.keySet().contains(this.wordIndexer.fastIndexOf(tags.getString(j)))) {
+							tf.put( this.wordIndexer.fastAddAndGetIndex(tags.getString(j)), 1 );
+						} else {
+							tf.put( this.wordIndexer.fastIndexOf(tags.getString(j)),
+									tf.get( this.wordIndexer.fastIndexOf(tags.getString(j)) ) + 1 );
+						}
+						tagsList.add(wordIndexer.fastIndexOf(tags.getString(j)));
+					}
+					tagMap.put(index-1, tagsList);
+				}
 				documents.add(p);
 				paperIndexer.add(p);
 			}
@@ -90,7 +114,7 @@ public class DatasetJSON {
     /**
      * Returns true if the input is already indexed
      * 
-     * @param filename filename path to the JSON file (should be passed from loadDatasetFromPath)
+     * @param filename path to the JSON file (should be passed from loadDatasetFromPath)
      * @return
      */
     private boolean isIndexed(String filename) {
@@ -114,6 +138,35 @@ public class DatasetJSON {
     		System.out.println("Something went wrong with isIndexed");
     		return false;
     	}
+    }
+    
+    /**
+     * Returns true if the input is tagged. Tagged input will have a JSONArray
+     * entitled "tags" for some users
+     * 
+     * @param filename path to the JSON file
+     * @return
+     */
+    public boolean isTagged(String filename) {
+    	JSONObject user; JSONArray items, tags;
+    	try {
+			BufferedReader in = new BufferedReader( new FileReader( filename ) );
+			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" );
+			for (int i = 0; i < users.length(); i++) {
+				user = users.getJSONObject( i );
+				items = user.getJSONArray( "items" );
+				try {
+					tags = user.getJSONArray("tags");
+					return true;
+				} catch (Exception e) {
+					//If we fall into this statement every time, return false
+				}
+			}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    		return false;
+    	}
+    	return false;
     }
     
     /**

@@ -16,7 +16,7 @@ public class StackOverflow {
 	/**
 	 * Makes a json from the Stack Overflow dataset
 	 * 
-	 * @param args unused
+	 * @param args if args[0] is true, tags are put in as tag_word
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws Throwable {
@@ -39,14 +39,30 @@ public class StackOverflow {
 			String inDoc = inUser.getString("body");
 			ArrayList<String> questionText = new ArrayList<String>(
 					Arrays.asList(inDoc.split(" ")));
+			ArrayList<String> tagText = new ArrayList<String>();
+			JSONArray answers, tags;
+			if (Boolean.parseBoolean(args[0]) == true) {
+				try {
+					tags = inUser.getJSONArray("tags");
+				} catch (Exception e) {
+					tags = null;
+					System.out.println("Question " + i + " has no tags");
+				}
+				if (tags != null) {
+					for (int j = 0; j < tags.length(); j++) {
+						tagText.add(tags.getString(j));
+					}
+				}
+			}
 			outUser.put("id", id++);
 			outUser.put("items", questionText);
+			outUser.put("tags", tagText);
 			docs.put(outUser);
-			JSONArray answers;
 			try {
 				answers = inUser.getJSONArray("answers");
 			} catch (Exception e) {
 				answers = null;
+				System.out.println("Question " + i + " has no answers");
 			}
 			if (answers != null) {
 				for (int j = 0; j < answers.length(); j++) {

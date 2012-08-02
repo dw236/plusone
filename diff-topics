@@ -5,9 +5,9 @@ export basedir=$PWD
 #Generator
 generator="lda"
 #Number of topics for generation
-kGenlist=(15)
+kGenlist=(10 15 20 30)
 #Number of topics for estimation
-kEstlist=(10 15 20 30 40)
+kEstlist=(100)
 #Number of docs
 nlist=(500)
 #Number of words per document
