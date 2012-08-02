@@ -31,7 +31,7 @@ public class StackOverflow {
 		JSONObject outJson = new JSONObject();
 		JSONArray questions = inJson.getJSONArray("questions");
 		JSONArray docs = new JSONArray();
-		int id = 0;
+		int id = 0; boolean skip = false;
 		
 		for (int i = 0; i < questions.length(); i++) {
 			JSONObject inUser = questions.getJSONObject(i);
@@ -39,6 +39,9 @@ public class StackOverflow {
 			String inDoc = inUser.getString("body");
 			ArrayList<String> questionText = new ArrayList<String>(
 					Arrays.asList(inDoc.split(" ")));
+			if (questionText.size() == 1 && questionText.get(0).equals("")) {
+				skip = true;
+			}
 			ArrayList<String> tagText = new ArrayList<String>();
 			JSONArray answers, tags;
 			if (Boolean.parseBoolean(args[0]) == true) {
@@ -54,10 +57,14 @@ public class StackOverflow {
 					}
 				}
 			}
-			outUser.put("id", id++);
-			outUser.put("items", questionText);
-			outUser.put("tags", tagText);
-			docs.put(outUser);
+			if (!skip) {
+				outUser.put("id", id++);
+				outUser.put("items", questionText);
+				outUser.put("tags", tagText);
+				docs.put(outUser);
+			} else {
+				skip = false;
+			}
 			try {
 				answers = inUser.getJSONArray("answers");
 			} catch (Exception e) {
@@ -71,6 +78,9 @@ public class StackOverflow {
 					String answererDoc = answerer.getString("body");
 					ArrayList<String> answerText = new ArrayList<String>(
 							Arrays.asList(answererDoc.split(" ")));
+					if (answerText.size() == 1 && answerText.get(0).equals("")) {
+						continue;
+					}
 					outUser.put("id", id++);
 					outUser.put("items", answerText);
 					docs.put(outUser);
