@@ -403,6 +403,9 @@ def show_path(tree, path_indices):
         tree = tree.children[index]
     return topic_indices
 
+def avg_sig_words(alpha, num):
+    return np.average(get_sig_words(dirichlet([alpha]*num, 1000)))
+
 class Dirichlet_Test(object):
     def __init__(self, alpha):
         self.alpha = alpha
