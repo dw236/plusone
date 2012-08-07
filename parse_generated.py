@@ -55,14 +55,16 @@ def add_result(results, new_result):
         results[universals][params] = {}
     
     for algorithm in sorted(new_result[2]):
-        results[universals][params][algorithm] \
-        = new_result[2][algorithm]['Predicted_Mean']
-        algorithms['names'].add(algorithm)
-        try: 
-            int(algorithm[-2:])
-            algorithms['types'].add(algorithm[:-2])
-        except:
-            algorithms['types'].add(algorithm)
+        score = new_result[2][algorithm]['Predicted_Mean']
+        results[universals][params][algorithm] = score
+        algorithm_type = get_type(algorithm)
+        assert(algorithm_type != None)
+        if not is_cheat(algorithm):
+            algorithms['names'].add(algorithm)
+        else:
+            algorithms['names'].add(algorithm_type)
+            results[universals][params][algorithm_type] = score
+        algorithms['types'].add(algorithm_type)
     for statistic in sorted(new_result[4]):
         if statistic not in HIDDEN:
             results[universals][params][statistic] \
@@ -135,6 +137,16 @@ def write_table(f, results, params):
 
 def is_cheat(algorithm):
     return any([cheat in algorithm for cheat in CHEATS])
+
+def get_type(algorithm):
+    alg_type = None
+    try:
+        int(algorithm[-2:])
+        alg_type = algorithm[:-2]
+    except:
+        alg_type = algorithm
+    
+    return alg_type
 
 def get_scores(result, algorithms):
     best_score_names = []

@@ -30,7 +30,7 @@ Plusone.jar
 /lib/ctm-dist/ctm
 
 /data/documents-out.json
-/data/test.html
+/data/*.html
 
 /src/datageneration/output/*
 /src/datageneration/script.py

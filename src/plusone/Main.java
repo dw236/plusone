@@ -99,29 +99,34 @@ public class Main {
 		trainingSet=new ArrayList<TrainingPaper>();
 		testingSet = new ArrayList<PredictionPaper>();
 
-		for (int i = 0; i < documents.size(); i ++) {
-			if (tagged) {
-				//Because documents.get(i).getIndex() == i
-				if (tagMap.keySet().contains(i)) {
-					testingSet.add((PredictionPaper)documents.get(i));
-					testIndices.put(documents.get(i), i);
-				} else {
-					trainingSet.add((TrainingPaper)documents.get(i));
-					trainingIndices.put(documents.get(i), i);
-				}
-			} else {
-				if (documents.get(i).getGroup()==testGroup) {
-					testingSet.add((PredictionPaper)documents.get(i));
-					testIndices.put(documents.get(i), i);
-				} else {
-					trainingSet.add((TrainingPaper)documents.get(i));
-					trainingIndices.put(documents.get(i), i);
-				}
-			}
-		}
-		
-		System.out.println("Training size:" + trainingSet.size());
-		System.out.println("Testing size:" + testingSet.size());
+//		for (int i = 0; i < documents.size(); i ++) {
+//			if (tagged) {
+//				//Because documents.get(i).getIndex() == i
+//				if (tagMap.keySet().contains(i)) {
+//					testingSet.add((PredictionPaper)documents.get(i));
+//					testIndices.put(documents.get(i), i);
+//				} else {
+//					trainingSet.add((TrainingPaper)documents.get(i));
+//					trainingIndices.put(documents.get(i), i);
+//				}
+//			} else {
+//				if (documents.get(i).getGroup()==testGroup) {
+//					testingSet.add((PredictionPaper)documents.get(i));
+//					testIndices.put(documents.get(i), i);
+//				} else {
+//					trainingSet.add((TrainingPaper)documents.get(i));
+//					trainingIndices.put(documents.get(i), i);
+//				}
+//			}
+//		}
+//		
+//		System.out.println("Training size:" + trainingSet.size());
+//		System.out.println("Testing size:" + testingSet.size());
+
+		double[] trainPercents = 
+			parseDoubleList(System.getProperty("plusone.trainPercents", 
+					"0.3,0.5"));
+		splitByTrainPercent(trainPercents[0], documents);
 		
 		// Held out words
 		Terms.Term[] terms = new Terms.Term[wordIndexer.size()];
@@ -730,10 +735,24 @@ public class Main {
 		trainingSet = new ArrayList<TrainingPaper>();
 		testingSet = new ArrayList<PredictionPaper>();
 		for (int i = 0; i < documents.size(); i ++) {
-			if (randGen.nextDouble() < trainPercent)
-				trainingSet.add((TrainingPaper)documents.get(i));
-			else
-				testingSet.add((PredictionPaper)documents.get(i));
+			if (tagged) {
+				//Because documents.get(i).getIndex() == i
+				if (tagMap.keySet().contains(i)) {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				} else {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				}
+			} else {
+				if (randGen.nextDouble() < trainPercent) {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				} else {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				}
+			}
 		}
 		System.out.println("trainingSet size: " + trainingSet.size());
 		System.out.println("testingSet size: " + testingSet.size());
