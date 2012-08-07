@@ -48,4 +48,8 @@ public class LSI extends ClusteringTest {
     public double[] predict(PredictionPaper testPaper) {
 	return svd.predict(testPaper);
     }
+    
+    public double[] getSingularValues() {
+    	return svd.getSingularValues();
+    }
 }

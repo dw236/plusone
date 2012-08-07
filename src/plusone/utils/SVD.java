@@ -224,4 +224,8 @@ public class SVD {
 
 		return ret;
 	}
+	
+	public double[] getSingularValues() {
+		return sigma;
+	}
 }

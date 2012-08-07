@@ -72,8 +72,8 @@ public class Main {
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
 	
-	private double ldaPerplexity;
-	
+	private double[] sVals;
+		
 	private static int numTopics;
 	
 	private static String generator;
@@ -295,9 +295,7 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						if (entry.getKey().equals("Lda")) {
-							thisTest.put("Perplexity", ldaPerplexity);
-						}
+						putHover(entry.getKey(), thisTest);
 						allTests.put(entry.getKey(), thisTest);
 					}
 					tests.put(allTests);
@@ -317,6 +315,12 @@ public class Main {
 			writer.close();
 		} catch (JSONException e) {
 			System.out.println("Error writing to output");
+		}
+	}
+	
+	private void putHover(String algName, JSONObject thisTest) throws JSONException {
+		if (algName.substring(0,3).equals("LSI")) {
+			thisTest.put("Hover", sVals);
 		}
 	}
 
@@ -365,7 +369,7 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
-
+				sVals = lsi.getSingularValues();
 			}
 		}
 		//PLSI
@@ -395,7 +399,6 @@ public class Main {
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 			}
-			ldaPerplexity = lda.getPerplexity();
 		}
 		//LDA, cheats on training but not testing
 		Lda ldaTrained = null;

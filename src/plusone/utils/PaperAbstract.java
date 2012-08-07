@@ -102,7 +102,6 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 * @param tagMap Map from the paper's index to the wordIndexer's indices for its tags
 	 */
 	public void generateTagTf(HashMap<Integer, ArrayList<Integer>> tagMap) {
-		Random randGen = Main.getRandomGenerator();
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
 		
