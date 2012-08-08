@@ -32,7 +32,9 @@ def parse(filename, show=False, external=True):
     names = []
     scores = []
     for test in data[TEST]:
-        for key in sorted(test.keys(), cmp=(lambda x,y: cmp(test[x], test[y]))):
+        for key in sorted(test.keys(), 
+                          cmp=(lambda x,y: cmp(test[x]['Predicted_Mean'], 
+                                               test[y]['Predicted_Mean']))):
             if key not in HIDDEN:
                 names.append(str(key))
                 scores.append(test[key]['Predicted_Mean'])
