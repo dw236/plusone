@@ -30,6 +30,7 @@ def generate_html(dir, overwrite=False):
     overwrite = 'w' if overwrite else 'a'
     with open('data/test.html', overwrite) as f:
         f.write('<script src="sorttable.js"></script>\n')
+        f.write('<head><link rel="stylesheet" type="text/css" href="dropt.css" /></head>\n')
         for result in results:
             write_table(f, result)
             f.write('<br></br>')
@@ -129,6 +130,7 @@ def write_table(f, results):
         for algorithm in sorted(result[2]):
             if algorithm not in HIDDEN:
                 score = result[2][algorithm]['Predicted_Mean']
+                hoverList = result[2][algorithm]['Hover']
                 #highlight the best and worst score
                 color = Color()
                 to_bold = False
@@ -148,8 +150,12 @@ def write_table(f, results):
                 elif round(score, 2) == round(median_score, 2):
                     color.add('r', 0xff)
                     color.add('g', 0xff)
-                f.write('\t\t<td ' + str(color) + '>' +
+                if hoverList == []:
+                    f.write('\t\t<td ' + str(color) + '>' +
                         bold(str(round(score, 2)), to_bold) + '</td>\n')
+                else:
+                    f.write('\t\t<td ' + str(color) + '>' +
+                        hover(bold(str(round(score, 2)), to_bold), hoverList) + '</td>\n')
         f.write('\t</tr>\n')
     f.write('</table>\n')
 
@@ -158,6 +164,12 @@ def bold(string, flag=True):
         return '<b>' + string + '</b>'
     else:
         return string
+
+def hover(displayText, hoverList):
+    ret = ''
+    for s in hoverList:
+       ret += str(s) + ' '
+    return '<span class="dropt">' + displayText + '<span style="width:500px;">' + ret + '</span> </span>'
 
 class Color(object):
     """class to handle colors for table cells

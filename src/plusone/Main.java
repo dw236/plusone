@@ -319,9 +319,17 @@ public class Main {
 		}
 	}
 	
+	/** Adds the text that should be appear on hover in the html
+	 * table for each algorithm
+	 * @param algName Algorithm name with any parameters included (eg LSI-15)
+	 * @param thisTest the JSONObject corresponding to algName
+	 * @throws JSONException
+	 */
 	private void putHover(String algName, JSONObject thisTest) throws JSONException {
 		if (algName.substring(0,3).equals("LSI")) {
 			thisTest.put("Hover", sVals);
+		} else {
+			thisTest.put("Hover", new double[0]);
 		}
 	}
 
