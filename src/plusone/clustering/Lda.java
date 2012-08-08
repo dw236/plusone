@@ -22,6 +22,7 @@ import org.ejml.simple.SimpleMatrix;
 
 public class Lda extends ClusteringTest {
 
+	private String name;
 	private List<TrainingPaper> trainingSet;
 	private Indexer<String> wordIndexer;
 	private Terms terms;
@@ -52,6 +53,7 @@ public class Lda extends ClusteringTest {
 	public Lda(String variant, List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
 		this(variant+numTopics);
+		this.name = variant;
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
@@ -161,7 +163,7 @@ public class Lda extends ClusteringTest {
 				}
 			}
 		}
-		System.out.println("Lda perplexity is " + getPerplexity());
+		System.out.println(name + " perplexity is " + getPerplexity());
 		return result;
 	}
 
@@ -236,6 +238,7 @@ public class Lda extends ClusteringTest {
 			while ((strLine = br.readLine()) != null) {
 				if (trainingIndices.containsValue(index)) {
 					fileWriter.write(strLine);
+					fileWriter.write("\n");
 				}
 				index++;
 			}
@@ -392,7 +395,7 @@ public class Lda extends ClusteringTest {
 	 * @return the perplexity for testDocs
 	 */
 	public double getPerplexity() {
-		if (trainCheat) {
+		if (testCheat) {
 			double[][] betaMatrix = getRealBeta("src/datageneration/output/documents_model-out");
 			double[][] gammaMatrix = getRealGamma("src/datageneration/output/documents_model-out");
 			SimpleMatrix realBetas = new SimpleMatrix(betaMatrix);

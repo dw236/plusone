@@ -361,7 +361,7 @@ def write_cheats(data, alpha, dir):
                 if topic in gammas[doc]:
                     f.write(str(gammas[doc][topic] + alpha) + " ")
                 else:
-                    f.write("0 ")
+                    f.write(str(alpha) + " ")
             f.write('\n') 
     with open(dir + '/final.other', 'w') as f:
         num_topics = len(words)

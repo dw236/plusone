@@ -126,6 +126,7 @@ public class Main {
 		double[] trainPercents = 
 			parseDoubleList(System.getProperty("plusone.trainPercents", 
 					"0.3,0.5"));
+		System.out.println("train percent: " + trainPercents[0]);
 		splitByTrainPercent(trainPercents[0], documents);
 		
 		// Held out words
