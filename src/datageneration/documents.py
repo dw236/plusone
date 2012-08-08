@@ -271,7 +271,7 @@ def write(data, args):
         pickle.dump([docs, doc_topics, words, topics, args], f)
     if not args.plsi and not args.ctm:
         print "writing cheats for lda ...",
-        util.write_cheats(data, args.a, dir)
+        util.write_cheats(data, args, dir)
     print "copying files to top-level folder ... "
     os.system("cp " + dir + "/* output")
 

@@ -331,7 +331,7 @@ def get_probabilities(pickle_file):
     
     return probabilities
 
-def write_cheats(data, alpha, dir):
+def write_cheats(data, args, dir):
     """writes files that will help lda cheat (replaces the files in lda/)
     
     Writes the three files to replace the three that lda-c-dist creates 
@@ -345,14 +345,15 @@ def write_cheats(data, alpha, dir):
         data:
             tuple containing all the information returned by 
             documents.generate_documents
-        alpha:
-            parameter to the dirichlet controlling topic distributions
+        args:
+            namespace containing parameters given to generate the data
         dir:
             directory to write the files (to be copied later)
     Returns:
         none, but writes three files to be used later
     """
     docs, doc_topics, words, topics = data
+    alpha = args.a
     
     with open(dir + '/final.gamma', 'w') as f:
         gammas = [count(topic) for topic in doc_topics]
@@ -364,8 +365,8 @@ def write_cheats(data, alpha, dir):
                     f.write(str(alpha) + " ")
             f.write('\n') 
     with open(dir + '/final.other', 'w') as f:
-        num_topics = len(words)
-        num_terms = len(topics)
+        num_topics = args.k
+        num_terms = args.m
         to_write = "num_topics " + str(num_topics) + "\n" 
         to_write += "num_terms " + str(num_terms) + "\n" 
         to_write += "alpha " + str(alpha) + "\n"  
