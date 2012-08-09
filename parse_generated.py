@@ -13,7 +13,7 @@ CHEATS = ['ldaC', 'ldaT']
 PARAMS = ['a', 'b']
 STATISTICS = ['sig_topics', 'sig_words']
 
-def generate_html(dir, overwrite=False):
+def generate_html(dir, overwrite=False, star=False, quiet=False):
     filenames = os.listdir(dir)
     results = {}
     files_found = 0
@@ -26,13 +26,14 @@ def generate_html(dir, overwrite=False):
             continue
     print "processed", files_found, "files"
     
-    overwrite = 'w' if overwrite else 'a'
-    with open('data/results.html', overwrite) as f:
-        f.write('<script src="sorttable.js"></script>\n')
-        for result in results:
-            write_table(f, results[result], result)
-            f.write('<br></br>')
-    assert(f.closed)
+    if not quiet:        
+        overwrite = 'w' if overwrite else 'a'
+        with open('data/results.html', overwrite) as f:
+            f.write('<script src="sorttable.js"></script>\n')
+            for result in results:
+                write_table(f, results[result], result, star)
+                f.write('<br></br>\n')
+        assert(f.closed)
     return results
 
 def add_result(results, new_result):
@@ -65,6 +66,15 @@ def add_result(results, new_result):
             algorithms['names'].add(algorithm_type)
             results[universals][params][algorithm_type] = score
         algorithms['types'].add(algorithm_type)
+        
+        #find the best algorithm by type:
+        if results[universals][params].has_key(algorithm_type + '*'):
+            current_score = results[universals][params][algorithm_type + '*']
+            results[universals][params] \
+            [algorithm_type + "*"] = max(current_score, score)
+        else:
+            results[universals][params][algorithm_type + "*"] = score 
+        
     for statistic in sorted(new_result[4]):
         if statistic not in HIDDEN:
             results[universals][params][statistic] \
@@ -72,7 +82,7 @@ def add_result(results, new_result):
 
     return results
 
-def write_table(f, results, params):
+def write_table(f, results, params, star=False):
     """
     note: DOES NOT CLOSE f
     """
@@ -93,19 +103,26 @@ def write_table(f, results, params):
     #===========================================================================
     # write the algorithm names
     #===========================================================================
-    for algorithm in sorted(results['algorithms']['names']):
-        f.write('\t\t<th>' + algorithm + '</th>\n')
+    if star:
+        algorithm_titles = sorted(results['algorithms']['types'])
+        add_star = '*'
+    else:
+        algorithm_titles = sorted(results['algorithms']['names'])
+        add_star = ''
+    for algorithm in algorithm_titles:
+        f.write('\t\t<th>' + algorithm + add_star + '</th>\n')
     #===========================================================================
     # write the numerical results
     #===========================================================================
     for result in results:
         if result != 'algorithms':
             scores = get_scores(results[result], results['algorithms'])
-            f.write('\t<tr>\n')
+            f.write('\t<tr ' + mouse() + '>\n')
             for statistic in STATISTICS:
-                f.write('\t\t<td>' + str(results[result][statistic])
-                         + '</td>\n')
-            for algorithm in sorted(results['algorithms']['names']):
+                f.write('\t\t<td>'
+                         + str(results[result][statistic]) + '</td>\n')
+            for algorithm in algorithm_titles:
+                algorithm += add_star
                 if results[result].has_key(algorithm):
                     color = Color()
                     to_bold = False
@@ -128,8 +145,14 @@ def write_table(f, results, params):
                             color.add('g', 0xff)
                         else:
                             pass
-                    f.write('\t\t<td ' + str(color) +'>' + 
-                            bold(str(score), to_bold) + '</td>\n')
+                    mouseover_text = []
+                    for name in scores['names']:
+                        if not is_cheat(name) and star \
+                        and algorithm[:-1] in name:
+                            mouseover_text.append(name)
+                    f.write('\t\t<td ' + alt_text(mouseover_text, star) 
+                            + str(color) + '>' +  bold(str(score), to_bold) 
+                            + '</td>\n')
                 else:
                     f.write('\t\t<td></td>\n')
             f.write('\t</tr>\n')
@@ -193,6 +216,23 @@ def bold(string, flag=True):
     else:
         return string
 
+def mouse(mouse_off='"this.style.fontSize=\'medium\';', 
+          mouse_on='"this.style.fontSize=\'x-large\';'):
+    mouse_on += 'this.style.textDecoration=\'underline\'"'
+    mouse_off += 'this.style.textDecoration=\'none\'"'
+    
+    return 'onMouseOut=' + mouse_off + ' onMouseOver=' + mouse_on
+
+def alt_text(text=[], flag=True):
+    if flag:
+        to_add = ""
+        for name in text:
+            to_add += name + ', '
+        to_add = to_add[:-2]
+        return "title='algorithm(s): " + to_add + "'"
+    else:
+        return ''
+
 class Color(object):
     """class to handle colors for table cells
     """
@@ -244,13 +284,22 @@ def main():
                         help="directory containing json files to be read")
     parser.add_argument('-o', action="store_true", default=False,
                         help="flag to overwrite existing table (False)")
+    parser.add_argument('-q', action="store_true", default=False,
+                        help="flag to suppress writing to file (False)")
+    parser.add_argument('-*', action="store_true", default=False,
+                        help="flag to display best of each algorithm (False)")
     
     args = parser.parse_args()
+    star = args.__getattribute__('*')
     print "reading experiment files from directory:", args.f
     if args.o:
         print "overwriting existing table with new results"
+    if args.q:
+        print "returning dictionary of results rather than writing html"
+    if star:
+        print "displaying best of each algorithm"
     
-    return generate_html(args.f, args.o)
+    return generate_html(args.f, args.o, star, args.q)
 
 if __name__ == '__main__':
     results = main()
