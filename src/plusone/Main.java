@@ -73,6 +73,7 @@ public class Main {
 	public List<PredictionPaper> testingSet;
 	
 	private double[] sVals;
+	private static HashMap<String, double[]> hoverMap = new HashMap<String, double[]>();
 		
 	private static int numTopics;
 	
@@ -296,7 +297,7 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						putHover(entry.getKey(), thisTest);
+						putHover(entry.getKey().split("-")[0], thisTest);
 						allTests.put(entry.getKey(), thisTest);
 					}
 					tests.put(allTests);
@@ -321,13 +322,13 @@ public class Main {
 	
 	/** Adds the text that should be appear on hover in the html
 	 * table for each algorithm
-	 * @param algName Algorithm name with any parameters included (eg LSI-15)
+	 * @param algName Algorithm name without any parameters included (eg LSI, not LSI-15)
 	 * @param thisTest the JSONObject corresponding to algName
 	 * @throws JSONException
 	 */
 	private void putHover(String algName, JSONObject thisTest) throws JSONException {
-		if (algName.substring(0,3).equals("LSI")) {
-			thisTest.put("Hover", sVals);
+		if (hoverMap.containsKey(algName)) {
+			thisTest.put("Hover", hoverMap.get(algName));
 		} else {
 			thisTest.put("Hover", new double[0]);
 		}
@@ -378,7 +379,7 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
-				sVals = lsi.getSingularValues();
+				hoverMap.put("LSI", lsi.getSingularValues());
 			}
 		}
 		//PLSI
@@ -407,6 +408,7 @@ public class Main {
 				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
+				hoverMap.put("lda", new double[]{lda.getPerplexity()});
 			}
 		}
 		//LDA, cheats on training but not testing
@@ -418,6 +420,7 @@ public class Main {
 				ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
+				hoverMap.put("ldaT", new double[]{ldaTrained.getPerplexity()});
 			}
 		}
 		//LDA, cheats in both training and testing
@@ -429,6 +432,7 @@ public class Main {
 				ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
+				hoverMap.put("ldaC", new double[]{ldaCheat.getPerplexity()});
 			}
 		}
 		

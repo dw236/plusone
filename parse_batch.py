@@ -30,7 +30,8 @@ def generate_html(dir, overwrite=False):
     overwrite = 'w' if overwrite else 'a'
     with open('data/test.html', overwrite) as f:
         f.write('<script src="sorttable.js"></script>\n')
-        f.write('<head><link rel="stylesheet" type="text/css" href="dropt.css" /></head>\n')
+        f.write('<head><link rel="stylesheet" type="text/css" '
+                + 'href="dropt.css" /></head>\n')
         for result in results:
             write_table(f, result)
             f.write('<br></br>')
@@ -155,7 +156,8 @@ def write_table(f, results):
                         bold(str(round(score, 2)), to_bold) + '</td>\n')
                 else:
                     f.write('\t\t<td ' + str(color) + '>' +
-                        hover(bold(str(round(score, 2)), to_bold), hoverList) + '</td>\n')
+                        hover(bold(str(round(score, 2)), to_bold), hoverList) +
+                        '</td>\n')
         f.write('\t</tr>\n')
     f.write('</table>\n')
 
@@ -168,7 +170,7 @@ def bold(string, flag=True):
 def hover(displayText, hoverList):
     ret = ''
     for s in hoverList:
-       ret += str(s) + ' '
+       ret += str(s) + '<br>'
     return '<span class="dropt">' + displayText + '<span style="width:500px;">' + ret + '</span> </span>'
 
 class Color(object):

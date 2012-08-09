@@ -52,7 +52,7 @@ public class Lda extends ClusteringTest {
 
 	public Lda(String variant, List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
-		this(variant+numTopics);
+		this(variant + "-" + numTopics);
 		this.name = variant;
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;

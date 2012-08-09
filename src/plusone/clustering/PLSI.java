@@ -150,7 +150,7 @@ public class PLSI extends ClusteringTest{
 
 	public void train(int numTopics){
 		init(numTopics);
-		this.testName="PLSI"+numTopics;
+		this.testName="PLSI-"+numTopics;
 //		System.out.println("start training");
 		double lkh = likelihood();
 		boolean stop=false;
