@@ -30,8 +30,8 @@ def generate_html(dir, overwrite=False):
     overwrite = 'w' if overwrite else 'a'
     with open('data/test.html', overwrite) as f:
         f.write('<script src="sorttable.js"></script>\n')
-        f.write('<head><link rel="stylesheet" type="text/css" '
-                + 'href="dropt.css" /></head>\n')
+        f.write('<head> <style type="text/css"> '
+                + css() + ' </style></head>\n')
         for result in results:
             write_table(f, result)
             f.write('<br></br>\n')
@@ -174,6 +174,18 @@ def hover(displayText, hoverList):
     return ('<span class="dropt">'
                 + displayText
             + '<span style="width:500px;">' + ret + '</span> </span>')
+
+def css():
+    return 'span.dropt {border-bottom: thin dotted; background: transparent;} \
+    span.dropt:hover {text-decoration: none; background: #ffffff; z-index: 6; } \
+    span.dropt span {position: absolute; left: -9999px; \
+    margin: 20px 0 0 0px; padding: 3px 3px 3px 3px; \
+    border-style:solid; border-color:black; border-width:1px; z-index: 6;} \
+    span.dropt:hover span {left: 2%; background: #ffffff;} \
+    span.dropt span {position: absolute; left: -9999px; \
+    margin: 4px 0 0 0px; padding: 3px 3px 3px 3px; \
+    border-style:solid; border-color:black; border-width:1px;} \
+    span.dropt:hover span {margin: 20px 0 0 170px; background: #ffffff; z-index:6;}'
 
 class Color(object):
     """class to handle colors for table cells
