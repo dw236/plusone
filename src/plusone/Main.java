@@ -142,7 +142,8 @@ public class Main {
 			}
 	
 			for (PredictionPaper a : testingSet){
-				((PaperAbstract)a).generateTagTf(tagMap);
+				((PaperAbstract)a).generateTagTf(tagMap.get(a.getIndex()),
+					testWordPercent, terms);
 			}
 		} else {
 			for (TrainingPaper a : trainingSet){
@@ -614,9 +615,19 @@ public class Main {
 
 				if (queue.size() < largestK || 
 						(double)itemScores[i] > queue.peek().score) {
-					if (queue.size() >= largestK)
-						queue.poll();
-					queue.add(new ItemAndScore(i, itemScores[i], true));
+					if (tagged) {
+						if (wordIndexer.get(i).length() >= 4 &&
+								wordIndexer.get(i).substring(0, 4).equals("tag ")) {
+							if (queue.size() >= largestK)
+								queue.poll();
+							queue.add(new ItemAndScore(i, itemScores[i], true));
+						}
+					} else {
+						if (queue.size() >= largestK)
+							queue.poll();
+						
+						queue.add(new ItemAndScore(i, itemScores[i], true));
+					}
 				}
 			}
 
@@ -631,7 +642,7 @@ public class Main {
 //				MetadataLogger.TestMetadata meta = getMetadataLogger().getTestMetadata("k=" + k + test.testName);
 //				test.addMetadata(meta);
 //				List<Double> predictionScores = new ArrayList<Double>();
-
+				
 				Integer[] predict = topPrdcts.subList(0, k).toArray(new Integer[k]);
 
 				double[] result = evaluate(testingPaper, predict, size, k);
@@ -753,7 +764,7 @@ public class Main {
 		for (int i = 0; i < documents.size(); i ++) {
 			if (tagged) {
 				//Because documents.get(i).getIndex() == i
-				if (tagMap.keySet().contains(i)) {
+				if (tagMap.keySet().contains(i) && randGen.nextDouble() < trainPercent) {
 					testingSet.add((PredictionPaper)documents.get(i));
 					testIndices.put(documents.get(i), i);
 				} else {

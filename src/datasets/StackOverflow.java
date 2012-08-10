@@ -16,15 +16,23 @@ public class StackOverflow {
 	/**
 	 * Makes a json from the Stack Overflow dataset
 	 * 
-	 * @param args if args[0] is true, tags are put in as tag_word
+	 * @param args if args[0] is true, tags are put in a separate component of the json
+	 * (as opposed to not being put in at all)
+	 * if args[1] is true, only questions get put in, no answers
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws Throwable {
 		String filename = "data/stackoverflow.1000.data";
+		boolean onlyQuestions = Boolean.parseBoolean(args[1]);
 		System.out.println("Processing " + filename + "...");
 		File input = new File(filename);
-    	PrintWriter out = new PrintWriter( new BufferedWriter(
-    			new FileWriter( filename + ".json" ) ) );
+    	PrintWriter out;
+    	if (onlyQuestions) {
+    		out = new PrintWriter( new BufferedWriter(new FileWriter( filename + ".questions.json" ) ) );
+    	} else {
+    		out = new PrintWriter( new BufferedWriter(new FileWriter( filename + ".json" ) ) );
+    	}
+   
     	//ArrayList<String> stopWords = makeStopWords();
     	
 		JSONObject inJson = new JSONObject(new Scanner(input).nextLine());
@@ -71,7 +79,7 @@ public class StackOverflow {
 				answers = null;
 				System.out.println("Question " + i + " has no answers");
 			}
-			if (answers != null) {
+			if (answers != null && !onlyQuestions) {
 				for (int j = 0; j < answers.length(); j++) {
 					outUser = new JSONObject();
 					JSONObject answerer = answers.getJSONObject(j);

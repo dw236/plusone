@@ -99,22 +99,35 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	/**
 	 * A specialized version of generateTf for tagged data
 	 * 
-	 * @param tagMap Map from the paper's index to the wordIndexer's indices for its tags
+	 * @param myTags the tags for the document
+	 * @param testWordpercent percent of tags we expect to hold out
+	 * @param terms the terms for the document
 	 */
-	public void generateTagTf(HashMap<Integer, ArrayList<Integer>> tagMap) {
+	public void generateTagTf(ArrayList<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
+		Random randGen = Main.getRandomGenerator();
 		
 		for (Integer word : tf.keySet()) {
-			if (tagMap.get(index).contains(word)) {
-				testingTf.put(word, tf.get(word));
+			if (terms != null)
+				terms[word].addDoc(this, true);
+			
+			int freq = tf.get(word);
+			if (myTags.contains(word) && randGen.nextDouble() < testWordpercent) {
+				testingTf.put(word, freq);
 			} else {
-				trainingTf.put(word, tf.get(word));
-				norm += tf.get(word) * tf.get(word);
+				trainingTf.put(word, freq);
+				norm += freq * freq;
 			}
 		}
+		
+		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
+			norm += entry.getValue() * entry.getValue();
+		}
+		
 		norm = Math.sqrt(norm);
 	}
+	
 
 	public Integer getTrainingTf(Integer word) {
 		return trainingTf == null ? 

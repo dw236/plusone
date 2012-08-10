@@ -79,14 +79,17 @@ public class DatasetJSON {
 				PaperAbstract p = new PaperAbstract(index++, null, null, tf);
 				if (tags != null) {
 					ArrayList<Integer> tagsList = new ArrayList<Integer>();
+					//Each tag gets put into the tf as a separate entity, "tag " + tags.getString(j)
+					//Ideally there will be no spaces in non-tag words, so no "fake tags" could be created
 					for (int j = 0; j < tags.length(); j++) {
-						if ( !tf.keySet().contains(this.wordIndexer.fastIndexOf(tags.getString(j)))) {
-							tf.put( this.wordIndexer.fastAddAndGetIndex(tags.getString(j)), 1 );
+						String newTag = "tag " + tags.getString(j);
+						if ( !tf.keySet().contains(this.wordIndexer.fastIndexOf(newTag))) {
+							tf.put( this.wordIndexer.fastAddAndGetIndex(newTag), 1 );
 						} else {
-							tf.put( this.wordIndexer.fastIndexOf(tags.getString(j)),
-									tf.get( this.wordIndexer.fastIndexOf(tags.getString(j)) ) + 1 );
+							tf.put( this.wordIndexer.fastIndexOf(newTag),
+									tf.get( this.wordIndexer.fastIndexOf(newTag) ) + 1 );
 						}
-						tagsList.add(wordIndexer.fastIndexOf(tags.getString(j)));
+						tagsList.add(wordIndexer.fastIndexOf(newTag));
 					}
 					tagMap.put(index-1, tagsList);
 				}

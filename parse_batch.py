@@ -151,7 +151,7 @@ def write_table(f, results):
                 elif round(score, 2) == round(median_score, 2):
                     color.add('r', 0xff)
                     color.add('g', 0xff)
-                if hoverList == []:
+                if hoverList is None or hoverList == []:
                     f.write('\t\t<td ' + str(color) + '>' +
                         bold(str(round(score, 2)), to_bold) + '</td>\n')
                 else:
@@ -171,9 +171,9 @@ def hover(displayText, hoverList):
     ret = ''
     for s in hoverList:
        ret += str(s) + '<br>'
-    return '<span class="dropt">' \
-                + displayText \
-            + '<span style="width:500px;">' + ret + '</span> </span>'
+    return ('<span class="dropt">'
+                + displayText
+            + '<span style="width:500px;">' + ret + '</span> </span>')
 
 class Color(object):
     """class to handle colors for table cells
