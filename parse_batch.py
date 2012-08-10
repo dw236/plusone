@@ -34,7 +34,7 @@ def generate_html(dir, overwrite=False):
                 + 'href="dropt.css" /></head>\n')
         for result in results:
             write_table(f, result)
-            f.write('<br></br>')
+            f.write('<br></br>\n')
     assert(f.closed)
     return results
 
@@ -171,7 +171,9 @@ def hover(displayText, hoverList):
     ret = ''
     for s in hoverList:
        ret += str(s) + '<br>'
-    return '<span class="dropt">' + displayText + '<span style="width:500px;">' + ret + '</span> </span>'
+    return '<span class="dropt">' \
+                + displayText \
+            + '<span style="width:500px;">' + ret + '</span> </span>'
 
 class Color(object):
     """class to handle colors for table cells

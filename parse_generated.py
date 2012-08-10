@@ -13,7 +13,7 @@ CHEATS = ['ldaC', 'ldaT']
 PARAMS = ['a', 'b']
 STATISTICS = ['sig_topics', 'sig_words']
 
-def generate_html(dir, overwrite=False, star=False, quiet=False):
+def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
     filenames = os.listdir(dir)
     results = {}
     files_found = 0
@@ -31,7 +31,7 @@ def generate_html(dir, overwrite=False, star=False, quiet=False):
         with open('data/results.html', overwrite) as f:
             f.write('<script src="sorttable.js"></script>\n')
             for result in results:
-                write_table(f, results[result], result, star)
+                write_table(f, results[result], result, star, short)
                 f.write('<br></br>\n')
         assert(f.closed)
     return results
@@ -49,7 +49,9 @@ def add_result(results, new_result):
         #=======================================================================
         results[universals]['algorithms']['names'] = set()
         results[universals]['algorithms']['types'] = set()
-    algorithms = results[universals]['algorithms']    
+        results[universals]['algorithms']['totals'] = {}
+    algorithms = results[universals]['algorithms']
+    totals = results[universals]['algorithms']['totals']
     #alpha and beta parameters (sig_topics and sig_words, respectively)
     params = tuple([new_result[3][param] for param in PARAMS])
     if params not in results[universals]:
@@ -73,7 +75,15 @@ def add_result(results, new_result):
             results[universals][params] \
             [algorithm_type + "*"] = max(current_score, score)
         else:
-            results[universals][params][algorithm_type + "*"] = score 
+            results[universals][params][algorithm_type + "*"] = score
+        #add score to totals (for determining best algorithm by topic param)
+        algorithm_name = algorithm
+        if is_cheat(algorithm):
+            algorithm_name = algorithm_type
+        if totals.has_key(algorithm_name):
+            totals[algorithm_name] += score
+        else:
+            totals[algorithm_name] = score
         
     for statistic in sorted(new_result[4]):
         if statistic not in HIDDEN:
@@ -82,7 +92,7 @@ def add_result(results, new_result):
 
     return results
 
-def write_table(f, results, params, star=False):
+def write_table(f, results, params, star=False, short=False):
     """
     note: DOES NOT CLOSE f
     """
@@ -103,14 +113,9 @@ def write_table(f, results, params, star=False):
     #===========================================================================
     # write the algorithm names
     #===========================================================================
-    if star:
-        algorithm_titles = sorted(results['algorithms']['types'])
-        add_star = '*'
-    else:
-        algorithm_titles = sorted(results['algorithms']['names'])
-        add_star = ''
+    algorithm_titles = get_algorithm_names(results['algorithms'], star, short)
     for algorithm in algorithm_titles:
-        f.write('\t\t<th>' + algorithm + add_star + '</th>\n')
+        f.write('\t\t<th>' + algorithm + '</th>\n')
     #===========================================================================
     # write the numerical results
     #===========================================================================
@@ -122,11 +127,10 @@ def write_table(f, results, params, star=False):
                 f.write('\t\t<td>'
                          + str(results[result][statistic]) + '</td>\n')
             for algorithm in algorithm_titles:
-                algorithm += add_star
                 if results[result].has_key(algorithm):
                     color = Color()
-                    to_bold = False
-                    if algorithm in scores['names']:
+                    to_bold = star and not short
+                    if algorithm in scores['names'] or '*' in algorithm:
                         to_bold = True
                     score = round(results[result][algorithm], 2)
                     if is_cheat(algorithm):
@@ -146,17 +150,51 @@ def write_table(f, results, params, star=False):
                         else:
                             pass
                     mouseover_text = []
+                    alt = False
                     for name in scores['names']:
                         if not is_cheat(name) and star \
-                        and algorithm[:-1] in name:
+                        and ('*' in algorithm and algorithm[:-1] in name):
                             mouseover_text.append(name)
-                    f.write('\t\t<td ' + alt_text(mouseover_text, star) 
+                            alt = True
+                    if short and not to_bold:
+                        algorithm_type = algorithm.strip('1234567890')
+                        for name in scores['names']:
+                            if not is_cheat(name) and algorithm_type in name:
+                                mouseover_text.append(name)
+                        alt = True
+                    f.write('\t\t<td ' + alt_text(mouseover_text, alt) 
                             + str(color) + '>' +  bold(str(score), to_bold) 
                             + '</td>\n')
                 else:
                     f.write('\t\t<td></td>\n')
             f.write('\t</tr>\n')
     f.write('</table>\n')
+
+def get_algorithm_names(algorithms, star, short):
+    if star:
+        star_names = [algorithm + '*' for algorithm in algorithms['types']]
+    if short: 
+        short_names = get_scores(algorithms['totals'], algorithms)['names']
+    if star and short:
+        algorithm_names = set(star_names + short_names)
+        new_names = []
+        for algorithm in algorithm_names:
+            if '*' in algorithm and algorithm[:-1] in algorithm_names:
+                pass
+            else:
+                new_names.append(algorithm)
+        algorithm_names = new_names
+    elif star or short:
+        if star:
+            algorithm_names = star_names
+        elif short:
+            algorithm_names = short_names
+        else:
+            pass
+    else:
+        algorithm_names = sorted(algorithms['names'])
+    
+    return sorted(algorithm_names)
 
 def is_cheat(algorithm):
     return any([cheat in algorithm for cheat in CHEATS])
@@ -277,7 +315,11 @@ def main():
     parser.add_argument('-q', action="store_true", default=False,
                         help="flag to suppress writing to file (False)")
     parser.add_argument('-*', action="store_true", default=False,
-                        help="flag to display best of each algorithm (False)")
+                        help="flag to display best of each algorithm \
+                        by row (False)")
+    parser.add_argument('-s', action="store_true", default=False,
+                        help="flag to display best of each algorithm \
+                        by column (False)")
     
     args = parser.parse_args()
     star = args.__getattribute__('*')
@@ -287,9 +329,15 @@ def main():
     if args.q:
         print "returning dictionary of results rather than writing html"
     if star:
-        print "displaying best of each algorithm"
+        print "displaying best of each algorithm by row" 
+        print "    (each entry is the best result for that run)"
+    if args.s:
+        print "displaying best of each algorithm by column"
+        print "    (each column is the algorithm that did the best overall)"
     
-    return generate_html(args.f, args.o, star, args.q)
+    return generate_html(args.f, args.o, star, args.s, args.q)
 
 if __name__ == '__main__':
     results = main()
+    universals = results.keys()
+     
