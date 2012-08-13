@@ -3,6 +3,7 @@ import argparse
 import src.datageneration.util as util
 import parse_output
 import numpy as np
+from parse_batch import css, hover
 
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
@@ -30,6 +31,8 @@ def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
         overwrite = 'w' if overwrite else 'a'
         with open('data/results.html', overwrite) as f:
             f.write('<script src="sorttable.js"></script>\n')
+            f.write('<head><style type="text/css"> ' + css() + 
+                    '</style></head>\n')
             for result in results:
                 write_table(f, results[result], result, star, short)
                 f.write('<br></br>\n')
