@@ -167,17 +167,29 @@ def bold(string, flag=True):
     else:
         return string
 
-def hover(displayText, hoverList):
-    ret = ''
-    for s in hoverList:
-       ret += str(s) + '<br>'
-    return ('<span class="dropt">'
-                + displayText
-            + '<span style="width:500px;">' + ret + '</span> </span>')
+def hover(displayText, hoverList, flag=True):
+    if flag:
+        ret = ''
+        for s in hoverList:
+           ret += str(s) + '<br>'
+        return ('<span class="dropt">'
+                    + displayText
+                + '<span style="width:500px;">' + ret + '</span> </span>')
+    else:
+        return displayText
 
 def css():
-    return 'span.dropt {border-bottom: thin dotted; background: transparent;} \
-    span.dropt:hover {text-decoration: none; background: #ffffff; z-index: 6; } \
+    """
+    first line:
+        what shows up in the actual text box (it appears slightly below the
+        actual text)
+    second line:
+        how the original text gets modified on mouseover
+    third line:
+        still trying to figure it out
+    """
+    return 'span.dropt {border-bottom: none; background: transparent;} \
+    span.dropt:hover {text-decoration: none; background: transparent; z-index: 6; } \
     span.dropt span {position: absolute; left: -9999px; \
     margin: 20px 0 0 0px; padding: 3px 3px 3px 3px; \
     border-style:solid; border-color:black; border-width:1px; z-index: 6;} \
