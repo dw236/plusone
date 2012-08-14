@@ -63,7 +63,7 @@ def add_result(results, new_result):
     for algorithm in sorted(new_result[2]):
         score = new_result[2][algorithm]['Predicted_Mean']
         results[universals][params][algorithm] = score
-        algorithm_type = algorithm.strip('1234567890')
+        algorithm_type = algorithm.strip('1234567890-')
         assert(algorithm_type != None)
         if not is_cheat(algorithm):
             algorithms['names'].add(algorithm)
@@ -122,9 +122,11 @@ def write_table(f, results, params, star=False, short=False):
     #===========================================================================
     # write the numerical results
     #===========================================================================
+    algorithm_subsets = get_algorithm_subsets(results['algorithms'])
     for result in results:
         if result != 'algorithms':
-            scores = get_scores(results[result], results['algorithms'])
+            scores = get_scores(results[result], results['algorithms'],
+                                algorithm_subsets)
             f.write('\t<tr ' + mouse() + '>\n')
             for statistic in STATISTICS:
                 f.write('\t\t<td>'
@@ -156,17 +158,19 @@ def write_table(f, results, params, star=False, short=False):
                     alt = False
                     for name in scores['names']:
                         if not is_cheat(name) and star \
-                        and ('*' in algorithm and algorithm[:-1] in name):
+                        and ('*' in algorithm and \
+                             name in algorithm_subsets[algorithm[:-1]]):
                             mouseover_text.append(name)
                             alt = True
                     if short and not to_bold:
-                        algorithm_type = algorithm.strip('1234567890')
+                        algorithm_type = algorithm.strip('1234567890-')
                         for name in scores['names']:
                             if not is_cheat(name) and algorithm_type in name:
                                 mouseover_text.append(name)
                         alt = True
-                    f.write('\t\t<td ' + alt_text(mouseover_text, alt) 
-                            + str(color) + '>' +  bold(str(score), to_bold) 
+                    f.write('\t\t<td ' + str(color) + '>' 
+                            + hover(bold(str(score), to_bold), 
+                                    mouseover_text, alt) 
                             + '</td>\n')
                 else:
                     f.write('\t\t<td></td>\n')
@@ -199,20 +203,31 @@ def get_algorithm_names(algorithms, star, short):
     
     return sorted(algorithm_names)
 
+def get_algorithm_subsets(algorithms):
+    subsets = {}
+    for algorithm_type in algorithms['types']:
+        if not subsets.has_key(algorithm_type):
+            subsets[algorithm_type] = set()
+        for name in algorithms['names']:
+            try:
+                match = (algorithm_type == name[:len(algorithm_type)])
+            except:
+                match = False
+            if match and (not is_cheat(name) or is_cheat(algorithm_type)):
+                subsets[algorithm_type].add(name)
+    return subsets
+
 def is_cheat(algorithm):
     return any([cheat in algorithm for cheat in CHEATS])
 
-def get_scores(result, algorithms):
+def get_scores(result, algorithms, subsets):
     best_score_names = []
     for algorithm_type in algorithms['types']:
         best_score = -np.inf
         to_add = []
         for algorithm in algorithms['names']:
             if result.has_key(algorithm):
-                if algorithm_type in algorithm:
-                    #special case for lda (because 'lda' is in 'ldaC')
-                    if algorithm_type == 'lda' and is_cheat(algorithm): 
-                        continue
+                if algorithm in subsets[algorithm_type]:
                     score = round(result[algorithm], 2)
                     if score > best_score:
                         to_add = [algorithm]
