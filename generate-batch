@@ -5,15 +5,15 @@ export basedir=$PWD
 #Generator
 generator="lda"
 #Number of topics
-klist=(4)
+klist=(5 10 15 30 50)
 #Number of docs
-nlist=(200)
+nlist=(500)
 #Number of words per document
-llist=(40)
+llist=(300)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.01 0.5 4.0) #1, 2, 3 
+alist=(0.001 0.005 0.01 0.05 0.1 0.5 1.0) #1, 2, 3 
 #Beta
 blist=(0.0175 0.05 0.1 0.25) #10, 30, 50, 100
 
@@ -53,3 +53,4 @@ do
         done
     done
 done
+
