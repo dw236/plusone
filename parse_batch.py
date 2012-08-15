@@ -131,7 +131,10 @@ def write_table(f, results):
         for algorithm in sorted(result[2]):
             if algorithm not in HIDDEN:
                 score = result[2][algorithm]['Predicted_Mean']
-                hoverList = result[2][algorithm]['Hover']
+                if result[2][algorithm].has_key('Hover'):    
+                    hoverList = result[2][algorithm]['Hover']
+                else:
+                    hoverList = []
                 #highlight the best and worst score
                 color = Color()
                 to_bold = False
