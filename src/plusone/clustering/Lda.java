@@ -35,6 +35,7 @@ public class Lda extends ClusteringTest {
 	private boolean trainCheat;
 	private boolean testCheat;
 	private List<PredictionPaper> testDocs;
+	private String[] hoverText;
 	
 	public Lda(String variant) {
 		super(variant);
@@ -164,9 +165,24 @@ public class Lda extends ClusteringTest {
 			}
 		}
 		System.out.println(name + " perplexity is " + getPerplexity());
+		
+		//write result to hoverText so it can be displayed
+		hoverText = new String[result.length];
+		for (int row=0; row<result.length; row++){
+			String prediction = "";
+			for (int col=0; col<result[row].length; col++) {
+				prediction += result[row][col] + " ";
+			}
+			hoverText[row] = 	prediction.trim();
+		}
+		
 		return result;
 	}
 
+	public String[] getHover() {
+		return hoverText;
+	}
+	
 	private void createLdaInput(String filename, List<TrainingPaper> papers){
 		System.out.print("creating lda input in file: " + filename + " ... ");
 
