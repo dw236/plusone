@@ -24,6 +24,10 @@ public abstract class ClusteringTest implements ClusteringMethod {
     public double[][] predict(List<PredictionPaper> testPaper){
     	return null;
     }
+    
+    public Object getHover(){
+    	return new Object();
+    }
 
     protected PlusoneFileWriter makePredictionWriter(int k, 
 						     File outputDirectory, 

@@ -73,7 +73,8 @@ public class Main {
 	public List<PredictionPaper> testingSet;
 	
 	private double[] sVals;
-	private static HashMap<String, double[]> hoverMap = new HashMap<String, double[]>();
+	private static HashMap<String, ClusteringTest> algMap
+		= new HashMap<String, ClusteringTest>();
 		
 	private static int numTopics;
 	
@@ -298,7 +299,9 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						putHover(entry.getKey().split("-")[0], thisTest);
+						if (algMap.keySet().contains(entry.getKey().split("-")[0])) {
+							thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
+						}
 						allTests.put(entry.getKey(), thisTest);
 					}
 					tests.put(allTests);
@@ -320,21 +323,6 @@ public class Main {
 			System.out.println("Error writing to output");
 		}
 	}
-	
-	/** Adds the text that should be appear on hover in the html
-	 * table for each algorithm
-	 * @param algName Algorithm name without any parameters included (eg LSI, not LSI-15)
-	 * @param thisTest the JSONObject corresponding to algName
-	 * @throws JSONException
-	 */
-	private void putHover(String algName, JSONObject thisTest) throws JSONException {
-		if (hoverMap.containsKey(algName)) {
-			thisTest.put("Hover", hoverMap.get(algName));
-		} else {
-			thisTest.put("Hover", new double[0]);
-		}
-	}
-
 
 	public void runClusteringMethods(int[] ks) {
 		int size = trainingSet.size() + testingSet.size();
@@ -342,6 +330,7 @@ public class Main {
 		if (testIsEnabled("baseline")) {
 			Baseline baseline = new Baseline(trainingSet, terms);
 			runClusteringMethod(baseline, ks, size, false);
+			algMap.put("baseline", baseline);
 		}
 
 		// KNN
@@ -357,6 +346,7 @@ public class Main {
 				knn = new KNN(closest_k[ck], trainingSet, paperIndexer, 
 						terms, knnSimilarityCache);
 				runClusteringMethod(knn, ks, size, false);
+				algMap.put("knn", knn);
 			}
 		}
 
@@ -380,7 +370,7 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
-				hoverMap.put("LSI", lsi.getSingularValues());
+				algMap.put("LSI", lsi);
 			}
 		}
 		//PLSI
@@ -397,7 +387,7 @@ public class Main {
 						(System.currentTimeMillis() - t1) / 1000.0 
 						+ " seconds.");
 				runClusteringMethod(plsi, ks, size, false);
-
+				algMap.put("PLSI", plsi);
 			}
 		}
 		//lda
@@ -409,7 +399,7 @@ public class Main {
 				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
-				hoverMap.put("lda", new double[]{lda.getPerplexity()});
+				algMap.put("lda", lda);
 			}
 		}
 		//LDA, cheats on training but not testing
@@ -421,7 +411,7 @@ public class Main {
 				ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
-				hoverMap.put("ldaT", new double[]{ldaTrained.getPerplexity()});
+				algMap.put("ldaT", ldaTrained);
 			}
 		}
 		//LDA, cheats in both training and testing
@@ -433,7 +423,7 @@ public class Main {
 				ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
-				hoverMap.put("ldaC", new double[]{ldaCheat.getPerplexity()});
+				algMap.put("ldaC", ldaCheat);
 			}
 		}
 		
