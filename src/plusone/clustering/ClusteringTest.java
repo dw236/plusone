@@ -25,8 +25,8 @@ public abstract class ClusteringTest implements ClusteringMethod {
     	return null;
     }
     
-    public Object getHover(){
-    	return new Object();
+    public String[] getHover(){
+    	return new String[]{""};
     }
 
     protected PlusoneFileWriter makePredictionWriter(int k, 
