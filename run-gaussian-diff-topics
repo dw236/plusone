@@ -1,0 +1,83 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Generator
+generator="lda"
+#Number of topics for generation
+kGenlist=(5 10 15 30 50)
+#Difference between number of generation topics and estimation topics
+kDifflist=(-3 -2 -1 1)
+#Number of docs (fixed)
+nlist=(500)
+#Number of words per document
+llist=(300)
+#Vocab size (fixed)
+mlist=(500)
+#Alpha
+alist=(0.005 0.01 0.05 0.1 0.5 1.0) #1, 2, 3 
+#Beta
+blist=(0.0175 0.05 0.1 0.25) #10, 30, 50, 100
+
+# compile using ant
+ant -f build.xml || exit
+
+#If gaussian directory does not exist, make it
+if [ ! -d "$gaussian" ]; then
+    mkdir gaussian
+fi
+
+#Iterate through every combination of parameters
+for k in "${kGenlist[@]}";
+do
+    for n in "${nlist[@]}";
+    do
+        for l in "${llist[@]}";
+        do
+            for m in "${mlist[@]}";
+            do
+                for a in "${alist[@]}";
+                do
+                    for b in "${blist[@]}";
+                    do
+                        for difference in "${kDifflist[@]}";
+                        do
+                            cd src/datageneration/
+                            case "$generator" in
+                            hlda)
+                                    #Generate a data file with given parameters
+                                    python hlda_journal.py -w -n $n -l $l -m $m -b $b
+                                ;;
+                            lda)
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b
+                                ;;
+                            ctm)
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b -ctm
+                                ;;
+                            esac
+                            cd $basedir
+
+                            #Run the matlab program
+                            /Applications/MATLAB_R2012a.app/bin/matlab -nodesktop -nosplash -nojvm <<-EOF
+                            cd ~/Research/plusone;
+                            [tpcCOS,tpcEUC,gausCOS,gausEUC]=gaussian('src/datageneration/output/documents-out',$n,$m,$k + $difference);
+                            cosRatio = tpcCOS/gausCOS; eucRatio = tpcEUC/gausEUC;
+                            outFile = fopen('gaussian.a.$a.b.$b.n.$n.m.$m.k.$k.d.$difference','w');
+                            fprintf(outFile, '%f %f %f %f %u %u %u %d', cosRatio, eucRatio, $a, $b, $n, $m, $k, $difference);
+                            fclose(outFile);
+                            exit
+EOF
+                        
+                            mv gaussian.a.$a.b.$b.n.$n.m.$m.k.$k.d.$difference gaussian
+                            done
+                    done
+                done
+            done
+        done
+    done
+done
+
