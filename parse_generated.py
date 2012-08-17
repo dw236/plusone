@@ -141,22 +141,10 @@ def write_table(f, results, params, star=False, short=False):
             scores = get_scores(results[result], results['algorithms'])
             f.write('\t<tr ' + mouse() + '>\n')
             for statistic in STATISTICS:
-                """THIS IS A HACK--REMOVE ASAP"""
-                with open("src/datageneration/output/results.pickle", 'r') as d:
-                    docs, doc_topics, words, topics, args = pickle.load(d)
-                if statistic == 'sig_topics':
-                    to_traverse = topics
-                    how_many = 15
-                if statistic == 'sig_words':
-                    to_traverse = words
-                    how_many = 10
-                top_three = [sorted(range(len(topic)), 
-                                    cmp=lambda x,y: cmp(topic[x],
-                                                        topic[y]))[:3]
-                             for topic in to_traverse][:how_many]
-                """"""
+                top_three = hack_1(statistic, params, result, results) #HACK
                 f.write('\t\t<td>'
-                         + hover(str(results[result][statistic]), top_three) + '</td>\n')
+                         + hover(str(results[result][statistic]), 
+                                 top_three) + '</td>\n')
             for algorithm in algorithm_titles:
                 if results[result].has_key(algorithm):
                     color = Color()
@@ -199,19 +187,8 @@ def write_table(f, results, params, star=False, short=False):
                         mouseover_text = results[result][algorithm]['hover']
                         alt = not (mouseover_text == [] 
                                    or mouseover_text == [""])
-                        """THIS IS A HACK--REMOVE ASAP"""
                         if alt:
-                            mouseover_text = [line.split(" ") for line in 
-                                              mouseover_text]
-                            predictions = []
-                            for line in mouseover_text:
-                                predictions.append([float(num) for num in line])
-                            top_three = [sorted(range(len(prediction)), 
-                                                cmp=lambda x,y: cmp(prediction[x],
-                                                                   prediction[y]))[:3]
-                                         for prediction in predictions]
-                            mouseover_text = top_three
-                        """"""
+                            mouseover_text = hack_2(mouseover_text) #HACK
                     
                     f.write('\t\t<td ' + str(color) + '>' 
                             + hover(bold(str(score), to_bold), 
@@ -221,6 +198,48 @@ def write_table(f, results, params, star=False, short=False):
                     f.write('\t\t<td></td>\n')
             f.write('\t</tr>\n')
     f.write('</table>\n')
+
+def hack_1(statistic, params, result, results):
+    """THIS IS A HACK--REMOVE ASAP"""
+    filename = "k" + str(params[0]) + "." \
+    + "n" + str(params[1]) + "." \
+    + "l" + str(params[2]) + "." \
+    + "m" + str(params[3]) + "." \
+    + "a" + str(float(result[0])) + "." \
+    + "b" + str(result[1])
+    with open("src/datageneration/output/" + filename +"/results.pickle", 'r') as d:
+        docs, doc_topics, words, topics, args = pickle.load(d)
+    if statistic == 'sig_topics':
+        to_traverse = topics
+        lines = [str(line).split(" ") for line in results[result]['ldaC']['hover']]
+        indices = []
+        for line in lines:
+            indices.append(int([float(num) for num in line][0]))
+        indices = np.array(indices)
+    if statistic == 'sig_words':
+        to_traverse = words
+        indices = np.array(range(15))
+    top_three = list(np.array([sorted(range(len(topic)), 
+                                      cmp=lambda x,y: cmp(topic[x],
+                                                          topic[y]),
+                                      reverse=True)[:3]
+                               for topic in to_traverse])[indices])
+    return top_three
+
+def hack_2(mouseover_text):
+    """THIS IS A HACK--REMOVE ASAP"""
+    mouseover_text = [str(line).split(" ")[1:] for line in 
+                      mouseover_text]
+    predictions = []
+    for line in mouseover_text:
+        predictions.append([float(num) for num in line])
+    top_three = [sorted(range(len(prediction)), 
+                        cmp=lambda x,y: cmp(prediction[x],
+                                           prediction[y]),
+                        reverse=True)[:3]
+                 for prediction in predictions]
+    mouseover_text = top_three
+    return mouseover_text
 
 def check(entry, algorithm, current_score):
     """ Checks if an entry has results for an algorithm. If it doesn't, it 
@@ -257,7 +276,7 @@ def get_algorithm_names(algorithms, star, short):
         else:
             pass
     else:
-        algorithm_names = sorted(algorithms['names'])
+        algorithm_names = algorithms['names']
     
     return sorted(algorithm_names)
 

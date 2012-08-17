@@ -300,7 +300,11 @@ public class Main {
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
 						if (algMap.keySet().contains(entry.getKey().split("-")[0])) {
-							thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
+							try {
+								thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
+							} catch (Exception e) {
+								thisTest.put("Hover", new String[0]);
+							}
 						}
 						allTests.put(entry.getKey(), thisTest);
 					}

@@ -5,7 +5,7 @@ export basedir=$PWD
 #Generator
 generator="lda"
 #Number of topics
-klist=(15 30 40)
+klist=(15)
 #Number of docs
 nlist=(1000)
 #Number of words per document
@@ -13,9 +13,9 @@ llist=(30)
 #Vocab size
 mlist=(500)
 #Alpha
-alist=(0.01 0.075 0.4 4.0) #1, 2, 5, 10 
+alist=(0.01 0.4 4.0) #1, 5, 10 
 #Beta
-blist=(0.0001 0.1 1.0 4.0) #1, 50, 200, 300
+blist=(0.0001 0.0175 0.125 0.25) #1, 10, 60, 100
 #Flag for plotting output
 plot=false
 #Flag for making table

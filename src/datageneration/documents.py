@@ -341,7 +341,7 @@ def main():
         print "b    =  ", args.b, what_is_beta
     print "s    =  ", args.s, "(noise probability)"
     print "plsi =  ", args.plsi, "(whether to draw from plsi)"
-    print "ctm =   ", args.ctm, "(whether to draw from ctm)"
+    print "ctm  =  ", args.ctm, "(whether to draw from ctm)"
     print "pareto= ", args.p, "(whether to make alpha pareto)" 
     print ""
     
