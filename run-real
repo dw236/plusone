@@ -3,11 +3,11 @@
 export basedir=$PWD
 
 #Number of topics
-klist=(20 30 40 50)
+klist=(15 30 50 75 100)
 #Datasets to use
 #datalist=("cacm.json" "cisi.json" "cran.json" "med.json" "kos.json" "nips.json")
-#datalist=("kos.json" "nips.json")
-datalist=("stackoverflow.1000.data.json")
+#datalist=("stackoverflow.1000.data.json")
+datalist=("lastfmsubset.json")
 #Flag to make html table
 table=true
 
