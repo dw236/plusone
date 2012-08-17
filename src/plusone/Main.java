@@ -406,7 +406,7 @@ public class Main {
 				algMap.put("lda", lda);
 			}
 		}
-		//LDA, cheats on training but not testing
+		//ldaT, cheats on training but not testing
 		Lda ldaTrained = null;
 		if (testIsEnabled("ldaTrained")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
@@ -418,7 +418,7 @@ public class Main {
 				algMap.put("ldaT", ldaTrained);
 			}
 		}
-		//LDA, cheats in both training and testing
+		//ldaC, cheats in both training and testing
 		Lda ldaCheat = null;
 		if (testIsEnabled("ldaCheat")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
