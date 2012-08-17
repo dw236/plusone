@@ -167,13 +167,13 @@ public class Lda extends ClusteringTest {
 		System.out.println(name + " perplexity is " + getPerplexity());
 		
 		//write result to hoverText so it can be displayed
-		hoverText = new String[result.length];
-		for (int row=0; row<result.length; row++){
+		hoverText = new String[10];
+		for (int row=0; row<hoverText.length; row++){
 			String prediction = "";
 			for (int col=0; col<result[row].length; col++) {
 				prediction += result[row][col] + " ";
 			}
-			hoverText[row] = 	prediction.trim();
+			hoverText[row] = prediction.trim();
 		}
 		
 		return result;

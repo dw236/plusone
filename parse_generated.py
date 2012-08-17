@@ -4,6 +4,7 @@ import src.datageneration.util as util
 import parse_output
 import numpy as np
 from parse_batch import css, hover
+import pickle #HACK--REMOVE ASAP
 
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
@@ -43,42 +44,52 @@ def add_result(results, new_result):
     universals = tuple([new_result[3][option] for option in UNIVERSALS])
     if universals not in results:
         results[universals] = {}
-        #keep track of algorithm names and types
-        results[universals]['algorithms'] = {}
         #=======================================================================
-        # assumes each algorithm is run with double-digit topics as a parameter
+        # Keep track of algorithm names and types
         # names: includes topic number (eg lda15)
         # types: does not include topic number (eg lda)
         #=======================================================================
-        results[universals]['algorithms']['names'] = set()
-        results[universals]['algorithms']['types'] = set()
-        results[universals]['algorithms']['totals'] = {}
+        results[universals]['algorithms'] = {'names':set(),
+                                             'types':set(),
+                                             'totals':{}}
     algorithms = results[universals]['algorithms']
     totals = results[universals]['algorithms']['totals']
+    
     #alpha and beta parameters (sig_topics and sig_words, respectively)
     params = tuple([new_result[3][param] for param in PARAMS])
     if params not in results[universals]:
         results[universals][params] = {}
+    entry = results[universals][params]
     
     for algorithm in sorted(new_result[2]):
+        #extract score and hover text
         score = new_result[2][algorithm]['Predicted_Mean']
-        results[universals][params][algorithm] = score
+        if new_result[2][algorithm].has_key('Hover'):    
+            hoverList = new_result[2][algorithm]['Hover']
+        else:
+            hoverList = []
+        
+        check(entry, algorithm, score) #initialize dictionary if necessary
+        entry[algorithm]['score'] = score
+        entry[algorithm]['hover'] = hoverList
+        
         algorithm_type = algorithm.strip('1234567890-')
-        assert(algorithm_type != None)
         if not is_cheat(algorithm):
             algorithms['names'].add(algorithm)
         else:
             algorithms['names'].add(algorithm_type)
-            results[universals][params][algorithm_type] = score
+            check(entry, algorithm_type, score)
+            entry[algorithm_type]['score'] = score
+            entry[algorithm_type]['hover'] = hoverList
         algorithms['types'].add(algorithm_type)
         
         #find the best algorithm by type:
-        if results[universals][params].has_key(algorithm_type + '*'):
-            current_score = results[universals][params][algorithm_type + '*']
-            results[universals][params] \
-            [algorithm_type + "*"] = max(current_score, score)
+        if entry.has_key(algorithm_type + '*'):
+            current_score = entry[algorithm_type + '*']['score']
+            entry[algorithm_type + "*"]['score'] = max(current_score, score)
         else:
-            results[universals][params][algorithm_type + "*"] = score
+            entry[algorithm_type + "*"] = {'score':score,
+                                           'hover':[]}
         #add score to totals (for determining best algorithm by topic param)
         algorithm_name = algorithm
         if is_cheat(algorithm):
@@ -90,8 +101,10 @@ def add_result(results, new_result):
         
     for statistic in sorted(new_result[4]):
         if statistic not in HIDDEN:
-            results[universals][params][statistic] \
-            = new_result[4][statistic]
+            entry[statistic] = new_result[4][statistic]
+    
+    #get subsets of algorithms (for comparisons by algorithm)
+    algorithms['subsets'] = get_algorithm_subsets(algorithms)
 
     return results
 
@@ -122,22 +135,35 @@ def write_table(f, results, params, star=False, short=False):
     #===========================================================================
     # write the numerical results
     #===========================================================================
-    algorithm_subsets = get_algorithm_subsets(results['algorithms'])
+    algorithm_subsets = results['algorithms']['subsets']
     for result in results:
         if result != 'algorithms':
-            scores = get_scores(results[result], results['algorithms'],
-                                algorithm_subsets)
+            scores = get_scores(results[result], results['algorithms'])
             f.write('\t<tr ' + mouse() + '>\n')
             for statistic in STATISTICS:
+                """THIS IS A HACK--REMOVE ASAP"""
+                with open("src/datageneration/output/results.pickle", 'r') as d:
+                    docs, doc_topics, words, topics, args = pickle.load(d)
+                if statistic == 'sig_topics':
+                    to_traverse = topics
+                    how_many = 15
+                if statistic == 'sig_words':
+                    to_traverse = words
+                    how_many = 10
+                top_three = [sorted(range(len(topic)), 
+                                    cmp=lambda x,y: cmp(topic[x],
+                                                        topic[y]))[:3]
+                             for topic in to_traverse][:how_many]
+                """"""
                 f.write('\t\t<td>'
-                         + str(results[result][statistic]) + '</td>\n')
+                         + hover(str(results[result][statistic]), top_three) + '</td>\n')
             for algorithm in algorithm_titles:
                 if results[result].has_key(algorithm):
                     color = Color()
                     to_bold = star and not short
                     if algorithm in scores['names'] or '*' in algorithm:
                         to_bold = True
-                    score = round(results[result][algorithm], 2)
+                    score = round(results[result][algorithm]['score'], 2)
                     if is_cheat(algorithm):
                         if score == scores['best_cheating']:
                             color.add('b', 0xFF)
@@ -165,9 +191,28 @@ def write_table(f, results, params, star=False, short=False):
                     if short and not to_bold:
                         algorithm_type = algorithm.strip('1234567890-')
                         for name in scores['names']:
-                            if not is_cheat(name) and algorithm_type in name:
+                            if not is_cheat(name) and \
+                            name in algorithm_subsets[algorithm_type]:
                                 mouseover_text.append(name)
                         alt = True
+                    if not short and not star:
+                        mouseover_text = results[result][algorithm]['hover']
+                        alt = not (mouseover_text == [] 
+                                   or mouseover_text == [""])
+                        """THIS IS A HACK--REMOVE ASAP"""
+                        if alt:
+                            mouseover_text = [line.split(" ") for line in 
+                                              mouseover_text]
+                            predictions = []
+                            for line in mouseover_text:
+                                predictions.append([float(num) for num in line])
+                            top_three = [sorted(range(len(prediction)), 
+                                                cmp=lambda x,y: cmp(prediction[x],
+                                                                   prediction[y]))[:3]
+                                         for prediction in predictions]
+                            mouseover_text = top_three
+                        """"""
+                    
                     f.write('\t\t<td ' + str(color) + '>' 
                             + hover(bold(str(score), to_bold), 
                                     mouseover_text, alt) 
@@ -176,6 +221,19 @@ def write_table(f, results, params, star=False, short=False):
                     f.write('\t\t<td></td>\n')
             f.write('\t</tr>\n')
     f.write('</table>\n')
+
+def check(entry, algorithm, current_score):
+    """ Checks if an entry has results for an algorithm. If it doesn't, it 
+        creates an empty dictionary
+    NOTE: modifies entry in-place
+    """
+    if not entry.has_key(algorithm):
+        entry[algorithm] = {}
+    else:
+        if entry[algorithm]['score'] != current_score:
+            print "something went wrong:"
+            print "algorithm:", algorithm, current_score, "and", 
+            print entry[algorithm['score']]
 
 def get_algorithm_names(algorithms, star, short):
     if star:
@@ -220,7 +278,8 @@ def get_algorithm_subsets(algorithms):
 def is_cheat(algorithm):
     return any([cheat in algorithm for cheat in CHEATS])
 
-def get_scores(result, algorithms, subsets):
+def get_scores(result, algorithms):
+    subsets = algorithms['subsets']
     best_score_names = []
     for algorithm_type in algorithms['types']:
         best_score = -np.inf
@@ -228,7 +287,7 @@ def get_scores(result, algorithms, subsets):
         for algorithm in algorithms['names']:
             if result.has_key(algorithm):
                 if algorithm in subsets[algorithm_type]:
-                    score = round(result[algorithm], 2)
+                    score = round(result[algorithm]['score'], 2)
                     if score > best_score:
                         to_add = [algorithm]
                         best_score = score
@@ -240,7 +299,7 @@ def get_scores(result, algorithms, subsets):
     list_of_scores = [] #does not include cheating algorithms
     for algorithm in algorithms['names']:
         if result.has_key(algorithm):
-            score = round(result[algorithm], 2)
+            score = round(result[algorithm]['score'], 2)
             if is_cheat(algorithm):
                 best_cheating_score = max(best_cheating_score, score)
             else:
@@ -264,7 +323,7 @@ def bold(string, flag=True):
 
 def mouse(mouse_off='"this.style.fontSize=\'medium\';', 
           mouse_on='"this.style.fontSize=\'x-large\';'):
-    mouse_on += 'this.style.textDecoration=\'underline\'"'
+    mouse_on += '"'#'this.style.textDecoration=\'underline\'"'
     mouse_off += 'this.style.textDecoration=\'none\'"'
     
     return 'onMouseOut=' + mouse_off + ' onMouseOver=' + mouse_on
