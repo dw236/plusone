@@ -35,3 +35,6 @@ Plusone.jar
 
 /src/datageneration/output/*
 /src/datageneration/script.py
+
+projector/final.*
+projector/documents

@@ -378,6 +378,36 @@ def write_cheats(data, args, dir):
                 f.write(str(np.log(word + noise)) + " ")
             f.write('\n')
 
+def match_beta(input_beta='../../projector/final.beta'):
+    real_beta = 'output/results.pickle'
+    with open(real_beta, 'r') as f:
+        real_beta = pickle.load(f)[2]
+    
+    with open(input_beta, 'r') as f:
+        input_beta = [line.strip(' \n').split(' ') for line in f.readlines()]
+    lines_to_nums = []
+    for line in input_beta:
+        lines_to_nums.append([float(num) for num in line])
+    input_beta = np.array(lines_to_nums)
+    
+    assert(shape(real_beta) == shape(input_beta))
+    
+    #generate preference list
+    male_preferences = np.zeros(np.shape(real_beta))
+    female_preferences = np.zeros(np.shape(input_beta))
+    for i in range(len(real_beta)):
+        for j in range(len(input_beta)):
+            cos_sim = real_beta[i].dot(input_beta[j]) / \
+                      (np.sqrt(real_beta[i].dot(real_beta[i])) * 
+                       np.sqrt(input_beta[j].dot(real_beta[j])))
+            male_preferences[i][j] = cos_sim
+            female_preferences[j][i] = cos_sim
+            
+    #run stable marriage algorithm
+    proposals = [np.argmax(male) for male in male_preferences]
+    while(len(set(proposals)) != len(male_preferences)):
+        pass
+
 """for HLDA--still hacky"""
 def display_children(tree, parent="root"):
     print "topic", tree.topic_number, "[parent:", str(parent) + "]"

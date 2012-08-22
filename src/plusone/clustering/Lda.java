@@ -34,6 +34,7 @@ public class Lda extends ClusteringTest {
 	//flag to take true parameters (only for synthesized data)
 	private boolean trainCheat;
 	private boolean testCheat;
+	private boolean project;
 	private List<PredictionPaper> testDocs;
 	private String[] hoverText;
 	
@@ -45,6 +46,8 @@ public class Lda extends ClusteringTest {
 		} else if (variant.substring(0,4).equals("ldaC")) {
 			this.trainCheat = true;
 			this.testCheat = true;
+		} else if (variant.substring(0, 4).equals("proj")) {
+			this.project = true;
 		} else {
 			this.trainCheat = false;
 			this.testCheat = false;
@@ -78,12 +81,24 @@ public class Lda extends ClusteringTest {
 	 * parameter (in this case, all alphas to the dirichlet are equal)
 	 */
 	private void train() {
+		System.out.print("cleaning out lda folder for training...");
+		Utils.runCommand("rm lda/*", false);
 		double[][] betaMatrix = null;
 		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
 			betaMatrix = getRealBeta("src/datageneration/output/" + 
 					"documents_model-out");
 			cheat();
+		} else if (project) { 
+			System.out.println("We are getting beta from the projector");
+			createProjectorInput("projector/documents", trainingSet);
+			Utils.runCommand("./run-projector " + numTopics + " " + trainingSet.size()
+					+ " " + terms.size(), false);
+			betaMatrix = readLdaResultFile("projector/final.beta", 0 , true);
+			System.out.print("replacing trained beta with projector beta...");
+			Utils.runCommand("cp projector/final.beta lda", false);
+			Utils.runCommand("cp src/datageneration/output/final.other lda", false);
+			System.out.println("done.");
 		} else {
 			try {
 				new File("lda").mkdir();
@@ -104,6 +119,26 @@ public class Lda extends ClusteringTest {
 		beta = new SimpleMatrix(betaMatrix);
 	}
 
+	//TODO move this
+	private void createProjectorInput(String filename, List<TrainingPaper> papers) {
+		System.out.print("creating projector input: " + filename + " ... ");
+
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+
+		for (TrainingPaper paper : papers) {
+			for (int word : paper.getTrainingWords()) {
+				for (int i=0; i<paper.getTrainingTf(word); i++) {
+					fileWriter.write(word + " ");
+				}
+			}
+			fileWriter.write("\n");
+		}
+
+		fileWriter.close();
+		
+		System.out.println("done.");
+	}
+	
 	/**
 	 * Given a set of test documents, runs lda-c-dist inference to learn the
 	 * final gammas. Then, subtracts alpha from each gamma to find the expected
@@ -241,8 +276,7 @@ public class Lda extends ClusteringTest {
 		System.out.print("replacing trained beta with real beta...");
 		System.out.print("saving trained beta as 'trained_final.beta'...");
 		Utils.runCommand("mv lda/final.beta lda/trained_final.beta", false);
-		Utils.runCommand("cp src/datageneration/output/final.beta " +
-				"lda", false);
+		Utils.runCommand("cp src/datageneration/output/final.beta lda", false);
 		System.out.println("done.");
 		
 		System.out.print("replacing trained gammas with real gammas...");

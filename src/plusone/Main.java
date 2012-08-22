@@ -406,6 +406,20 @@ public class Main {
 				algMap.put("lda", lda);
 			}
 		}
+		
+		//projector, uses new algorithm for training and lda inference
+		Lda projector = null;
+		if (testIsEnabled("projector")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+			"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				projector = new Lda("projector", trainingSet, wordIndexer, terms, dimensions[dk],
+									trainingIndices, testIndices);
+				runClusteringMethod(projector, ks, size, true);
+				algMap.put("projector", projector);
+			}
+		}
+		
 		//ldaT, cheats on training but not testing
 		Lda ldaTrained = null;
 		if (testIsEnabled("ldaTrained")){
@@ -418,6 +432,7 @@ public class Main {
 				algMap.put("ldaT", ldaTrained);
 			}
 		}
+		
 		//ldaC, cheats in both training and testing
 		Lda ldaCheat = null;
 		if (testIsEnabled("ldaCheat")){

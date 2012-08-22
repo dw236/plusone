@@ -218,7 +218,7 @@ def hack_1(statistic, params, result, results):
         indices = np.array(indices)
     if statistic == 'sig_words':
         to_traverse = words
-        indices = np.array(range(15))
+        indices = np.array(range(args.k))
     top_three = list(np.array([sorted(range(len(topic)), 
                                       cmp=lambda x,y: cmp(topic[x],
                                                           topic[y]),
@@ -252,7 +252,7 @@ def check(entry, algorithm, current_score):
         if entry[algorithm]['score'] != current_score:
             print "something went wrong:"
             print "algorithm:", algorithm, current_score, "and", 
-            print entry[algorithm['score']]
+            print entry[algorithm]['score']
 
 def get_algorithm_names(algorithms, star, short):
     if star:
