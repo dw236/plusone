@@ -38,6 +38,7 @@ public class GaussianTable {
 		out.print(",");
 		ArrayList<GaussianFile> allFiles = new ArrayList<GaussianFile>();
 		HashSet<Integer> kSet = new HashSet<Integer>();
+		HashSet<Integer> diffSet = new HashSet<Integer>();
 		HashSet<Double> aSet = new HashSet<Double>();
 		HashSet<Double> bSet = new HashSet<Double>();
 
@@ -61,13 +62,16 @@ public class GaussianTable {
     		}
     		allFiles.add(thisFile);
     		kSet.add(k);
+    		diffSet.add(diff);
     		aSet.add(a);
     		bSet.add(b);
     	}
     	//All sorted
     	ArrayList<Integer> kList = new ArrayList<Integer>(new TreeSet<Integer>(kSet));
+    	ArrayList<Integer> diffList = new ArrayList<Integer>(new TreeSet<Integer>(diffSet));
     	ArrayList<Double> aList = new ArrayList<Double>(new TreeSet<Double>(aSet));
     	ArrayList<Double> bList = new ArrayList<Double>(new TreeSet<Double>(bSet));
+    	System.out.println(diffList);
 
     	for (Integer k : kList) {
     		out.print(k+",");
@@ -78,20 +82,28 @@ public class GaussianTable {
     		for (Double b : bList) {
     			out.print("(" + a + " " + b + "),");
     			for (Integer k : kList) {
-    				GaussianFile correctABKTriple = null;
-    				for (GaussianFile g : allFiles) {
-    					if (g.a == a && g.b == b && g.k == k) {
-    						correctABKTriple = g;
-    					}
-    				}
     				if (diffTopics) {
-    					out.print(correctABKTriple.cosRatio + " "
-        						+ correctABKTriple.eucRatio + " "
-        						+ "(" + correctABKTriple.estK + "),");
+	    				ArrayList<GaussianFile> correctABKs = new ArrayList<GaussianFile>();
+	    				for (GaussianFile g : allFiles) {
+	    					if (g.a == a && g.b == b && g.k == k) {
+	    						correctABKs.add(g);
+	    					}
+	    				}
+	    				for (GaussianFile g : correctABKs) {
+	    					out.print(g.cosRatio + " " + g.eucRatio + " " + "("
+	    							+ g.estK + ") | ");
+	    				}
+	    				out.print(",");
     				} else {
-    					out.print(correctABKTriple.cosRatio + " "
-    						+ correctABKTriple.eucRatio + ",");
-    				}
+	    				GaussianFile correctABKTriple = null;
+	    				for (GaussianFile g : allFiles) {
+	    					if (g.a == a && g.b == b && g.k == k) {
+	    						correctABKTriple = g;
+	    					}
+	    				}
+	    				out.print(correctABKTriple.cosRatio + " "
+	    					+ correctABKTriple.eucRatio + ",");
+	    			}
     			}
     			out.println();
     		}
@@ -118,7 +130,8 @@ public class GaussianTable {
 				double a, double b, int n, int m, int k, int diff) {
 			this.cosRatio = cosRatio;
 			this.eucRatio = eucRatio;
-			this.a = a; this.b = b; this.n = n; this.m = m; this.estK = k + diff;
+			this.a = a; this.b = b; this.n = n; this.m = m; this.k = k;
+			this.estK = k + diff;
 		}
 	}
 }

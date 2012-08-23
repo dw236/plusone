@@ -210,7 +210,7 @@ public class Main {
 		JSONObject json = new JSONObject();
 
 		try {
-			String outName = null;
+			String fileName = ""; String dirName = "";
 			ArrayList<Double> params = new ArrayList<Double>();
 			ArrayList<String> paramNames = new ArrayList<String>();
 			ArrayList<Double> data = new ArrayList<Double>();
@@ -247,7 +247,15 @@ public class Main {
 								+ (int)Math.floor(params.get(i)) + ".");
 					}
 				}
-				outName = tmpOutName.toString();
+				//Find where alpha is
+				int alphaLoc = 0;
+				for (int i = 0; i < tmpOutName.length(); i++) {
+					if (tmpOutName.charAt(i) == 'a') {
+						alphaLoc = i;
+					}
+				}
+				dirName = tmpOutName.substring(0, alphaLoc - 1);
+				fileName = tmpOutName.substring(alphaLoc + 1);
 				if (documentsOtherOut != null) {
 					//Put the information from documents_other-out into data
 					Scanner lines = null;
@@ -274,7 +282,7 @@ public class Main {
 				}
 			} else { //Real data
 				String shortFile = dataFile.split("/")[1];
-				outName = "k." + numTopics + "."
+				fileName = "k." + numTopics + "."
 						+ shortFile.substring(0,shortFile.length()-4);
 				parameters.put("k", numTopics);
 			}
@@ -312,13 +320,19 @@ public class Main {
 				}
 			}
 			json.put("tests", tests);
-			
-			File out = new File("data", "experiment." + outName + "json");
-			while (out.exists()) {
-				outName = new String(outName.concat("0."));
-				out = new File("data", "experiment." + outName + "json");
+			new File ("data/" + dirName).mkdir();
+			File out = new File("data/" + dirName, "experiment." + fileName + "json");
+			if (out.exists()) {
+				int newFileEnd = 0;
+				String oldFileName = fileName;
+				while (out.exists()) {
+					fileName = new String(oldFileName.concat(newFileEnd + "."));
+					newFileEnd++;
+					out = new File("data/" + dirName, "experiment." + fileName + "json");
+				}
 			}
-			System.out.println("Wrote to data/experiment." + outName + "json");
+			System.out.println("Wrote to data/" + dirName + "/experiment."
+					+ fileName + "json");
 	
 			PlusoneFileWriter writer = new PlusoneFileWriter(out);
 			writer.write(json.toString());
