@@ -93,7 +93,7 @@ public class Lda extends ClusteringTest {
 			System.out.println("We are getting beta from the projector");
 			createProjectorInput("projector/documents", trainingSet);
 			Utils.runCommand("./run-projector " + numTopics + " " + trainingSet.size()
-					+ " " + terms.size(), false);
+					+ " " + terms.size(), true);
 			betaMatrix = readLdaResultFile("projector/final.beta", 0 , true);
 			System.out.print("replacing trained beta with projector beta...");
 			Utils.runCommand("cp projector/final.beta lda", false);
@@ -112,6 +112,11 @@ public class Lda extends ClusteringTest {
 			Utils.runCommand("lib/lda-c-dist/lda est 1 " + numTopics
 					+ " lib/lda-c-dist/settings.txt " + trainingData
 					+ " random lda", false);
+			new File ("lda/trained").mkdir();
+			System.out.print("copying trained beta to 'trained' folder...");
+			Utils.runCommand("cp lda/final.beta lda/trained", false);
+			System.out.print("copying trained gammas to 'trained' folder...");
+			Utils.runCommand("cp lda/final.gamma lda/trained", false);
 		
 			betaMatrix = readLdaResultFile("lda/final.beta", 0, true);
 		}
@@ -274,14 +279,10 @@ public class Lda extends ClusteringTest {
 	
 	private void cheat() {
 		System.out.print("replacing trained beta with real beta...");
-		System.out.print("saving trained beta as 'trained_final.beta'...");
-		Utils.runCommand("mv lda/final.beta lda/trained_final.beta", false);
 		Utils.runCommand("cp src/datageneration/output/final.beta lda", false);
 		System.out.println("done.");
 		
 		System.out.print("replacing trained gammas with real gammas...");
-		System.out.print("saving trained gammas as 'trained_final.gamma'...");
-		Utils.runCommand("mv lda/final.gamma lda/trained_final.gamma", false);
 		try {
 			FileInputStream fstream = new FileInputStream("src/" +
 					"datageneration/output/final.gamma");

@@ -211,7 +211,7 @@ def get_sig_words(word_dists, amount=0.8):
         sig_words.append(index + 1)
     return sig_words
 
-def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
+def plot_dist(types, color='b', labels=None, bottom=0, clear=True):
     """Plots a distribution as a bar graph.
     
     Given a distribution, plots a bar graph. Each bar is an element in the
@@ -223,7 +223,7 @@ def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
     Returns:
         none, but plots the distribution
     """
-    if clear == None:
+    if clear:
         clf()
     offset = 0
     width = 0.01
@@ -234,19 +234,20 @@ def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
         offset += width
     xticks(np.arange(width / 2, width * len(types), .01), labels)
 
-def plot_dists(types, color='b', labels=None, scale=0):
+def plot_dists(types, color='b', labels=None, scale=0, clear=True):
     """plots several distributions vertically stacked for easier visualization
     
     TODO: scale y-axis so labels make sense
     """
-    clf()
+    if clear:
+        clf()
     bottom = 0
     for dist in types:
         if len(dist) > 100:
-            plot(dist + bottom)
+            plot(dist + bottom, color=color)
         else:
-            plot_dist(dist, color, labels, bottom, "don't clear")
-        if scale == 1.0:
+            plot_dist(dist, color, labels, bottom, clear=False)
+        if scale != 0:
             to_add = scale
         else:
             to_add = max(dist) * 1.1
@@ -387,26 +388,113 @@ def match_beta(input_beta='../../projector/final.beta'):
         input_beta = [line.strip(' \n').split(' ') for line in f.readlines()]
     lines_to_nums = []
     for line in input_beta:
-        lines_to_nums.append([float(num) for num in line])
+        lines_to_nums.append([np.exp(float(num)) for num in line])
     input_beta = np.array(lines_to_nums)
     
-    assert(shape(real_beta) == shape(input_beta))
+    r_shape, i_shape = np.shape(real_beta), np.shape(input_beta)
+    assert(r_shape[0] == i_shape[0])
+    if r_shape[1] != i_shape[1]:
+        print "input beta is missing words--padding with 0's"
+        #pad input_beta
+        lines = []
+        for line in input_beta:
+            lines.append(list(line) + [0]*(r_shape[1] - i_shape[1]))
+        input_beta = np.array(lines)
     
     #generate preference list
-    male_preferences = np.zeros(np.shape(real_beta))
-    female_preferences = np.zeros(np.shape(input_beta))
+    male_distances = np.zeros((np.shape(real_beta)[0], 
+                               np.shape(input_beta)[0]))
+    female_distances = np.zeros((np.shape(input_beta)[0],
+                                 np.shape(real_beta)[0]))
     for i in range(len(real_beta)):
         for j in range(len(input_beta)):
             cos_sim = real_beta[i].dot(input_beta[j]) / \
                       (np.sqrt(real_beta[i].dot(real_beta[i])) * 
-                       np.sqrt(input_beta[j].dot(real_beta[j])))
-            male_preferences[i][j] = cos_sim
-            female_preferences[j][i] = cos_sim
+                       np.sqrt(input_beta[j].dot(input_beta[j])))
+            male_distances[i][j] = cos_sim
+            female_distances[j][i] = cos_sim
+    pairings = tma(male_distances, female_distances)
+    plot_dists(real_beta, color='green')
+    reordered_input_beta = np.array([input_beta[pairings[i][0]]
+                                     for i in sorted(pairings.keys())])
+    plot_dists(reordered_input_beta, color='red', scale=0.1, clear=False)
+
+    return real_beta, input_beta, pairings
+    
             
-    #run stable marriage algorithm
-    proposals = [np.argmax(male) for male in male_preferences]
-    while(len(set(proposals)) != len(male_preferences)):
-        pass
+def tma(male_distances, female_distances, verbose=False):
+    """ run stable marriage algorithm
+    Note: input is distances, not rankings (ie higher is more preferred)
+    """
+    #rank from highest to lowest
+    male_preferences = [sorted(range(len(male)), cmp=ind_cmp(male),
+                               reverse=True)
+                        for male in male_distances]
+    female_preferences = [sorted(range(len(female)), cmp=ind_cmp(female),
+                                 reverse=True)
+                          for female in female_distances]
+    if verbose:
+        print "Male preference list:", male_preferences
+        print "Female preference list:", female_preferences
+    #each male crosses off his top female and proposes to her
+    proposals = [male.pop(0) for male in male_preferences]
+    if verbose: 
+        print "Proposals:", proposals
+    pairings = {}
+    for i in range(len(proposals)):
+        female = proposals[i]
+        if pairings.has_key(female):
+            pairings[female].append(i)
+        else:
+            pairings[female] = [i]
+
+    while(len(pairings.keys()) != len(female_distances)):
+        if verbose:
+            print "Pairings:", pairings
+        #at least one woman has more than one proposal
+        rejected_men = []
+        #find these women, then reject the men
+        for female in pairings:
+            if len(pairings[female]) > 1:
+                if verbose:
+                    print "Female", female, "has suitors:", pairings[female]
+                ordered_men = sorted(pairings[female], 
+                                     cmp=ind_cmp(female_distances[female]),
+                                     reverse=True)
+                #put favorite man on string, reject the rest
+                pairings[female] = [ordered_men[0]]
+                if verbose:
+                    print "Female", female, 
+                    print "says 'maybe' to Male", ordered_men[0]
+                rejected_men += ordered_men[1:]
+        #rejected men must now propose to the next female on his list
+        if verbose:
+            print "Rejections:", rejected_men
+        for rejected_man in rejected_men:
+            next_female = male_preferences[rejected_man].pop(0)
+            if verbose:
+                print "Male", rejected_man, 
+                print "now proposes to Female", next_female
+            if pairings.has_key(next_female):
+                pairings[next_female].append(rejected_man)
+            else:
+                pairings[next_female] = [rejected_man]
+    if verbose:
+        print "Final pairings:", pairings
+            
+    return pairings
+
+def ind_cmp(values):
+    """returns a cmp function to sort a list of indices based on their values
+       
+        Args:
+           values: a list (or dict) of values
+        
+        Returns:
+            a function that compares two indices x,y by 
+            cmp(values[x], values[y])
+    """
+    return lambda x,y: cmp(values[x], values[y])
 
 """for HLDA--still hacky"""
 def display_children(tree, parent="root"):
