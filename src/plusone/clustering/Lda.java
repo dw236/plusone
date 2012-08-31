@@ -82,7 +82,7 @@ public class Lda extends ClusteringTest {
 	 */
 	private void train() {
 		System.out.print("cleaning out lda folder for training...");
-		Utils.runCommand("rm lda/*", false);
+		Utils.runCommand("./clear-folder lda", true);
 		double[][] betaMatrix = null;
 		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
@@ -91,12 +91,15 @@ public class Lda extends ClusteringTest {
 			cheat();
 		} else if (project) { 
 			System.out.println("We are getting beta from the projector");
-			createProjectorInput("projector/documents", trainingSet);
-			Utils.runCommand("./run-projector " + numTopics + " " + trainingSet.size()
-					+ " " + terms.size(), true);
-			betaMatrix = readLdaResultFile("projector/final.beta", 0 , true);
+			System.out.println("cleaning out projector folder for training...");
+			Utils.runCommand("rm projector/data/documents", true);
+			Utils.runCommand("rm projector/data/final.beta", true);
+			createProjectorInput("projector/data/documents", trainingSet);
+			while(!Utils.runCommand("./run-projector " + numTopics + " " 
+					+ trainingSet.size() + " " + terms.size(), true));
+			betaMatrix = readLdaResultFile("projector/data/final.beta", 0 , true);
 			System.out.print("replacing trained beta with projector beta...");
-			Utils.runCommand("cp projector/final.beta lda", false);
+			Utils.runCommand("cp projector/data/final.beta lda", false);
 			Utils.runCommand("cp src/datageneration/output/final.other lda", false);
 			System.out.println("done.");
 		} else {

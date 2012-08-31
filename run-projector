@@ -20,11 +20,11 @@ a=1
 b=1
 
 # compile using ant
-ant -f build.xml || exit
+#ant -f build.xml || exit
 
 #run matlab program
 matlab -nodesktop -nosplash -nojvm <<-EOF
 cd projector;
-G = predictTopics('documents', $n, $m, $k, 0.9, 1);
+G = predictTopics('data/documents', $n, $m, $k, 0.9, 1);
 exit
 EOF

@@ -242,8 +242,10 @@ def plot_dists(types, color='b', labels=None, scale=0, clear=True):
     if clear:
         clf()
     bottom = 0
+    y_indices = []
     for dist in types:
-        if len(dist) > 100:
+        y_indices.append(bottom)
+        if len(dist) > 50:
             plot(dist + bottom, color=color)
         else:
             plot_dist(dist, color, labels, bottom, clear=False)
@@ -252,6 +254,8 @@ def plot_dists(types, color='b', labels=None, scale=0, clear=True):
         else:
             to_add = max(dist) * 1.1
         bottom += to_add
+    if labels != None:
+        yticks(y_indices, labels)
 
 def show_dists(dists):
     for dist in dists:
@@ -379,7 +383,7 @@ def write_cheats(data, args, dir):
                 f.write(str(np.log(word + noise)) + " ")
             f.write('\n')
 
-def match_beta(input_beta='../../projector/final.beta'):
+def match_beta(input_beta='../../projector/data/final.beta'):
     real_beta = 'output/results.pickle'
     with open(real_beta, 'r') as f:
         real_beta = pickle.load(f)[2]
@@ -414,12 +418,15 @@ def match_beta(input_beta='../../projector/final.beta'):
             male_distances[i][j] = cos_sim
             female_distances[j][i] = cos_sim
     pairings = tma(male_distances, female_distances)
-    plot_dists(real_beta, color='green')
+    plot_dists(real_beta, color='green', scale=0.25)
     reordered_input_beta = np.array([input_beta[pairings[i][0]]
                                      for i in sorted(pairings.keys())])
-    plot_dists(reordered_input_beta, color='red', scale=0.1, clear=False)
+    labels = [pairings[i][0] for i in sorted(pairings.keys())]
+    labels = [labels.index(female) for female in sorted(pairings.keys())]
+    plot_dists(reordered_input_beta, color='red', scale=0.25, labels=labels,
+               clear=False)
 
-    return real_beta, input_beta, pairings
+    return real_beta, input_beta, pairings, male_distances
     
             
 def tma(male_distances, female_distances, verbose=False):

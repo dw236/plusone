@@ -28,8 +28,9 @@ public class Utils {
      * @param streamOutput	a flag to determine whether or not to display
      * 						any output the command might give
      */
-    public static void runCommand(String command, boolean streamOutput) {
-
+    public static boolean runCommand(String command, boolean streamOutput) {
+    
+    boolean success = true;
 	System.out.println("Running command: " + command);
 	try {
 	    Process p = Runtime.getRuntime().exec(command);
@@ -51,6 +52,7 @@ public class Utils {
 		if (streamOutput)
 			System.out.println("Here is the standard error of the command (if any):\n");
 		while ((s = stdError.readLine()) != null) {
+			success = false;
 			if (streamOutput) {
 				System.out.println(s);
 			}
@@ -62,6 +64,6 @@ public class Utils {
 	    e.printStackTrace();
 	    System.exit(-1);
 	}
-
+	return success;
     }
 }

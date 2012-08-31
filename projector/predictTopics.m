@@ -27,7 +27,7 @@ end
 [U,S,V]=svds(doc,dim-1);
 docProj=U*S;
 
-[ID,C,sumd]=kmeans(docProj,dim,'replicates',10,'distance','cosine');
+[ID,C,sumd]=kmeans(docProj,dim,'replicates',10,'start','cluster','distance','cosine');
 
 centers = zeros(dim,dim-1);
 sizes = zeros(1,dim);
@@ -76,4 +76,4 @@ for i=1:dim
 end
 
 Beta = log(G + 1e-323);
-dlmwrite('final.beta', Beta, ' ');
+dlmwrite('data/final.beta', Beta, ' ');
