@@ -255,7 +255,7 @@ public class Main {
 					}
 				}
 				dirName = tmpOutName.substring(0, alphaLoc - 1);
-				fileName = tmpOutName.substring(alphaLoc + 1);
+				fileName = tmpOutName.substring(alphaLoc);
 				if (documentsOtherOut != null) {
 					//Put the information from documents_other-out into data
 					Scanner lines = null;

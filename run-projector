@@ -19,9 +19,6 @@ a=1
 #Beta (resize parameter)
 b=1
 
-# compile using ant
-#ant -f build.xml || exit
-
 #run matlab program
 matlab -nodesktop -nosplash -nojvm <<-EOF
 cd projector;

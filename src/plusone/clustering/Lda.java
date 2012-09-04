@@ -90,6 +90,9 @@ public class Lda extends ClusteringTest {
 					"documents_model-out");
 			cheat();
 		} else if (project) { 
+            if (!new File("projector/data").exists()) {
+                new File("projector/data").mkdir();
+            }
 			System.out.println("We are getting beta from the projector");
 			System.out.println("cleaning out projector folder for training...");
 			Utils.runCommand("rm projector/data/documents", true);
