@@ -89,7 +89,9 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 					terms[word].totalCount += tf.get(word);
 			}
 		}
-
+		if (test && testingTf.isEmpty()) {
+			System.err.println("WARNING: Test document is empty");
+		}
 		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
 			norm += entry.getValue() * entry.getValue();
 		}

@@ -423,6 +423,8 @@ def match_beta(input_beta='../../projector/data/final.beta'):
                                      for i in sorted(pairings.keys())])
     labels = [pairings[i][0] for i in sorted(pairings.keys())]
     labels = [labels.index(female) for female in sorted(pairings.keys())]
+    labels = zip(labels, [round(male_distances[i][labels[i]], 2)
+                          for i in labels])
     plot_dists(reordered_input_beta, color='red', scale=0.25, labels=labels,
                clear=False)
 
