@@ -40,6 +40,15 @@ def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
         assert(f.closed)
     return results
 
+def parse_result(new_result):
+    result = {option:new_result[3][option] for option in UNIVERSALS}
+    for param in PARAMS:
+         result[param] = new_result[3][param]
+    for algorithm in sorted(new_result[2]):
+        result[algorithm] = new_result[2][algorithm['Prediced_Mean']]
+    
+    return result
+
 def add_result(results, new_result):
     universals = tuple([new_result[3][option] for option in UNIVERSALS])
     if universals not in results:

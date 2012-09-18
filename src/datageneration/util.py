@@ -419,12 +419,11 @@ def match_beta(input_beta='../../projector/data/final.beta'):
             female_distances[j][i] = cos_sim
     pairings = tma(male_distances, female_distances)
     plot_dists(real_beta, color='green', scale=0.25)
-    reordered_input_beta = np.array([input_beta[pairings[i][0]]
-                                     for i in sorted(pairings.keys())])
     labels = [pairings[i][0] for i in sorted(pairings.keys())]
     labels = [labels.index(female) for female in sorted(pairings.keys())]
+    reordered_input_beta = np.array([input_beta[i] for i in labels])
     labels = zip(labels, [round(male_distances[i][labels[i]], 2)
-                          for i in labels])
+                          for i in range(len(labels))])
     plot_dists(reordered_input_beta, color='red', scale=0.25, labels=labels,
                clear=False)
 
@@ -504,6 +503,12 @@ def ind_cmp(values):
             cmp(values[x], values[y])
     """
     return lambda x,y: cmp(values[x], values[y])
+
+def top_three_words(topic):
+    top_three = sorted(range(len(topic)), cmp=ind_cmp(topic), reverse=True)[:3]
+    top_three = zip(top_three, [round(topic[i], 2) for i in top_three])
+    
+    return top_three
 
 """for HLDA--still hacky"""
 def display_children(tree, parent="root"):

@@ -163,6 +163,9 @@ public class Lda extends ClusteringTest {
 	@Override
 	public double[][] predict(List<PredictionPaper> testDocs){
 		this.testDocs = testDocs;
+		System.out.print("writing test indices to file in lda/trained...");
+		writeIndices();
+		System.out.println("done.");
 		double[][] result = null;
 		if (testCheat) {
 			System.out.println("we are cheating and using true parameters " +
@@ -281,6 +284,16 @@ public class Lda extends ClusteringTest {
 		fileWriter.close();
 		
 		System.out.println("done.");
+	}
+	
+	private void writeIndices() {
+		PlusoneFileWriter fileWriter = 
+			new PlusoneFileWriter("lda/trained/test_indices");
+		for (PredictionPaper paper : testDocs) {
+			fileWriter.write(testIndices.get(paper) + " ");
+		}
+		fileWriter.write("\n");
+		fileWriter.close();
 	}
 	
 	private void cheat() {

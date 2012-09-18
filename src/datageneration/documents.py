@@ -192,7 +192,8 @@ def write(data, args):
         print "plsi and ctm flags cannot both be active (returning None)"
         return None
     
-    dir = 'output/'
+    output_dir = 'output/'
+    dir = output_dir
     dir += "k" + str(args.k) + "."
     dir += "n" + str(args.n) + "."
     dir += "l" + str(args.l) + "."
@@ -272,8 +273,29 @@ def write(data, args):
     if not args.plsi and not args.ctm:
         print "writing cheats for lda ...",
         util.write_cheats(data, args, dir)
-    print "copying files to top-level folder ... "
+    print "copying files to top-level folder ... ",
     os.system("cp " + dir + "/* output")
+    print "done"
+    print "archiving files for future use...",
+    archive_base_dir = output_dir + 'archived/'
+    try:
+        os.mkdir(archive_dir)
+    except:
+        pass
+    index = 0
+    while True:
+        if index == 0:
+                ext = ''
+        else:
+            ext = "_" + str(index)
+        archive_dir = archive_base_dir + dir[len(output_dir):] + ext
+        try:
+            os.mkdir(archive_dir)
+            break
+        except:
+            index += 1
+    os.system("cp " + dir + "/* " + archive_dir)
+    print "done"
 
 def main():
     parser = argparse.ArgumentParser(description="Document generator. Default\
