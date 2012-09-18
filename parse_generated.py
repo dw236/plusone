@@ -79,7 +79,7 @@ def add_result(results, new_result):
             hoverList = []
         
         check(entry, algorithm, score) #initialize dictionary if necessary
-        entry[algorithm]['score'] = score
+        entry[algorithm]['score'] += [score]
         entry[algorithm]['hover'] = hoverList
         
         algorithm_type = algorithm.strip('1234567890-')
@@ -88,7 +88,7 @@ def add_result(results, new_result):
         else:
             algorithms['names'].add(algorithm_type)
             check(entry, algorithm_type, score)
-            entry[algorithm_type]['score'] = score
+            entry[algorithm_type]['score'] += [score]
             entry[algorithm_type]['hover'] = hoverList
         algorithms['types'].add(algorithm_type)
         
@@ -160,7 +160,7 @@ def write_table(f, results, params, star=False, short=False):
                     to_bold = star and not short
                     if algorithm in scores['names'] or '*' in algorithm:
                         to_bold = True
-                    score = round(results[result][algorithm]['score'], 2)
+                    score = round(np.mean(results[result][algorithm]['score']), 2)
                     if is_cheat(algorithm):
                         if score == scores['best_cheating']:
                             color.add('b', 0xFF)
@@ -256,12 +256,13 @@ def check(entry, algorithm, current_score):
     NOTE: modifies entry in-place
     """
     if not entry.has_key(algorithm):
-        entry[algorithm] = {}
+        entry[algorithm] = {'score':[]}
     else:
         if entry[algorithm]['score'] != current_score:
-            print "something went wrong:"
-            print "algorithm:", algorithm, current_score, "and", 
-            print entry[algorithm]['score']
+            #print "something went wrong:"
+            #print "algorithm:", algorithm, current_score, "and", 
+            #print entry[algorithm]['score']
+            print "adding new score for:", algorithm
 
 def get_algorithm_names(algorithms, star, short):
     if star:
@@ -315,7 +316,9 @@ def get_scores(result, algorithms):
         for algorithm in algorithms['names']:
             if result.has_key(algorithm):
                 if algorithm in subsets[algorithm_type]:
-                    score = round(result[algorithm]['score'], 2)
+                    score = round(np.mean(result[algorithm]['score']), 2)
+                    print np.mean(result[algorithm]['score'])
+                    print result[algorithm]['score']
                     if score > best_score:
                         to_add = [algorithm]
                         best_score = score
@@ -327,7 +330,7 @@ def get_scores(result, algorithms):
     list_of_scores = [] #does not include cheating algorithms
     for algorithm in algorithms['names']:
         if result.has_key(algorithm):
-            score = round(result[algorithm]['score'], 2)
+            score = round(np.mean(result[algorithm]['score']), 2)
             if is_cheat(algorithm):
                 best_cheating_score = max(best_cheating_score, score)
             else:

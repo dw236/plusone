@@ -279,7 +279,7 @@ def write(data, args):
     print "archiving files for future use...",
     archive_base_dir = output_dir + 'archived/'
     try:
-        os.mkdir(archive_dir)
+        os.mkdir(archive_base_dir)
     except:
         pass
     index = 0
