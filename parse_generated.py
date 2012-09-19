@@ -18,11 +18,14 @@ STATISTICS = ['sig_topics', 'sig_words']
 def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
     filenames = os.listdir(dir)
     results = {}
+    flat_results = []
     files_found = 0
     for filename in filenames:
         if "experiment" in filename and filename[-5:] == ".json":
             files_found += 1
             result = parse_output.parse(dir + '/' + filename, external=False)
+            flat_result = flatten_result(result)
+            flat_results.append(flat_result)
             results = add_result(results, result)
         else:
             continue
@@ -38,14 +41,17 @@ def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
                 write_table(f, results[result], result, star, short)
                 f.write('<br></br>\n')
         assert(f.closed)
-    return results
+    return results, flat_results
 
-def parse_result(new_result):
+def flatten_result(new_result):
     result = {option:new_result[3][option] for option in UNIVERSALS}
     for param in PARAMS:
          result[param] = new_result[3][param]
     for algorithm in sorted(new_result[2]):
-        result[algorithm] = new_result[2][algorithm['Prediced_Mean']]
+        result[algorithm] = new_result[2][algorithm]['Predicted_Mean']
+    for statistic in sorted(new_result[4]):
+        if statistic not in HIDDEN:
+            result[statistic] = new_result[4][statistic]
     
     return result
 
@@ -442,6 +448,6 @@ def main():
     return generate_html(args.f, args.o, star, args.s, args.q)
 
 if __name__ == '__main__':
-    results = main()
+    results, flat_results = main()
     universals = results.keys()
-     
+ 

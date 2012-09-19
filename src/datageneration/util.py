@@ -563,3 +563,14 @@ class Dirichlet_Test(object):
             return self.d
         else:
             return self.d / self.total
+        
+def plot_stats(stats, x):
+    algs = ['lda-15_s', 'ldaT-15_s', 'ldaC-15_s', 'projector-15_s', 
+            'knn-15_s', 'Baseline_s', 'LSI-15_s']
+    colors = 'brgmcyk'
+    clf()
+    for i in range(7):
+        color = colors[i]
+        alg = algs[i]
+        plot(stats[x], stats[alg], color + '.', label=alg[:-2])
+        legend(loc="best")
