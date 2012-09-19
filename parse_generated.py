@@ -80,7 +80,7 @@ def add_result(results, new_result):
         
         check(entry, algorithm, score) #initialize dictionary if necessary
         entry[algorithm]['score'] += [score]
-        hoverList += [score]
+        entry[algorithm]['hover'] = hoverList
         
         algorithm_type = algorithm.strip('1234567890-')
         if not is_cheat(algorithm):
