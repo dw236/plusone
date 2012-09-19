@@ -80,7 +80,7 @@ def add_result(results, new_result):
         
         check(entry, algorithm, score) #initialize dictionary if necessary
         entry[algorithm]['score'] += [score]
-        entry[algorithm]['hover'] = hoverList
+        hoverList += [score]
         
         algorithm_type = algorithm.strip('1234567890-')
         if not is_cheat(algorithm):
@@ -193,12 +193,13 @@ def write_table(f, results, params, star=False, short=False):
                                 mouseover_text.append(name)
                         alt = True
                     if not short and not star:
-                        mouseover_text = results[result][algorithm]['hover']
+                        #mouseover_text = results[result][algorithm]['hover']
                         alt = not (mouseover_text == [] 
                                    or mouseover_text == [""])
                         if alt:
                             mouseover_text = hack_2(mouseover_text) #HACK
-                    
+                    mouseover_text = results[result][algorithm]['score']
+                    alt = True
                     f.write('\t\t<td ' + str(color) + '>' 
                             + hover(bold(str(score), to_bold), 
                                     mouseover_text, alt) 
@@ -257,12 +258,9 @@ def check(entry, algorithm, current_score):
     """
     if not entry.has_key(algorithm):
         entry[algorithm] = {'score':[]}
-    else:
-        if entry[algorithm]['score'] != current_score:
-            #print "something went wrong:"
-            #print "algorithm:", algorithm, current_score, "and", 
-            #print entry[algorithm]['score']
-            print "adding new score for:", algorithm
+    #else:
+        #if entry[algorithm]['score'] != current_score:
+            #print "adding new score for:", algorithm
 
 def get_algorithm_names(algorithms, star, short):
     if star:
@@ -317,8 +315,6 @@ def get_scores(result, algorithms):
             if result.has_key(algorithm):
                 if algorithm in subsets[algorithm_type]:
                     score = round(np.mean(result[algorithm]['score']), 2)
-                    print np.mean(result[algorithm]['score'])
-                    print result[algorithm]['score']
                     if score > best_score:
                         to_add = [algorithm]
                         best_score = score
