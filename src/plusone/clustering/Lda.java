@@ -103,7 +103,7 @@ public class Lda extends ClusteringTest {
 			betaMatrix = readLdaResultFile("projector/data/final.beta", 0 , true);
 			System.out.print("replacing trained beta with projector beta...");
 			Utils.runCommand("cp projector/data/final.beta lda", false);
-			Utils.runCommand("cp src/datageneration/output/final.other lda", false);
+			createProjectorInfo("lda/final.other");
 			System.out.println("done.");
 		} else {
 			try {
@@ -148,6 +148,41 @@ public class Lda extends ClusteringTest {
 		fileWriter.close();
 		
 		System.out.println("done.");
+	}
+	
+	//TODO move this
+	private void createProjectorInputTest(String filename,
+			List<PredictionPaper> papers) {
+		System.out.print("creating projector test input: " 
+				+ filename + " ... ");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+
+		for (PredictionPaper paper : papers) {
+			for (int word : paper.getTrainingWords()) {
+				for (int i=0; i<paper.getTrainingTf(word); i++) {
+					fileWriter.write(word + " ");
+				}
+			}
+			fileWriter.write("\n");
+		}
+
+		fileWriter.close();
+		
+		System.out.println("done.");
+	}
+	
+	//TODO move this
+	/**
+	 * creates the final.other file required for lda inference
+	 */
+	private void createProjectorInfo(String filename) {
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+		fileWriter.write("num_topics " + numTopics + " \n");
+		fileWriter.write("num_terms " + terms.size() + " \n");
+		fileWriter.write("alpha " + 
+						 readAlpha("src/datageneration/output/final.other") 
+						 + " \n");
+		fileWriter.close();
 	}
 	
 	/**
@@ -231,6 +266,7 @@ public class Lda extends ClusteringTest {
 			hoverText[papers] = prediction.trim();
 			papers++;
 		}
+		//end hover
 		
 		return result;
 	}
@@ -268,7 +304,8 @@ public class Lda extends ClusteringTest {
 	 */
 	private void createLdaInputTest(String filename, List<PredictionPaper> papers) {
 
-		System.out.print("creating lda input in file: " + filename + " ... ");
+		System.out.print("creating lda test input in file: " 
+				+ filename + " ... ");
 
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
 

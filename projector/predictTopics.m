@@ -18,7 +18,7 @@ end
 avgL=avgL/numDoc;
 fclose(fid);
 centroid = sum(doc)/size(doc,1);
-for i=1:200
+for i=1:numDoc
     doc(i,:)=doc(i,:)-centroid;
 end
 
@@ -27,7 +27,7 @@ end
 [U,S,V]=svds(doc,dim-1);
 docProj=U*S;
 
-[ID,C,sumd]=kmeans(docProj,dim,'replicates',10,'start','cluster',...
+[ID,C,sumd]=kmeans(docProj,dim,'replicates',50,'start','cluster',...
                    'distance','cosine', 'EmptyAction', 'singleton');
 
 centers = zeros(dim,dim-1);
@@ -72,7 +72,7 @@ centers=centers*max(m,1)/beta;
 G=zeros(dim,vocSize);
 
 for i=1:dim
-    G(i,:)=max(centers(i,:)*V',0);
+    G(i,:)=max(centers(i,:)*V'+centroid,0);
     G(i,:)=G(i,:)/sum(G(i,:));
 end
 

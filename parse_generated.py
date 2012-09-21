@@ -85,7 +85,7 @@ def add_result(results, new_result):
             hoverList = []
         
         check(entry, algorithm, score) #initialize dictionary if necessary
-        entry[algorithm]['score'] += [score]
+        entry[algorithm]['score'].append(score)
         entry[algorithm]['hover'] = hoverList
         
         algorithm_type = algorithm.strip('1234567890-')
@@ -94,7 +94,7 @@ def add_result(results, new_result):
         else:
             algorithms['names'].add(algorithm_type)
             check(entry, algorithm_type, score)
-            entry[algorithm_type]['score'] += [score]
+            entry[algorithm_type]['score'].append(score)
             entry[algorithm_type]['hover'] = hoverList
         algorithms['types'].add(algorithm_type)
         
@@ -156,7 +156,11 @@ def write_table(f, results, params, star=False, short=False):
             scores = get_scores(results[result], results['algorithms'])
             f.write('\t<tr ' + mouse() + '>\n')
             for statistic in STATISTICS:
-                top_three = hack_1(statistic, params, result, results) #HACK
+                top_three = ''#hack_1(statistic, params, result, results) #HACK
+                if statistic == 'sig_topics':
+                    top_three = [result[0]]
+                if statistic == 'sig_words':
+                    top_three = [result[1]]
                 f.write('\t\t<td>'
                          + hover(str(results[result][statistic]), 
                                  top_three) + '</td>\n')
@@ -166,7 +170,8 @@ def write_table(f, results, params, star=False, short=False):
                     to_bold = star and not short
                     if algorithm in scores['names'] or '*' in algorithm:
                         to_bold = True
-                    score = round(np.mean(results[result][algorithm]['score']), 2)
+                    score = round(np.mean(results[result][algorithm]['score']),
+                                  2)
                     if is_cheat(algorithm):
                         if score == scores['best_cheating']:
                             color.add('b', 0xFF)
@@ -199,11 +204,11 @@ def write_table(f, results, params, star=False, short=False):
                                 mouseover_text.append(name)
                         alt = True
                     if not short and not star:
-                        #mouseover_text = results[result][algorithm]['hover']
+                        mouseover_text = results[result][algorithm]['hover']
                         alt = not (mouseover_text == [] 
                                    or mouseover_text == [""])
                         if alt:
-                            mouseover_text = hack_2(mouseover_text) #HACK
+                            mouseover_text = ''#hack_2(mouseover_text) #HACK
                     mouseover_text = results[result][algorithm]['score']
                     alt = True
                     f.write('\t\t<td ' + str(color) + '>' 
