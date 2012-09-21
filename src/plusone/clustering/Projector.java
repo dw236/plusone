@@ -2,6 +2,7 @@ package plusone.clustering;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -11,15 +12,16 @@ import java.util.Map;
 import plusone.utils.Indexer;
 import plusone.utils.PaperAbstract;
 import plusone.utils.PlusoneFileWriter;
+import plusone.utils.PredictionPaper;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.Utils;
-import plusone.clustering.Lda.*;
 
 public class Projector extends ClusteringTest {
 
 	private String name;
 	private List<TrainingPaper> trainingSet;
+	private List<PredictionPaper> testSet;
 	private Indexer<String> wordIndexer;
 	private Terms terms;
 	private int numTopics;
@@ -37,7 +39,7 @@ public class Projector extends ClusteringTest {
 			int numTopics, 
 			Map<PaperAbstract, Integer> trainingIndices,
 			Map<PaperAbstract, Integer> testIndices) {
-		this(name);
+		this(name + "-" + numTopics);
 		this.name = name;
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
@@ -49,21 +51,27 @@ public class Projector extends ClusteringTest {
 	}
 
 	private void train() {
-		createProjectorInput("projector/documents", trainingSet);
+		if (!new File("projector/data").exists()) {
+            new File("projector/data").mkdir();
+        }
 		System.out.println("We are getting beta from the projector");
-		Utils.runCommand("./run-projector", false);
-		betaMatrix = readBeta("projector/final.beta", true);
+		System.out.println("cleaning out projector folder for training...");
+		Utils.runCommand("rm projector/data/documents", false);
+		Utils.runCommand("rm projector/data/test_documents", false);
+		Utils.runCommand("rm projector/data/final.beta", false);
+		Utils.runCommand("rm projector/data/predictions", false);
+		createProjectorInput("projector/data/documents", trainingSet);
+		while(!Utils.runCommand("./run-projector " + numTopics + " " 
+				+ trainingSet.size() + " " + terms.size(), true));
+		betaMatrix = readMatrix("projector/data/final.beta", true);
 		System.out.print("replacing trained beta with projector beta...");
-		Utils.runCommand("cp projector/final.beta lda", false);
-		Utils.runCommand("cp src/datageneration/output/final.other lda", false);
+		Utils.runCommand("cp projector/data/final.beta lda", false);
 		System.out.println("done.");
 	}
 
 	private void createProjectorInput(String filename, List<TrainingPaper> papers) {
 		System.out.print("creating projector input: " + filename + " ... ");
-
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-
 		for (TrainingPaper paper : papers) {
 			for (int word : paper.getTrainingWords()) {
 				for (int i=0; i<paper.getTrainingTf(word); i++) {
@@ -72,13 +80,28 @@ public class Projector extends ClusteringTest {
 			}
 			fileWriter.write("\n");
 		}
-
 		fileWriter.close();
-		
 		System.out.println("done.");
 	}
 	
-	private double[][] readBeta(String filename, boolean exp) {
+	private void createProjectorInputTest(String filename,
+			List<PredictionPaper> papers) {
+		System.out.print("creating projector test input: " 
+				+ filename + " ... ");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+		for (PredictionPaper paper : papers) {
+			for (int word : paper.getTrainingWords()) {
+				for (int i=0; i<paper.getTrainingTf(word); i++) {
+					fileWriter.write(word + " ");
+				}
+			}
+			fileWriter.write("\n");
+		}
+		fileWriter.close();
+		System.out.println("done.");
+	}
+	
+	private double[][] readMatrix(String filename, boolean exp) {
 		List<String[]> gammas = new ArrayList<String[]>();
 		double[][] results = null;
 		
@@ -106,6 +129,20 @@ public class Projector extends ClusteringTest {
 		}
 
 		return results;
+	}
+	
+	@Override
+	public double[][] predict(List<PredictionPaper> testDocs) {
+		this.testSet = testDocs;
+		System.out.print("writing test indices to file in projector/data...");
+		Utils.writeIndices("projector/data/testIndices", testDocs, testIndices);
+		System.out.println("done.");
+		createProjectorInputTest("projector/data/test_documents", testDocs);
+		
+		while(!Utils.runCommand("./run-projector-inference " + numTopics + " " 
+				+ testSet.size() + " " + terms.size(), true));
+		
+		return readMatrix("projector/data/predictions", false);
 	}
 	
 }

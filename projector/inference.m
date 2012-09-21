@@ -1,23 +1,28 @@
-function P=inference(model, testingSet,numDoc, vocSize, dim)
+function P=inference(model, testingSet, numDocs, vocSize, numTopics)
+%model: final.beta (should be 'data/final.beta')
+%testingSet: test_documents (should be found in 'data/test_documents')
 
-fid=fopen(model);
-doc = zeros(numDoc,vocSize);
+% Read the model into V, each row is a topic, the entries are probabilities
+% (not log probabilities)
+V = load(model); %dim(numTopics, vocSize)
+V = exp(V);
 
-avgL=0;
-for i=1:numDoc
-
+% Read the testingDoc into D
+fid = fopen(testingSet);
+D=zeros(numDocs,vocSize);
+for i=1:numDocs
     d = str2num(fgetl(fid));
     for j=1:length(d)
-        doc(i,d(j)+1)=doc(i,d(j)+1)+1;
-
+        index = d(j) + 1;
+        D(i, index) = D(i, index) + 1;
     end
-    avgL=avgL+sum(doc(i,:));
-    doc(i,:)=doc(i,:)/sum(doc(i,:));
+end
 
-end
-avgL=avgL/numDoc;
-fclose(fid);
-centroid = sum(doc)/size(doc,1);
-for i=1:numDoc
-    doc(i,:)=doc(i,:)-centroid;
-end
+[L,U]=lu(V');
+T=U\(L\D');
+P=T'*V;
+
+% Write P to a file so java can read it. P is (numDoc)*(vocSize), P_ij is
+% the probability of word j in testing document i. In java just read the
+% matrix and return it as result.
+dlmwrite('data/predictions', P, ' ');

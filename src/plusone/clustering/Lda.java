@@ -199,7 +199,7 @@ public class Lda extends ClusteringTest {
 	public double[][] predict(List<PredictionPaper> testDocs){
 		this.testDocs = testDocs;
 		System.out.print("writing test indices to file in lda/trained...");
-		writeIndices();
+		Utils.writeIndices("lda/trained/testIndices", testDocs, testIndices);
 		System.out.println("done.");
 		double[][] result = null;
 		if (testCheat) {
@@ -321,16 +321,6 @@ public class Lda extends ClusteringTest {
 		fileWriter.close();
 		
 		System.out.println("done.");
-	}
-	
-	private void writeIndices() {
-		PlusoneFileWriter fileWriter = 
-			new PlusoneFileWriter("lda/trained/test_indices");
-		for (PredictionPaper paper : testDocs) {
-			fileWriter.write(testIndices.get(paper) + " ");
-		}
-		fileWriter.write("\n");
-		fileWriter.close();
 	}
 	
 	private void cheat() {

@@ -16,23 +16,8 @@ import plusone.utils.LocalSVDish;
 import plusone.utils.Results;
 import plusone.utils.LocalCOSample;
 
-import plusone.clustering.Baseline;
-import plusone.clustering.ClusteringTest;
-import plusone.clustering.CommonNeighbors;
-import plusone.clustering.Ctm;
-import plusone.clustering.DTRandomWalkPredictor;
-import plusone.clustering.GibbsLda;
-import plusone.clustering.Hlda;
-import plusone.clustering.KNN;
-import plusone.clustering.KNNLocalSVDish;
-import plusone.clustering.KNNWithCitation;
-import plusone.clustering.LSI;
-import plusone.clustering.CO;
-import plusone.clustering.PLSI;
-//import plusone.clustering.SVDAndKNN;
+import plusone.clustering.*;
 
-import plusone.clustering.Lda;
-//import plusone.clustering.KNNRandomWalkPredictor;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
@@ -421,14 +406,15 @@ public class Main {
 			}
 		}
 		
-		//projector, uses new algorithm for training and lda inference
-		Lda projector = null;
+		//projector, uses a projection algorithm
+		Projector projector = null;
 		if (testIsEnabled("projector")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 			"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				projector = new Lda("projector", trainingSet, wordIndexer, terms, dimensions[dk],
-									trainingIndices, testIndices);
+				projector = new Projector("projector", trainingSet, wordIndexer, 
+								terms, dimensions[dk], trainingIndices, 
+								testIndices);
 				runClusteringMethod(projector, ks, size, true);
 				algMap.put("projector", projector);
 			}

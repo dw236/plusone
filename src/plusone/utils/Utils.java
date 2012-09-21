@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
 
 public class Utils {
 
@@ -65,5 +67,17 @@ public class Utils {
 	    System.exit(-1);
 	}
 	return success;
+    }
+    
+    public static void writeIndices(String filename, 
+    		List<PredictionPaper> testDocs, 
+    		Map<PaperAbstract, Integer> testIndices) {
+    	PlusoneFileWriter fileWriter = 
+			new PlusoneFileWriter(filename);
+		for (PredictionPaper paper : testDocs) {
+			fileWriter.write(testIndices.get(paper) + " ");
+		}
+		fileWriter.write("\n");
+		fileWriter.close();
     }
 }
