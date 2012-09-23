@@ -3,6 +3,7 @@
 import operator
 import pickle
 import time
+import itertools
 
 import numpy as np
 from numpy.random.mtrand import poisson as p
@@ -17,6 +18,9 @@ from random import random as rand
 
 import matplotlib
 from matplotlib.pyplot import *
+
+import parse_generated
+from parse_generated import generate_html
 
 def poisson(l, max_val=None, min_val=1):
     """samples a poisson distribution, but has a bounded max and min value
@@ -383,7 +387,7 @@ def write_cheats(data, args, dir):
                 f.write(str(np.log(word + noise)) + " ")
             f.write('\n')
 
-def match_beta(input_beta='../../projector/data/final.beta'):
+def match_beta(input_beta='../../projector/data/final.beta', metric='cosine'):
     real_beta = 'output/results.pickle'
     with open(real_beta, 'r') as f:
         real_beta = pickle.load(f)[2]
@@ -412,12 +416,20 @@ def match_beta(input_beta='../../projector/data/final.beta'):
                                  np.shape(real_beta)[0]))
     for i in range(len(real_beta)):
         for j in range(len(input_beta)):
-            cos_sim = real_beta[i].dot(input_beta[j]) / \
+            if metric == 'cosine':
+                sim = real_beta[i].dot(input_beta[j]) / \
                       (np.sqrt(real_beta[i].dot(real_beta[i])) * 
                        np.sqrt(input_beta[j].dot(input_beta[j])))
-            male_distances[i][j] = cos_sim
-            female_distances[j][i] = cos_sim
-    pairings = tma(male_distances, female_distances)
+                invert = False
+            elif metric == 'L1':
+                sim = np.sum(np.abs(real_beta[i] - input_beta[j]))
+                #invert so it makes larger values less preferable
+                invert = True
+            else:
+                raise Exception("invalid metric: " + str(metric))
+            male_distances[i][j] = sim
+            female_distances[j][i] = sim
+    pairings = tma(male_distances, female_distances, invert=invert)
     plot_dists(real_beta, color='green', scale=0.25)
     labels = [pairings[i][0] for i in sorted(pairings.keys())]
     labels = [labels.index(female) for female in sorted(pairings.keys())]
@@ -430,10 +442,14 @@ def match_beta(input_beta='../../projector/data/final.beta'):
     return real_beta, input_beta, pairings, male_distances
     
             
-def tma(male_distances, female_distances, verbose=False):
+def tma(male_distances, female_distances, invert=False, verbose=False):
     """ run stable marriage algorithm
     Note: input is distances, not rankings (ie higher is more preferred)
+        Use the invert flag to use distances as rankings
     """
+    if invert:
+        male_distances = -male_distances
+        female_distances = -female_distances
     #rank from highest to lowest
     male_preferences = [sorted(range(len(male)), cmp=ind_cmp(male),
                                reverse=True)
@@ -563,14 +579,143 @@ class Dirichlet_Test(object):
             return self.d
         else:
             return self.d / self.total
-        
-def plot_stats(stats, x):
-    algs = ['lda-15_s', 'ldaT-15_s', 'ldaC-15_s', 'projector-15_s', 
-            'knn-15_s', 'Baseline_s', 'LSI-15_s']
+
+def group_flat_results(flat_results):
+    results = {}
+    for result in flat_results:
+        params = result['a']#, result['b']
+        if results.has_key(params):
+            results[params].append(result)
+        else:
+            results[params] = [result]
+    groups = []
+    for param in results:
+        groups.append(results[param])
+    return groups
+
+def get_stats(grouped_flat_results):
+    stats = []
+    for group in grouped_flat_results:
+        params = group[0].keys()
+        stat = {param:np.mean([entry[param] for entry in group])
+                for param in params}
+        stats.append(stat)
+    all_stats = {param:[stat[param] for stat in stats]
+                 for param in params}
+    return all_stats
+
+def get_all_stats(all_results):
+    """grouped-flat-results of multiple tables
+    """
+    algs = ['lda', 'ldaT', 'ldaC', 'projector', 'Baseline', 'LSI']
+    all_stats = []
+    for group in all_results:
+        stats = {}
+        for entry in group:
+            params = entry.keys()
+            for param in params:
+                suffix = '-' + str(entry['k'])
+                if param in [alg + suffix for alg in algs]:
+                    key = param[:-len(suffix)]
+                else:
+                    key = param
+                if stats.has_key(key):
+                    stats[key].append(entry[param])
+                else:
+                    stats[key] = [entry[param]]
+        all_stats.append(stats)
+    return all_stats
+
+def plot_stats(stats, x, algs=None):
+    if algs == None:
+        algs = ['lda', 'ldaT', 'ldaC', 'projector', 'Baseline', 'LSI']
     colors = 'brgmcyk'
     clf()
-    for i in range(7):
+    k = int(stats['k'][0])
+    for i in range(len(algs)):
         color = colors[i]
         alg = algs[i]
-        plot(stats[x], stats[alg], color + '.', label=alg[:-2])
+#        if alg != 'Baseline':
+#            alg += '-' + str(k)
+        x_s = stats[x]
+        scores = stats[alg]
+        indices = sorted(range(len(x_s)), cmp=ind_cmp(x_s))
+        plot(sorted(x_s), [scores[i] for i in indices], color + '.', label=alg)
         legend(loc="best")
+        
+def count_words(docs, voc_size=1000):
+    pairwise_totals = np.zeros((voc_size, voc_size))
+    print "calculating pairwise totals..."
+    index = 0
+    for doc in docs:
+        if index % 100 == 0:
+            print "reached document", index
+        for i,j in itertools.combinations(set(doc), 2):
+            pairwise_totals[i, j] += 1
+            pairwise_totals[j, i] += 1
+        index += 1
+    print "done"
+    totals = np.zeros(voc_size)
+    for doc in docs:
+        for word in doc:
+            totals[word] += 1
+    return totals, pairwise_totals
+
+def which_topics(words, voc_size=1000):
+    which_topics = {}
+    sig_words = get_sig_words(words)
+    top_words = [sorted(range(len(topic)), cmp=ind_cmp(topic), reverse=True) 
+                 for topic in words]
+    for word in range(voc_size):
+        which_topics[word] = []
+        for i in range(len(top_words)):
+            if top_words[i].index(word) < sig_words[i]:
+                which_topics[word].append(i)
+    return which_topics
+
+def get_scores(results):
+    universals = results.keys()
+    k, n, l, m = universals[0]
+    scores = results[universals[0]]
+    tc_scores, pc_scores, tp_scores, x_s = [], [], [], []
+    points = []
+    for r in scores:
+        if r != "algorithms":
+            ldaT = np.mean(scores[r]['ldaT-' + str(k)]['score'])
+            ldaC = np.mean(scores[r]['ldaC-' + str(k)]['score'])
+            projector = np.mean(scores[r]['projector-' + str(k)]['score'])
+            sig_topics = float(scores[r]['sig_topics'])
+            sig_words = float(scores[r]['sig_words'])
+            tc_scores.append(metric(ldaT, ldaC))
+            pc_scores.append(metric(projector, ldaC))
+            tp_scores.append(metric(projector, ldaT))
+            x = sig_topics / k * (max(sig_words * k / m, 1))**2
+            x_s.append(x)
+            points.append([k]+ list(r))
+    return x_s, tc_scores, pc_scores, tp_scores, points
+
+def metric(dist_1, dist_2, kind='ratio'):
+    if kind == 'ratio':
+        return dist_1 / dist_2
+    else:
+        return np.sum(np.abs(dist_1 - dist_2))
+
+def get_all_scores(k_s):
+    x_s, tc_scores, pc_scores, tp_scores = [], [], [], []
+    points = []
+    for k in k_s:
+        filename = "data/old_k" + str(k) + ".n1000.l75.m1000"
+        results = generate_html(filename, quiet=True)[0]
+        x, tc, pc, tp, p = get_scores(results)
+        x_s += x
+        tc_scores += tc
+        pc_scores += pc
+        tp_scores += tp
+        points += p
+    indices = sorted(range(len(x_s)), cmp=ind_cmp(x_s))
+    clf()
+    plot_xs = sorted(x_s)
+    plot(plot_xs, [tc_scores[i] for i in indices], '.')
+    #plot(plot_xs, [pc_scores[i] for i in indices], 'r.-')
+    plot(plot_xs, [tp_scores[i] for i in indices], 'g.')
+    return x_s, tc_scores, pc_scores, tp_scores, points

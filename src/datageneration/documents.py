@@ -89,9 +89,10 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     if not plsi and not ctm:
         if pareto:
             alpha = [alpha / i for i in range(1, num_topics + 1)]
+            beta = [np.sqrt(beta / i) for i in range(1, vocab_size + 1)]
         else:
             alpha = [alpha] * num_topics
-        beta = [beta] * vocab_size
+            beta = [beta] * vocab_size
 
     if plsi or ctm:
         sig_words = [rsample(range(vocab_size), util.poisson(beta, vocab_size))\
@@ -373,7 +374,8 @@ def main():
         noise = args.s
     
     data = generate_docs(args.k, args.n, args.l, args.m, args.a, args.b,
-                         noise=noise, plsi=args.plsi, ctm=args.ctm)
+                         noise=noise, plsi=args.plsi, ctm=args.ctm, 
+                         pareto=args.p)
     if args.w:
         print "writing data to file...",
         write(data, args)
