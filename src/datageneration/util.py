@@ -19,9 +19,6 @@ from random import random as rand
 import matplotlib
 from matplotlib.pyplot import *
 
-import parse_generated
-from parse_generated import generate_html
-
 def poisson(l, max_val=None, min_val=1):
     """samples a poisson distribution, but has a bounded max and min value
     
@@ -650,7 +647,7 @@ def count_words(docs, voc_size=1000):
     for doc in docs:
         if index % 100 == 0:
             print "reached document", index
-        for i,j in itertools.combinations(set(doc), 2):
+        for i,j in itertools.combinations(doc, 2):
             pairwise_totals[i, j] += 1
             pairwise_totals[j, i] += 1
         index += 1
