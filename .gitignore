@@ -12,6 +12,7 @@
 .classpath
 
 experiment*
+norms*
 Plusone.jar
 
 /build

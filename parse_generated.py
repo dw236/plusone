@@ -1,6 +1,5 @@
 import os
 import argparse
-import src.datageneration.util as util
 import parse_output
 import numpy as np
 from parse_batch import css, hover

@@ -17,7 +17,7 @@ alist=(0.01 0.1 0.4 4.0) #1, 2, 5, 10
 #Beta
 blist=(0.0175 0.125 0.25 4.0) #10, 60, 100, 300
 #Number of tests to run for each corpus generated
-numTests=3
+numTests=1
 #Flag for plotting output
 plot=false
 #Flag for making table
@@ -108,6 +108,9 @@ do
 
                             #Run the test
                             ./test data/documents-out.json $generator $k
+                            
+                            #match betas and record L1-norms
+                            python parse_betas.py data/norms.k$k.n$n.l$l.m$m.a$a.b$b
                         done
                     done
                 done
