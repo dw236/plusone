@@ -31,7 +31,7 @@ public class GibbsLda extends ClusteringTest {
 
 	public GibbsLda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
-		super("GibbsLda" + numTopics);
+		super("GibbsLda-" + numTopics);
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
@@ -53,7 +53,7 @@ public class GibbsLda extends ClusteringTest {
 
 		createGibbsLdaInput(trainingData, trainingSet);
 		Utils.runCommand("lib/GibbsLDA/src/lda -est -alpha 0.001 -ntopics "
-				+ numTopics + " -dfile " + trainingData, false);
+				+ numTopics + " -dfile " + trainingData + "", false);
 		double[][] betaMatrix = readLdaResultFile("GibbsLDA/model-final.phi", 0, false);
 		beta = new SimpleMatrix(betaMatrix);
 	}

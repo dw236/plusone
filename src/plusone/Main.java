@@ -15,6 +15,7 @@ import plusone.utils.TrainingPaper;
 import plusone.utils.LocalSVDish;
 import plusone.utils.Results;
 import plusone.utils.LocalCOSample;
+import plusone.utils.Utils;
 
 import plusone.clustering.*;
 
@@ -57,7 +58,6 @@ public class Main {
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
 	
-	private double[] sVals;
 	private static HashMap<String, ClusteringTest> algMap
 		= new HashMap<String, ClusteringTest>();
 		
@@ -76,6 +76,10 @@ public class Main {
 		tagged = dataset.isTagged(filename);
 		tagMap = dataset.getTagMap();
 		wordIndexer = dataset.getWordIndexer();
+		PlusoneFileWriter wordMap = new PlusoneFileWriter("data/wordMap.txt");
+		for (int i = 0; i < wordIndexer.size(); i++) {
+			wordMap.write(wordIndexer.get(i) + "\n");
+		}
 		paperIndexer = dataset.getPaperIndexer();
 	}
 
@@ -241,6 +245,7 @@ public class Main {
 				}
 				dirName = tmpOutName.substring(0, alphaLoc - 1);
 				fileName = tmpOutName.substring(alphaLoc);
+				
 				if (documentsOtherOut != null) {
 					//Put the information from documents_other-out into data
 					Scanner lines = null;
@@ -294,12 +299,34 @@ public class Main {
 						thisTest.put("tfidf score_Var" , variance[2]);
 						if (algMap.keySet().contains(entry.getKey().split("-")[0])) {
 							try {
-								thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
+								//Disabling hover in JSON because we aren't using it
+								//thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
+								thisTest.put("Hover", new String[0]);
 							} catch (Exception e) {
 								thisTest.put("Hover", new String[0]);
 							}
 						}
+
 						allTests.put(entry.getKey(), thisTest);
+					}
+					//Makes a fake experiment with cosine similarities
+					if (!generator.equals("")) {
+						Scanner in = null;
+						Utils.runCommand("python parse_betas.py data/normfile", false);
+						try {
+							in = new Scanner( new File( "data/normfile" ) );
+						} catch (Exception e) {
+							System.out.println("Couldnt find cosine similarity file");
+						}
+						String[] cosineSimilarities = in.nextLine().split(" ");
+						double cosineSimilarityMean = 0;
+						for (String sim : cosineSimilarities) {
+							cosineSimilarityMean += Double.parseDouble(sim);
+						}
+						cosineSimilarityMean /= cosineSimilarities.length; 
+						JSONObject fakeExperiment = new JSONObject();
+						fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
+						allTests.put("projector-norm", fakeExperiment);
 					}
 					tests.put(allTests);
 				}
