@@ -26,7 +26,7 @@ public class AP {
 		File input = new File(filename);
     	PrintWriter out = new PrintWriter( new BufferedWriter(
     			new FileWriter( "data/ap.json" ) ) );
-    	//ArrayList<String> stopWords = makeStopWords();
+    	ArrayList<String> stopWords = makeStopWords();
     	
 		HashMap<String, Integer> idf = makeIdf(input);
 		ArrayList<HashMap<String, Double>> tfs = makeTfs(input);
@@ -44,7 +44,8 @@ public class AP {
 			ArrayList<String> savedWordsInDoc = new ArrayList<String>();
 			for (String s : docTf.keySet()) {
 				//if (docTf.get(s)*Math.log(numDocs/idf.get(s)) > tfIdfTolerance) {
-				if (idf.get(s) < idf.keySet().size()*0.8 && idf.get(s) > 4) {
+				if (idf.get(s) < idf.keySet().size()*0.8 && idf.get(s) > 4
+						&& !stopWords.contains(s)) {
 					savedWordsInDoc.add(s);
 					keptWords.add(s);
 				}

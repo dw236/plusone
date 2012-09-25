@@ -80,6 +80,7 @@ public class Main {
 		for (int i = 0; i < wordIndexer.size(); i++) {
 			wordMap.write(wordIndexer.get(i) + "\n");
 		}
+		wordMap.close();
 		paperIndexer = dataset.getPaperIndexer();
 	}
 
@@ -326,7 +327,18 @@ public class Main {
 						cosineSimilarityMean /= cosineSimilarities.length; 
 						JSONObject fakeExperiment = new JSONObject();
 						fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
-						allTests.put("projector-norm", fakeExperiment);
+						allTests.put("projector-cosine", fakeExperiment);
+						
+						String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
+						double cosineSimilarityMeanLDA = 0;
+						for (String sim : cosineSimilaritiesLDA) {
+							cosineSimilarityMeanLDA += Double.parseDouble(sim);
+						}
+						cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
+						JSONObject fakeExperimentLDA = new JSONObject();
+						fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
+						allTests.put("~lda-cosine", fakeExperimentLDA);
+
 					}
 					tests.put(allTests);
 				}

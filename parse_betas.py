@@ -12,11 +12,16 @@ def main(filename):
                                   metric='cosine', plot=False)[-2]
     projector_norms = [pair[1] for pair in projector_labels]
     
-#    lda_labels = match_beta(lda_beta, real_beta, metric='L1', plot=False)[-2]
-#    lda_norms = [pair[1] for pair in lda_labels]
+    lda_labels = match_beta(lda_beta, real_beta, metric='cosine', plot=False)[-2]
+    lda_norms = [pair[1] for pair in lda_labels]
     
-    output = np.array(projector_norms)
-    output.tofile(filename, sep=' ')
+    with open(filename, 'w') as f:
+        for norm in projector_norms: 
+            f.write(str(norm) + ' ')
+        f.write('\n')
+        for norm in lda_norms:
+            f.write(str(norm) + ' ')
+        f.write('\n')
 
 def parse_all(dir):
     filenames = os.listdir(dir)
