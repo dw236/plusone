@@ -12,7 +12,8 @@ def main(filename):
                                   metric='cosine', plot=False)[-2]
     projector_norms = [pair[1] for pair in projector_labels]
     
-    lda_labels = match_beta(lda_beta, real_beta, metric='cosine', plot=False)[-2]
+    lda_labels = match_beta(lda_beta, real_beta, 
+                            metric='cosine', plot=False)[-2]
     lda_norms = [pair[1] for pair in lda_labels]
     
     with open(filename, 'w') as f:
@@ -30,7 +31,7 @@ def parse_all(dir):
     lda_norms = []
     results = {}
     for filename in filenames:
-        if "norms" in filename:
+        if "norms" in filename and len(filename) > len("norms"):
             files_found += 1
             params = parse_params(filename)
             for param in params:
@@ -38,7 +39,7 @@ def parse_all(dir):
                     results[param].append(params[param])
                 else:
                     results[param] = [params[param]]
-            norm = np.fromfile(dir + '/' + filename, sep=' ')
+            norm = np.fromfile(dir + '/' + filename)
             norm.reshape(2, len(norm)/2)
             projector_norms.append(np.mean(norm[0]))
             lda_norms.append(np.mean(norm[1]))

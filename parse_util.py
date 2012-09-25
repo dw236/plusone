@@ -5,10 +5,14 @@ from parse_generated import generate_html
 from matplotlib.pyplot import *
 from src.datageneration.util import ind_cmp
 
-def group_flat_results(flat_results):
+def group_flat_results(flat_results, group_keys=['a', 'b']):
     results = {}
     for result in flat_results:
-        params = result['a']#, result['b']
+        try:
+            params = result[group_keys]
+        except:
+            params = tuple(result[key] for key in group_keys)
+        print params
         if results.has_key(params):
             results[params].append(result)
         else:

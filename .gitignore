@@ -33,6 +33,7 @@ Plusone.jar
 
 /data/documents-out.json
 /data/*.html
+/data/*.pickle
 
 /src/datageneration/output/*
 /src/datageneration/script.py
