@@ -103,6 +103,8 @@ def distance(metric='ratio'):
         return lambda x,y: x / y
     elif metric == 'diff':
         return lambda x,y: np.sum(np.abs(x - y))
+    elif metric == 'cosine':
+        return lambda x,y: 0
     else:
         print "supported types: ratio, diff"
         raise Exception("unrecognized input: " + str(metric))
@@ -133,7 +135,7 @@ def get_all_scores(k_s, metric='diff'):
     x_s, tc_scores, pc_scores, tp_scores = [], [], [], []
     points = []
     for k in k_s:
-        filename = "data/old_k" + str(k) + ".n1000.l75.m1000"
+        filename = "data/k" + str(k) + ".n1000.l75.m1000"
         results = generate_html(filename, quiet=True)[0]
         x, tc, pc, tp, p = get_scores(results, metric)
         x_s += x
@@ -149,10 +151,11 @@ def get_all_scores(k_s, metric='diff'):
     points = np.array(points)    
     return x_s, tc_scores, pc_scores, tp_scores, points
 
-def plot_scores(x_s, y_s, max_x=np.inf, color='g'):
+def plot_scores(x_s, y_s, max_x=np.inf, color='g', clear=True):
     plot_xs = sorted(x_s[x_s < max_x])
-    indices = sorted(range(len(plot_xs)), cmp=ind_cmp(plot_xs))
-    clf()
+    indices = sorted(range(len(plot_xs)), cmp=ind_cmp(x_s))
+    if clear:
+        clf()
     #plot(plot_xs, [tc_scores[i] for i in indices], '.')
     #plot(plot_xs, [pc_scores[i] for i in indices], 'r.-')
     plot(plot_xs, [y_s[i] for i in indices], color + '.')

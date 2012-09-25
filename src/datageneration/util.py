@@ -263,14 +263,14 @@ def show_dists(dists):
         if raw_input('q to quit...') == 'q':
             break
 
-def plot_cdfs(dists):
+def plot_cdfs(dists, offset=1):
     clf()
     dists = [get_cdf(sorted(dist, reverse=1)) for dist in dists]
     bottom = 0
     for dist in dists:
         plot([bottom] * len(dist), 'black')
         plot(np.insert((1 - dist), 0, 1) + bottom)
-        bottom += 1
+        bottom += offset
 
 def perplexity(docs, probabilities, indices=None, holdout=0.7):
     """deprecated: feel free to remove this function
