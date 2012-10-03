@@ -32,6 +32,8 @@ def parse_all(dir):
     results = {}
     for filename in filenames:
         if "norms" in filename and len(filename) > len("norms"):
+            if files_found % 10 == 0:
+                print "reached file:", files_found
             files_found += 1
             params = parse_params(filename)
             for param in params:
@@ -39,7 +41,7 @@ def parse_all(dir):
                     results[param].append(params[param])
                 else:
                     results[param] = [params[param]]
-            norm = np.fromfile(dir + '/' + filename)
+            norm = np.fromfile(dir + '/' + filename, sep=' ')
             norm.reshape(2, len(norm)/2)
             projector_norms.append(np.mean(norm[0]))
             lda_norms.append(np.mean(norm[1]))

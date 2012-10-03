@@ -327,7 +327,7 @@ public class Main {
 						cosineSimilarityMean /= cosineSimilarities.length; 
 						JSONObject fakeExperiment = new JSONObject();
 						fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
-						allTests.put("projector-cosine", fakeExperiment);
+						allTests.put("~projector-cosine", fakeExperiment);
 						
 						String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
 						double cosineSimilarityMeanLDA = 0;

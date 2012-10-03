@@ -12,7 +12,6 @@ def group_flat_results(flat_results, group_keys=['a', 'b']):
             params = result[group_keys]
         except:
             params = tuple(result[key] for key in group_keys)
-        print params
         if results.has_key(params):
             results[params].append(result)
         else:
@@ -54,6 +53,71 @@ def get_all_stats(all_results):
                     stats[key] = [entry[param]]
         all_stats.append(stats)
     return all_stats
+
+def plot_all_deep_stats(stats, k=20, clear=True, save=False):
+    for i in range(len(stats)):
+        figure(i)
+        plot_deep_stats(stats, k, i, clear)
+        xlabel('sig words')
+        ylabel('precision')
+        sig_topics = np.mean(stats[i]['sig_topics'])
+        title('average sig topics: ' + str(sig_topics))
+        if save:
+            savefig('k' + str(k) + 'a' + str(sig_topics) + '.pdf')
+
+def plot_deep_stats(stats, k=20, index=0, clear=True):
+    """plot the output of get_deep_stats()
+    """
+    if clear:
+        clf()
+    algs = ['lda', 'ldaT', 'ldaC', 'projector', 'Baseline', 'LSI']
+    markers = ['.', 'x', 'd', 'o', '-', '*']
+    colors = 'bgrymk'
+    for alg in algs:
+        if alg != 'Baseline':
+           alg_name = alg + '-' + str(k)
+        else:
+            alg_name = alg
+        sig_words = sorted(stats[index]['sig_words'])
+        indices = sorted(range(len(sig_words)), 
+                         cmp=ind_cmp(stats[index]['sig_words']))
+        scores = stats[index][alg_name]
+        plot(sig_words, [scores[i] for i in indices], 
+             colors[algs.index(alg)] + markers[algs.index(alg)] + '-', 
+             label=alg)
+    legend(loc='best')
+
+def group_deep_result(result, key_ind=0):
+    results = {}
+    for key in result:
+        if key == 'algorithms':
+            continue
+        param = key[key_ind]
+        if results.has_key(param):
+            results[param].append(result[key])
+        else:
+            results[param] = [result[key]]
+    groups = []
+    for key in results:
+        groups.append(results[key])
+    return groups, results
+
+def get_deep_stats(deep_groups):
+    stats = []
+    for group in deep_groups:
+        params = group[0].keys()
+        stat = {}
+        for param in params:
+            nums = []
+            for entry in group:
+                try:
+                    num = np.mean(entry[param]['score'])
+                except:
+                    num = entry[param]
+                nums.append(num)
+            stat[param] = nums
+        stats.append(stat)
+    return stats
 
 def plot_stats(stats, x, algs=None, flat=False):
     if algs == None:
@@ -139,7 +203,7 @@ def get_all_scores(k_s, metric='diff'):
     x_s, tc_scores, pc_scores, tp_scores = [], [], [], []
     points = []
     for k in k_s:
-        filename = "data/k" + str(k) + ".n1000.l75.m1000"
+        filename = "data/old_k" + str(k) + ".n1000.l75.m1000"
         results = generate_html(filename, quiet=True)[0]
         x, tc, pc, tp, p = get_scores(results, metric)
         x_s += x
@@ -155,11 +219,69 @@ def get_all_scores(k_s, metric='diff'):
     points = np.array(points)    
     return x_s, tc_scores, pc_scores, tp_scores, points
 
-def plot_scores(x_s, y_s, max_x=np.inf, color='g', clear=True):
+def plot_scores(x_s, y_s, max_x=np.inf, color='g.', label=None, clear=True):
     plot_xs = sorted(x_s[x_s < max_x])
     indices = sorted(range(len(plot_xs)), cmp=ind_cmp(x_s))
     if clear:
         clf()
     #plot(plot_xs, [tc_scores[i] for i in indices], '.')
     #plot(plot_xs, [pc_scores[i] for i in indices], 'r.-')
-    plot(plot_xs, [y_s[i] for i in indices], color + '.')
+    return plot(plot_xs, [y_s[i] for i in indices], color, label=label)[0]
+
+def plot_norms(norm_results, k=20, clear=True):
+    if clear:
+        clf()
+    colors = {0.01:'b', 0.1:'g', 0.4:'r', 4.0:'k'}
+    markers = {0.01:'+', 0.1:'x', 0.4:'o', 4.0:'.'}
+    indices = mlab.find(np.array(norm_results['k']) == k)
+    start, end = 0, 4
+    plots = []
+    for i in range(4):
+        sig_words = np.array(norm_results['sig_words'])[indices][start:end]
+        norms = np.array(norm_results['projector'])[indices][start:end]
+        alpha = norm_results['a'][start]
+        sig_topics = np.mean(norm_results['sig_topics'][start:end])
+        plots.append(plot_scores(sig_words, norms, 
+                                 color=colors[alpha] + '-' + markers[alpha],
+                                 label=str(sig_topics),
+                                 clear=False))
+        start += 4
+        end += 4
+    legend(title='average sig topics', loc='best')
+    return plots
+    
+def extract(flat_results, n):
+    groups = group_flat_results(flat_results, ['n'])
+    for group in groups:
+        if group[0]['n'] == n:
+            break
+    subgroups = group_flat_results(group, ['l'])
+    def combine_scores(subgroup):
+        return {param:np.mean([entry[param] for entry in subgroup])
+                     for param in subgroup[0].keys()}
+    new_entries = []
+    for subgroup in subgroups:
+        new_entries.append(combine_scores(subgroup)) #list of dictionaries
+    return {param:[entry[param] for entry in new_entries]
+            for param in new_entries[0].keys()}
+
+def plot_extract(flat_results, n_s=[1000, 1500, 2000, 2500], y='projector-20',
+                 clear=True):
+    if clear:
+        clf()
+    colors = {1000:'b', 1500:'g', 2000:'r', 2500:'k'}
+    markers = {1000:'+', 1500:'x', 2000:'o', 2500:'.'}
+    plots = []
+    for n in n_s:
+        results = extract(flat_results, n)
+        indices = sorted(range(len(results['l'])), cmp=ind_cmp(results['l']))
+        if y == 'ratio':
+            y_s = np.array([results['projector-20'][i] for i in indices]) / \
+                  np.array([results['ldaT-20'][i] for i in indices])
+        else:
+            y_s = [results[y][i] for i in indices]
+        plots.append(plot(sorted(results['l']), y_s,
+                          colors[n] + '-' + markers[n], 
+                          label=str(n) + ' documents')[0])
+    legend(loc='best')
+    return plots

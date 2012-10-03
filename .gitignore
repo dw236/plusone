@@ -5,6 +5,7 @@
 *.pyc
 *.csv
 .py*
+*.pickle
 
 .DS_Store
 .metadata
@@ -33,9 +34,10 @@ Plusone.jar
 
 /data/documents-out.json
 /data/*.html
-/data/*.pickle
 
 /src/datageneration/output/*
 /src/datageneration/script.py
 
 projector/data/*
+
+data/normfile
