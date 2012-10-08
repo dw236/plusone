@@ -38,6 +38,10 @@ public class Lda extends ClusteringTest {
 	private List<PredictionPaper> testDocs;
 	private String[] hoverText;
 	
+	/** 
+	 * Changes flags in Lda based on which algorithm is being run 
+	 * @param variant specific algorithm being tested (lda, LdaT, ldaC, proj)
+	 */
 	public Lda(String variant) {
 		super(variant);
 		if (variant.substring(0, 4).equals("ldaT")) {
@@ -77,8 +81,13 @@ public class Lda extends ClusteringTest {
 	}
 
 	/**
+	 * Lda:
 	 * Runs lda-c-dist on the training set to learn the beta matrix and alpha
 	 * parameter (in this case, all alphas to the dirichlet are equal)
+	 * LdaT/LdaC:
+	 * Copies over the true gamma and beta matrix
+	 * projector:
+	 * Gets beta from projector
 	 */
 	private void train() {
 		System.out.print("cleaning out lda folder for training...");
@@ -271,6 +280,9 @@ public class Lda extends ClusteringTest {
 		return result;
 	}
 
+	/**Currently unused - hover is being used to display average scores of
+	 * multiple experiments
+	 */
 	public String[] getHover() {
 		return hoverText;
 	}
