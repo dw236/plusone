@@ -385,6 +385,31 @@ def write_cheats(data, args, dir):
 def match_beta(input_beta='../../projector/data/final.beta',
                real_beta='output/results.pickle', 
                metric='cosine', plot=True):
+    """matches learned topics with real topics by using stable marriage
+    
+    Takes the topic matrix generated from a learning algorithm and compares it
+    to the topic matrix used to generate the data. Rows are then matched to
+    greedily find a max-weight matching between them.
+    Each row represents a topic, and each column represents a word.
+    
+    Args:
+        input_beta: filename of the learned topic matrix
+        real_beta: filename of the true topic matrix
+        metric: distance metric to compare two topics (currently only supports
+                'cosine' and 'L1')
+        plot: flag to plot resulting match
+    
+    Returns:
+        input_beta: learned topic matrix as a numpy array
+        real_beta: real topic matrix as a numpy array
+        pairings: dict--each key is a learned topic index, 
+                  each value is a one-element list, 
+                  containing the real topic index the key is matched to
+        labels: list--each element is a learned topic index, whose match is the
+                element's index
+        male_distances: distance matrix used to create matching (rows indices
+                        are real_beta indices, column indices are input_beta)
+    """
     with open(real_beta, 'r') as f:
         real_beta = pickle.load(f)[2]
     
@@ -440,9 +465,22 @@ def match_beta(input_beta='../../projector/data/final.beta',
     
             
 def tma(male_distances, female_distances, invert=False, verbose=False):
-    """ run stable marriage algorithm
-    Note: input is distances, not rankings (ie higher is more preferred)
-        Use the invert flag to use distances as rankings
+    """ run stable marriage algorithm for n pairs of "men" and "women"
+    
+    Performs standard propose-reject algorithm on a pair of preference lists.
+    This method assumes that a higher value means it is more preferred, but
+    supports the option to invert the preferences.
+    
+    Args:
+        male_distances: nxn matrix, where each row is a preference list over
+                        "women"
+        female_distances: nxn matrix, where each row is a preference list over
+                          "men"
+        invert: flag to invert preference lists. Default behavior assumes that
+                a higher value in a preference list is more preferred (that is,
+                male_distances and female_distances are scores, not rankings).
+                Set this flag to true to treat them as rankings.
+        verbose: flag to see output from method (for debugging)
     """
     if invert:
         male_distances = -male_distances
@@ -518,6 +556,8 @@ def ind_cmp(values):
     return lambda x,y: cmp(values[x], values[y])
 
 def top_three_words(topic):
+    """deprecated--feel free to remove
+    """
     top_three = sorted(range(len(topic)), cmp=ind_cmp(topic), reverse=True)[:3]
     top_three = zip(top_three, [round(topic[i], 2) for i in top_three])
     

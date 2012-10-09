@@ -17,6 +17,15 @@ import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.Utils;
 
+
+/**
+ * @author Victor
+ *
+ * Runs the projector algorithm (found in projector/predictTopics.m) for
+ * training, followed by the projector inference algorithm (found in
+ * projector/inference.m). Both use system calls to MATLAB.
+ *
+ */
 public class Projector extends ClusteringTest {
 
 	private String name;
@@ -50,6 +59,9 @@ public class Projector extends ClusteringTest {
 		train();
 	}
 
+	/**
+	 * Runs the MATLAB program found in projector/predictTopics.m
+	 */
 	private void train() {
 		if (!new File("projector/data").exists()) {
             new File("projector/data").mkdir();
@@ -69,6 +81,14 @@ public class Projector extends ClusteringTest {
 		System.out.println("done.");
 	}
 
+	/**
+	 * Creates a file containing the documents to be used for training
+	 * 
+	 * @param filename
+	 * 		The name of the file to be created
+	 * @param papers
+	 * 		The list of documents to be used for training
+	 */
 	private void createProjectorInput(String filename, List<TrainingPaper> papers) {
 		System.out.print("creating projector input: " + filename + " ... ");
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
@@ -84,6 +104,14 @@ public class Projector extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
+	/**
+	 * Creates a file containing the documents to be used for testing
+	 * 
+	 * @param filename
+	 * 		The name of the file to be created
+	 * @param papers
+	 * 		The list of documents to be used for testing
+	 */
 	private void createProjectorInputTest(String filename,
 			List<PredictionPaper> papers) {
 		System.out.print("creating projector test input: " 
@@ -101,6 +129,17 @@ public class Projector extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
+	/**
+	 * Reads in a file and interprets it as a matrix (each line is a row,
+	 * each entry is a column)
+	 * 
+	 * @param filename
+	 * 		Name of the file to be read
+	 * @param exp
+	 * 		Flag to exponentiate entries
+	 * @return
+	 * 		double[][] array containing the read matrix
+	 */
 	private double[][] readMatrix(String filename, boolean exp) {
 		List<String[]> gammas = new ArrayList<String[]>();
 		double[][] results = null;
