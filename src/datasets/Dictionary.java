@@ -32,7 +32,7 @@ public class Dictionary {
     	
 		JSONObject Json = new JSONObject();
 		int id = 0; 
-		int cutoff = 400;
+		final int cutoff = 400;
 		JSONArray docs = new JSONArray();
 		
 		HashMap<String, Integer> charCounts = getCharCounts(input);
@@ -43,7 +43,20 @@ public class Dictionary {
 			if (fullLine.charAt(0) == '#') {
 				continue;
 			}
-			String[] splitLine = fullLine.split("/");
+			String removedPinyin = "";
+			boolean pinyin = false;
+			for (int i = 0; i < fullLine.length(); i++) {
+				if (fullLine.charAt(i) == '[') {
+					pinyin = true;
+				}
+				if (!pinyin) {
+					removedPinyin += fullLine.charAt(i);
+				}
+				if (fullLine.charAt(i) == ']') {
+					pinyin = false;
+				}
+			}
+			String[] splitLine = removedPinyin.split("/");
 			String chinese = splitLine[0];
 			String english = "";
 			for (int i = 1; i < splitLine.length; i++) {

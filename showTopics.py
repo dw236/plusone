@@ -17,11 +17,13 @@ def showTopics(file='lda/trained/'):
         print
         print 'Topic ' + str(topicNum) + ':' 
         words = [line.strip() for line in open('data/wordMap.txt')]
-        for i in range(0, 20):
+        i = 0
+        while i < 20:
             ithMostPopular = topicDist[i]
             for j in range(0, len(unsortedTopic)):
                 if unsortedTopic[j] == ithMostPopular:
                     print words[j] + ' '
+                    i += 1
 """
         firstK = util.get_sig_words([topicDist])[0]
         newDist = []
