@@ -28,7 +28,7 @@ public class Dictionary {
     	PrintWriter out = new PrintWriter( new BufferedWriter(new FileWriter( "data/dictionary.json" ) ) );
     	Scanner in = new Scanner(input, "UTF-8");
    
-    	//ArrayList<String> stopWords = makeStopWords();
+    	ArrayList<String> stopWords = makeStopWords();
     	
 		JSONObject Json = new JSONObject();
 		int id = 0; 
@@ -62,7 +62,9 @@ public class Dictionary {
 			
 			for (String s : english.split(" ")) {
 				String engWord = s.replaceAll("[^A-Za-z]", "").trim().toLowerCase();
-				definition.add(engWord);
+				if(!stopWords.contains(engWord) && !engWord.equals("")) {
+					definition.add(engWord);
+				}
 			}
 			if (definition.size() == 0) {
 				skip = true;
