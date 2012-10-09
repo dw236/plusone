@@ -33,6 +33,7 @@ Plusone.jar
 /lib/ctm-dist/ctm
 
 /data/documents-out.json
+/data/wordMap.txt
 /data/*.html
 
 /src/datageneration/output/*
