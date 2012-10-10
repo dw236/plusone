@@ -1,5 +1,6 @@
+from math import exp
 import numpy as np
-from numpy.random import multinomial
+from numpy.random import multinomial, poisson
 from numpy.random.mtrand import dirichlet
 from scipy.misc import factorial
 
@@ -21,8 +22,8 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
     num_iterations -- The number of iterations of Gibbs sampling to perform.
     """
 
-    num_topics = topic_word.shape[0]
-    vocab_size = topic_word.shape[1]
+    vocab_size = topic_word.shape[0]
+    num_topics = topic_word.shape[1]
     assert vocab_size == observed_word_freqs.shape[0]
 
     if 0 == np.ndim(topic_strengths):
@@ -53,7 +54,7 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
         """
         if mask:
             # The word was not held out.
-            return multinomial(n_observed, topic_probs / sum(topic_probs))
+            return multinomial(n_observed, rates_by_topic / sum(rates_by_topic))
         else:
             # The word was held out.
             assert 0 == n_observed
@@ -66,15 +67,15 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
 
     # The sum of all the word distributions we've sampled so far, excluding the
     # first, since it doesn't even depend on the observed word frequencies.
-    word_dist_sum = np.zeroes(vocab_size)
+    word_dist_sum = np.zeros(vocab_size)
 
     for iteration in range(num_iterations):
         # Sample mask conditioned on topic_dist.
-        mask = np.array(
+        mask = np.array(tuple(
             sample_mask(n_observed = observed_word_freqs[word],
                         rate = l * word_dist[word])
-            for w in range(vocab_size)
-        )
+            for word in range(vocab_size)
+        ))
 
         # topic_word_freqs is a matrix of the same shape as topic_word, but with
         # a different interpretation.  Each entry (w, i) is a nonnegative
@@ -84,14 +85,14 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
         # Conditioned on topic_dist and mask, each column of topic_word_freqs is
         # multinomial (if mask is 1) or a collection of independent poissons
         # (if mask is 0).
-        topic_word_freqs = np.transpose(np.array(tuple(
+        topic_word_freqs = np.array(tuple(
             sample_topic_freqs_by_word(
                 n_observed = observed_word_freqs[word],
                 rates_by_topic = l * np.multiply(topic_word[word,:], topic_dist),
                 mask = mask[word]
             )
             for word in range(vocab_size)
-        )))
+        ))
  
         # Sample topic_dist conditioned on topic_word_freqs.
         topic_dist = dirichlet(topic_strengths + np.sum(topic_word_freqs, 0))
@@ -101,3 +102,6 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
         word_dist_sum += word_dist
 
     return word_dist_sum / num_iterations
+
+if "__main__" == __name__:
+    print word_dist(topic_strengths = 1, topic_word = np.array([[0.5, 0], [0.5, 0], [0, 1]]), observed_word_freqs = np.array([100, 0, 0]), test_word_prob = 0.2, l = 200)
