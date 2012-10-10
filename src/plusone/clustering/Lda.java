@@ -195,6 +195,10 @@ public class Lda extends ClusteringTest {
 	}
 	
 	/**
+	 * LdaC:
+	 * Multiplies the true beta and gamma and then returns that doc-word
+	 * matrix as its result
+	 * Other algorithms:
 	 * Given a set of test documents, runs lda-c-dist inference to learn the
 	 * final gammas. Then, subtracts alpha from each gamma to find the expected
 	 * number of times each word appears per topic. Finally, multiplies each
@@ -280,7 +284,8 @@ public class Lda extends ClusteringTest {
 		return result;
 	}
 
-	/**Currently unused - hover is being used to display average scores of
+	/**
+	 * Currently unused - hover is being used to display average scores of
 	 * multiple experiments
 	 */
 	public String[] getHover() {
@@ -335,6 +340,9 @@ public class Lda extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
+	/**
+	 * Replaces trained beta/gamma with real beta/gamma
+	 */
 	private void cheat() {
 		System.out.print("replacing trained beta with real beta...");
 		Utils.runCommand("cp src/datageneration/output/final.beta lda", false);
