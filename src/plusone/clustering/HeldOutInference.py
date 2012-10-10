@@ -4,14 +4,14 @@ from numpy.random import multinomial, poisson
 from numpy.random.mtrand import dirichlet
 from scipy.misc import factorial
 
-def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, l, num_iterations = 20):
+def word_dist(topic_strengths, word_topic, observed_word_freqs, test_word_prob, l, num_iterations = 20):
     """ Estimate the distribution of new words in a document.
 
     Arguments:
     topic_strengths -- The parameters to the Dirichlet distribution on topic
         distributions.  May be an array or a single number.  Set this to 1 for
         the uniform distribution.
-    topic_word -- A (vocabulary size) x (# topics) matrix; entries should be
+    word_topic -- A (vocabulary size) x (# topics) matrix; entries should be
         nonnegative and each column should sum to 1.
     observed_word_freqs -- A vector of integers: the number of times each
         non-held-out word appeared in the document.
@@ -22,8 +22,8 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
     num_iterations -- The number of iterations of Gibbs sampling to perform.
     """
 
-    vocab_size = topic_word.shape[0]
-    num_topics = topic_word.shape[1]
+    vocab_size = word_topic.shape[0]
+    num_topics = word_topic.shape[1]
     assert vocab_size == observed_word_freqs.shape[0]
 
     if 0 == np.ndim(topic_strengths):
@@ -63,7 +63,7 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
     # topic_dist is our current sample of the distribution of topics in the
     # document.  We initialize it to a uniform sample from the simplex.
     topic_dist = dirichlet(np.ones(num_topics))
-    word_dist = np.dot(topic_word, topic_dist)
+    word_dist = np.dot(word_topic, topic_dist)
 
     # The sum of all the word distributions we've sampled so far, excluding the
     # first, since it doesn't even depend on the observed word frequencies.
@@ -77,26 +77,26 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
             for word in range(vocab_size)
         ))
 
-        # topic_word_freqs is a matrix of the same shape as topic_word, but with
+        # word_topic_freqs is a matrix of the same shape as word_topic, but with
         # a different interpretation.  Each entry (w, i) is a nonnegative
         # integer, and is the number of times word w was chosen from topic i.
         # The columns should sum to observed_word_freqs.
         #
-        # Conditioned on topic_dist and mask, each column of topic_word_freqs is
+        # Conditioned on topic_dist and mask, each column of word_topic_freqs is
         # multinomial (if mask is 1) or a collection of independent poissons
         # (if mask is 0).
-        topic_word_freqs = np.array(tuple(
+        word_topic_freqs = np.array(tuple(
             sample_topic_freqs_by_word(
                 n_observed = observed_word_freqs[word],
-                rates_by_topic = l * np.multiply(topic_word[word,:], topic_dist),
+                rates_by_topic = l * np.multiply(word_topic[word,:], topic_dist),
                 mask = mask[word]
             )
             for word in range(vocab_size)
         ))
  
-        # Sample topic_dist conditioned on topic_word_freqs.
-        topic_dist = dirichlet(topic_strengths + np.sum(topic_word_freqs, 0))
-        word_dist = np.dot(topic_word, topic_dist)
+        # Sample topic_dist conditioned on word_topic_freqs.
+        topic_dist = dirichlet(topic_strengths + np.sum(word_topic_freqs, 0))
+        word_dist = np.dot(word_topic, topic_dist)
 
         # Generate words.
         word_dist_sum += word_dist
@@ -104,4 +104,18 @@ def word_dist(topic_strengths, topic_word, observed_word_freqs, test_word_prob, 
     return word_dist_sum / num_iterations
 
 if "__main__" == __name__:
-    print word_dist(topic_strengths = 1, topic_word = np.array([[0.5, 0], [0.5, 0], [0, 1]]), observed_word_freqs = np.array([100, 0, 0]), test_word_prob = 0.2, l = 200)
+    """A demonstration of the power of this inference method.  We have the
+    word-topic matrix:
+        0.5 0 0
+        0.5 0 0
+        0   1 0
+        0   0 1
+    and a Poisson rate of 800.  We observe word counts of (100, 0, 0, 100).
+    The explanation is that the middle two words were held out, the topic
+    distribution is about (1/4, 5/8, 1/8), and so the word distributions are
+    about (1/8, 1/8, 5/8, 1/8).  A method not aware of the Poisson rate, or
+    not aware that words could be held out, wouldn't be able to figure out that
+    the third word is present.
+    """
+    wt0 = np.array([[0.5, 0, 0], [0.5, 0, 0], [0, 1, 0], [0, 0, 1]])
+    print word_dist(topic_strengths = 1, word_topic = wt0, observed_word_freqs = np.array([100, 0, 0, 100]), test_word_prob = 0.2, l = 800)
