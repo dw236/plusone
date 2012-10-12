@@ -39,6 +39,17 @@ public class GibbsLda extends ClusteringTest {
 		train();
 	}
 	
+    /**
+     * Returns the estimated word-topic matrix.  Throws a NotTrainedException
+     * if there is not yet a beta matrix.
+     */
+    public SimpleMatrix getWordTopicMatrix() throws NotTrainedException {
+        if (null == beta)
+            throw new NotTrainedException();
+        else
+            return beta;
+    }
+
 	/**
 	 * Runs GibbsLDA on the training set
 	 */

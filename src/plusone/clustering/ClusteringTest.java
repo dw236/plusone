@@ -18,15 +18,18 @@ public abstract class ClusteringTest implements ClusteringMethod {
 
 
     public double[] predict(PredictionPaper testPaper) { 
-
-	return null;
+        throw new NotImplementedException(
+            "Did you mean to call the bulk version "
+            "predict(List<PredictionPaper>)?");
     }
     public double[][] predict(List<PredictionPaper> testPaper){
-    	return null;
+        throw new NotImplementedException(
+            "Did you mean to call the non-bulk version "
+            "predict(PredictionPaper)?");
     }
     
     public String[] getHover(){
-    	return new String[]{""};
+        return new String[]{""};
     }
 
     protected PlusoneFileWriter makePredictionWriter(int k, 
