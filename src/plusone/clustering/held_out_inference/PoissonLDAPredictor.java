@@ -1,6 +1,8 @@
 package plusone.clustering;
 
+import java.util.List;
 import org.ejml.simple.SimpleMatrix;
+import plusone.utils.PredictionPaper;
 
 class PoissonLDAPredictor extends ClusteringTest {
     public enum PredictionMethod {
@@ -14,13 +16,13 @@ class PoissonLDAPredictor extends ClusteringTest {
     // topicStrengths is (num topics) x 1
     final SimpleMatrix topicStrengths, wordTopicMatrix;
 
-    public HeldOutInferencePredictor(
+    public PoissonLDAPredictor(
             String nameBase,
             double lambda,
             SimpleMatrix topicStrengths, SimpleMatrix wordTopicMatrix,
             PredictionMethod predictionMethod) {
         super(nameBase + "_hoi_" + predictionMethod.toString());
-        this.lambda = lambda
+        this.lambda = lambda;
         this.topicStrengths = topicStrengths;
         this.predictionMethod = predictionMethod;
         this.wordTopicMatrix = wordTopicMatrix;
@@ -28,13 +30,13 @@ class PoissonLDAPredictor extends ClusteringTest {
         if (1 != topicStrengths.numCols() ||
             topicStrengths.numRows() != wordTopicMatrix.numCols()) {
             throw new IllegalArgumentException(
-                "topicStrengths must be (num topics) x 1 and "
+                "topicStrengths must be (num topics) x 1 and " +
                 "wordTopicMatrix must be (vocabulary size) x (num topics).");
         }
     }
 
     @Override
     public double[][] predict(List<PredictionPaper> testPaper) {
-       return TODO();
+       throw new UnsupportedOperationException();
     }
 }

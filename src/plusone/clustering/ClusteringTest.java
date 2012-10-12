@@ -18,13 +18,13 @@ public abstract class ClusteringTest implements ClusteringMethod {
 
 
     public double[] predict(PredictionPaper testPaper) { 
-        throw new NotImplementedException(
-            "Did you mean to call the bulk version "
+        throw new UnsupportedOperationException(
+            "Did you mean to call the bulk version " +
             "predict(List<PredictionPaper>)?");
     }
     public double[][] predict(List<PredictionPaper> testPaper){
-        throw new NotImplementedException(
-            "Did you mean to call the non-bulk version "
+        throw new UnsupportedOperationException(
+            "Did you mean to call the non-bulk version " +
             "predict(PredictionPaper)?");
     }
     
