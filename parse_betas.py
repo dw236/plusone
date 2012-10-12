@@ -4,6 +4,18 @@ import numpy as np
 from src.datageneration.util import *
 
 def main(filename):
+    """computes cosine similarities for a given experiment
+    
+    Computes the cosine similarities between matched topics for projector and
+    LDA to the true topics the model uses to generate the data. Writes the
+    similarities to file.
+    
+    Args:
+        filename: name of the file to be written
+    
+    Returns:
+        none
+    """
     projector_beta = 'projector/data/final.beta'
     lda_beta = 'lda/trained/final.beta'
     real_beta = 'src/datageneration/output/results.pickle'
@@ -25,6 +37,11 @@ def main(filename):
         f.write('\n')
 
 def parse_all(dir):
+    """deprecated--feel free to remove
+    
+    takes dir as input and reads the cosine similarities for all files in dir
+    
+    """
     filenames = os.listdir(dir)
     files_found = 0
     projector_norms = []
@@ -51,6 +68,12 @@ def parse_all(dir):
     return results
 
 def parse_params(filename):
+    """deprecated--feel free to remove
+    
+    assumes norm files are written in a format similar to experiments and
+    parses the parameters from that file
+    
+    """
     values = filename.split('.')
     values[-4] += '.' + values[-3]
     values[-2] += '.' + values[-1]
