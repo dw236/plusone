@@ -104,7 +104,7 @@ def word_dist(topic_strengths, word_topic, observed_word_freqs, test_word_prob, 
     return word_dist_sum / num_iterations
 
 if "__main__" == __name__:
-    """Two examples.
+    """Three examples.
 
     The first demonstration of the power of this inference method over ones not
     designed for held-out words.  We have the word-topic matrix:
@@ -119,15 +119,22 @@ if "__main__" == __name__:
     not aware that words could be held out, wouldn't be able to figure out that
     the third word is present.
 
-    The second is about untangling topics.  We have the word-topic matrix:
+    The second example has word-topic matrix::
+        1/6 0.3
+        1/6   0
+        1/6 0.2
+    and a Poisson rate of 500.  We observe word counts of (200, 0, 200).
+
+    The third is about untangling topics.  We have the word-topic matrix:
         1/4   0 1/6
         1/4 1/4 1/6
           0 1/4 1/6
         1/2   0   0
           0 1/2   0
           0   0 1/2
-    and a Poisson rate of 9000.  We observe word counts of (1500, 1500, 1500,
-    0, 0, 0).  This is consistent with the third topic having a much higher
+    and a Poisson rate of 9000.  We observe word counts of
+    (1500, 1500, 1500, 0, 0, 0).
+    This is consistent with the third topic having a much higher
     weight than the other two (and the last word being hold out).  So the topic
     distribution should be close to (0, 0, 1), and so the word distribution
     should be close to (1/6, 1/6, 1/6, 0, 0, 1/2).
@@ -135,10 +142,15 @@ if "__main__" == __name__:
     wt0 = np.array([[0.5, 0, 0], [0.5, 0, 0], [0, 1, 0], [0, 0, 1]])
     print word_dist(topic_strengths = 1, word_topic = wt0, observed_word_freqs = np.array([100, 0, 0, 100]), test_word_prob = 0.2, l = 800)
 
-    wt1 = np.array([[1.0/4,     0, 1.0/6],
+    wt1 = np.array([[1.0/6, 0.3],
+                    [1.0/6,   0],
+                    [1.0/6, 0.2]])
+    print word_dist(topic_strengths = 1, word_topic = wt1, observed_word_freqs = np.array([200, 0, 200]), test_word_prob = 0.2, l = 500, num_iterations=100)
+
+    wt2 = np.array([[1.0/4,     0, 1.0/6],
                     [1.0/4, 1.0/4, 1.0/6],
                     [    0, 1.0/4, 1.0/6], 
                     [  0.5,     0,     0],
                     [    0,   0.5,     0],
                     [    0,     0,   0.5]])
-    print word_dist(topic_strengths = 1, word_topic = wt1, observed_word_freqs = np.array([1500, 1500, 1500, 0, 0, 0]), test_word_prob = 0.2, l = 9000, num_iterations=100)
+    print word_dist(topic_strengths = 1, word_topic = wt2, observed_word_freqs = np.array([1500, 1500, 1500, 0, 0, 0]), test_word_prob = 0.2, l = 9000, num_iterations=100)
