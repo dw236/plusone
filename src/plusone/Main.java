@@ -58,9 +58,6 @@ public class Main {
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
 	
-	private static HashMap<String, ClusteringTest> algMap
-		= new HashMap<String, ClusteringTest>();
-		
 	private static int numTopics;
 	
 	private static String generator;
@@ -298,15 +295,6 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						if (algMap.keySet().contains(entry.getKey().split("-")[0])) {
-							try {
-								//Disabling hover in JSON because we aren't using it
-								//thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
-								thisTest.put("Hover", new String[0]);
-							} catch (Exception e) {
-								thisTest.put("Hover", new String[0]);
-							}
-						}
 
 						allTests.put(entry.getKey(), thisTest);
 					}
@@ -372,7 +360,6 @@ public class Main {
 		if (testIsEnabled("baseline")) {
 			Baseline baseline = new Baseline(trainingSet, terms);
 			runClusteringMethod(baseline, ks, size, false);
-			algMap.put("baseline", baseline);
 		}
 
 		// KNN
@@ -388,7 +375,6 @@ public class Main {
 				knn = new KNN(closest_k[ck], trainingSet, paperIndexer, 
 						terms, knnSimilarityCache);
 				runClusteringMethod(knn, ks, size, false);
-				algMap.put("knn", knn);
 			}
 		}
 
@@ -412,7 +398,6 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
-				algMap.put("LSI", lsi);
 			}
 		}
 		//PLSI
@@ -429,7 +414,6 @@ public class Main {
 						(System.currentTimeMillis() - t1) / 1000.0 
 						+ " seconds.");
 				runClusteringMethod(plsi, ks, size, false);
-				algMap.put("PLSI", plsi);
 			}
 		}
 		//lda
@@ -441,7 +425,6 @@ public class Main {
 				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
-				algMap.put("lda", lda);
 			}
 		}
 		
@@ -455,7 +438,6 @@ public class Main {
 								terms, dimensions[dk], trainingIndices, 
 								testIndices);
 				runClusteringMethod(projector, ks, size, true);
-				algMap.put("projector", projector);
 			}
 		}
 		
@@ -468,7 +450,6 @@ public class Main {
 				ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
-				algMap.put("ldaT", ldaTrained);
 			}
 		}
 		
@@ -481,7 +462,6 @@ public class Main {
 				ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
-				algMap.put("ldaC", ldaCheat);
 			}
 		}
 		
