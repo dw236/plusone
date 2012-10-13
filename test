@@ -8,22 +8,13 @@ cd lib/lda-c-dist; make || exit
 # compile using ant
 cd $basedir; ant -f build.xml || exit
 
-#data = {'med.out.1', 'test.5000.data'}
-data='med.out'
+data=""
 if [ "$1" ];then
     data=$1
+else
+    echo "Please specify an input data file."
 fi
-userdata=$data.`whoami`
-
-echo $userdata
-
-# download test.data if it doesn't exist
-
-#if test ! -f /tmp/$data.`whoami`; then
-#   cd /tmp/
-#   wget http://www.falsifian.org/a/9xwk/$data --output-document=$userdata
-#   cd $basedir
-#fi
+[ "$data" ] || exit 1
 
 #takes in name of generator for synthetic data
 generator=""
@@ -51,7 +42,6 @@ esac
 #mkdir $out_dir || exit
 echo Output will go in data
 
-#0.1,0.3,0.5,0.7,0.9 \
 args=\
 "-Dplusone.dataFile=$data \
  -Dplusone.crossValidation.FOLD=10 \

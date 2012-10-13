@@ -1,10 +1,11 @@
-package plusone.clustering;
+package plusone.clustering.held_out_inference;
 
 import java.util.List;
 import org.ejml.simple.SimpleMatrix;
+import plusone.clustering.ClusteringTest;
 import plusone.utils.PredictionPaper;
 
-class PoissonLDAPredictor extends ClusteringTest {
+public class PoissonLDAPredictor extends ClusteringTest {
     public enum PredictionMethod {
         WORD_DIST,    // Use the estimated probability distribution over words.
         WORD_PRESENT  // Use the estimated probability that the word is present.
@@ -37,6 +38,12 @@ class PoissonLDAPredictor extends ClusteringTest {
 
     @Override
     public double[][] predict(List<PredictionPaper> testPaper) {
-       throw new UnsupportedOperationException();
+        double[][] predictions = new double[testPaper.size()][];
+        for (int i = 0; i < testPaper.size(); ++i) {
+            predictions[i] = new double[wordTopicMatrix.numRows()];
+            for (int j = 0; j < wordTopicMatrix.numRows(); ++j)
+                predictions[i][j] = j;  // XXX
+        }
+        return predictions;
     }
 }

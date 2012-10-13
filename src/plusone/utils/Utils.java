@@ -32,19 +32,19 @@ public class Utils {
      */
     public static boolean runCommand(String command, boolean streamOutput) {
     
-    boolean success = true;
+	boolean success = true;
 	System.out.println("Running command: " + command);
 	try {
 	    Process p = Runtime.getRuntime().exec(command);
-		BufferedReader stdInput = 
+		BufferedReader stdout = 
 		    new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    
-		BufferedReader stdError = 
+		BufferedReader stderr = 
 		    new BufferedReader(new InputStreamReader(p.getErrorStream()));
 		if (streamOutput)
 			System.out.println("Here is the standard output of the command:\n");
 		String s;
-		while ((s = stdInput.readLine()) != null) {
+		while ((s = stdout.readLine()) != null) {
 			if (streamOutput) {
 				System.out.println(s);
 			}
@@ -53,7 +53,7 @@ public class Utils {
 		// read any errors from the attempted command
 		if (streamOutput)
 			System.out.println("Here is the standard error of the command (if any):\n");
-		while ((s = stdError.readLine()) != null) {
+		while ((s = stderr.readLine()) != null) {
 			success = false;
 			if (streamOutput) {
 				System.out.println(s);

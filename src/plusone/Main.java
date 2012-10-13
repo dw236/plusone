@@ -18,6 +18,7 @@ import plusone.utils.LocalCOSample;
 import plusone.utils.Utils;
 
 import plusone.clustering.*;
+import plusone.clustering.held_out_inference.PoissonLDAPredictor;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -34,6 +35,7 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.ejml.simple.SimpleMatrix;
 import org.json.*;
 
 
@@ -366,6 +368,42 @@ public class Main {
 		}
 	}
 
+	void handleHeldOutInferenceTests(
+			String nameBase, SimpleMatrix wordTopicMatrix, int[] ks, int size) {
+		final String enableName =
+				"plusone.held_out_inference.enable_poisson_lda";
+		final String rateName =
+				"plusone.document_length_rate_parameter";
+		final String alphaName =
+				"plusone.topic_alpha_parameter";
+
+		if (!Boolean.getBoolean(enableName))
+			return;
+
+		String lambdaStr = System.getProperty(rateName);
+		String alphaStr = System.getProperty(alphaName);
+		if (null == lambdaStr || null == alphaStr)
+			throw new IllegalArgumentException(
+					rateName + " and " + alphaName  + " must be set if " +
+					enableName + " is set.");
+		double lambda = Double.parseDouble(lambdaStr);
+		double alpha = Double.parseDouble(alphaStr);
+
+		// Set all topic strengths to alpha.
+		SimpleMatrix topicStrengths =
+			new SimpleMatrix(wordTopicMatrix.numCols(), 1);
+		topicStrengths.set(alpha);
+
+		for (PoissonLDAPredictor.PredictionMethod predictionMethod
+			 : PoissonLDAPredictor.PredictionMethod.values()) {
+			ClusteringTest pldap = new PoissonLDAPredictor(
+					nameBase, lambda, topicStrengths, wordTopicMatrix,
+					predictionMethod);
+			runClusteringMethod(pldap, ks, size, true);
+			algMap.put(pldap.getName(), pldap);
+		}
+	}
+
 	public void runClusteringMethods(int[] ks) {
 		int size = trainingSet.size() + testingSet.size();
 		// Baseline
@@ -433,15 +471,16 @@ public class Main {
 			}
 		}
 		//lda
-		Lda lda = null;
 		if (testIsEnabled("lda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
+				Lda lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 				algMap.put("lda", lda);
+				handleHeldOutInferenceTests(
+					lda.getName(), lda.getWordTopicMatrix(), ks, size);
 			}
 		}
 		
@@ -460,28 +499,32 @@ public class Main {
 		}
 		
 		//ldaT, cheats on training but not testing
-		Lda ldaTrained = null;
 		if (testIsEnabled("ldaTrained")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
+				Lda ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
 				algMap.put("ldaT", ldaTrained);
+				handleHeldOutInferenceTests(
+					ldaTrained.getName(), ldaTrained.getWordTopicMatrix(),
+					ks, size);
 			}
 		}
 		
 		//ldaC, cheats in both training and testing
-		Lda ldaCheat = null;
 		if (testIsEnabled("ldaCheat")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
+				Lda ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
 				algMap.put("ldaC", ldaCheat);
+				handleHeldOutInferenceTests(
+					ldaCheat.getName(), ldaCheat.getWordTopicMatrix(),
+					ks, size);
 			}
 		}
 		
@@ -496,13 +539,14 @@ public class Main {
 			}
 		}
 		//GibbsLda
-		GibbsLda gibbs = null;
 		if (testIsEnabled("gibbsLda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
+				GibbsLda gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
 				runClusteringMethod(gibbs, ks, size, true);
+				handleHeldOutInferenceTests(
+					gibbs.getName(), gibbs.getWordTopicMatrix(), ks, size);
 			}
 		}
 		//CTM
