@@ -60,9 +60,6 @@ public class Main {
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
 	
-	private static HashMap<String, ClusteringTest> algMap
-		= new HashMap<String, ClusteringTest>();
-		
 	private static int numTopics;
 	
 	private static String generator;
@@ -192,55 +189,31 @@ public class Main {
 		outputResults(ks, testWordPercents);
 	}
 
-	/** Outputs the results of the tests into the data folder.
+	/** 
+	 * Outputs the results of the tests into the data folder.
 	 * 
 	 * @param ks an array containing how many words each test should predict
 	 * @param twpNames an array containing the percentage of held out words for each test
-	 * @throws JSONException
 	 */
 	private void outputResults(int[] ks, double[] twpNames) {
 		JSONObject json = new JSONObject();
-
 		try {
 			String fileName = ""; String dirName = "";
-			ArrayList<Double> params = new ArrayList<Double>();
-			ArrayList<String> paramNames = new ArrayList<String>();
-			ArrayList<Double> data = new ArrayList<Double>();
-			ArrayList<String> dataNames = new ArrayList<String>();
 			JSONObject dataList = new JSONObject();
 			JSONObject parameters = new JSONObject();
-			//Deals with parameters/data. Somewhat messy at the moment
-			if (!generator.equals("")) {
-				File documentsOptionsOut = null, documentsOtherOut = null;
-				documentsOptionsOut = new File(
-						"src/datageneration/output/documents_options-out");
-				if (!generator.equals("hlda")) {
-					documentsOtherOut = new File(
-							"src/datageneration/output/documents_other-out");				
-				}
-				//Put the information from documents_options-out into params
-				Scanner line = null;
-				try {
-					line = new Scanner(new FileInputStream(documentsOptionsOut));
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				String[] parsedLine = line.nextLine().split(" ");
-				for (int i = 0; i < (parsedLine.length-2)/2; i++) {
-					params.add(Double.parseDouble(parsedLine[3+2*i]));
-					paramNames.add(parsedLine[2+2*i].substring(1));
-				}
-				StringBuffer tmpOutName = new StringBuffer();
-				for (int i = 0; i < params.size(); i++) {
-					if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
-						tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
-					} else {
-						tmpOutName.append(paramNames.get(i)
-								+ (int)Math.floor(params.get(i)) + ".");
-					}
-				}
-				//Find where alpha is
+			if (generator.equals("")) {
+				//Real data
+				String shortFile = dataFile.split("/")[1];
+				fileName = "k." + numTopics + "."
+						+ shortFile.substring(0,shortFile.length()-4);
+				parameters.put("k", numTopics);
+			} else {
+				//Synthetic data
+				putInfo(parameters, dataList);
+				
+				//Find where alpha is so we can correctly split dir/file name
 				int alphaLoc = 0;
+				String tmpOutName = getOutputFileName();
 				for (int i = 0; i < tmpOutName.length(); i++) {
 					if (tmpOutName.charAt(i) == 'a') {
 						alphaLoc = i;
@@ -248,36 +221,7 @@ public class Main {
 				}
 				dirName = tmpOutName.substring(0, alphaLoc - 1);
 				fileName = tmpOutName.substring(alphaLoc);
-				
-				if (documentsOtherOut != null) {
-					//Put the information from documents_other-out into data
-					Scanner lines = null;
-					try {
-						lines = new Scanner(new FileInputStream(documentsOtherOut));
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-					while (lines.hasNextLine()) {
-						String[] nameAndValue = lines.nextLine().split(" ");
-						dataNames.add(nameAndValue[0]);
-						data.add(Double.parseDouble(nameAndValue[1]));
-					}
-					for (int i = 0; i < data.size(); i++) {
-						dataList.put(dataNames.get(i), data.get(i));
-					}
-				}
-				for (int i = 0; i < params.size(); i++) {
-					if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
-						parameters.put(paramNames.get(i), params.get(i));
-					} else {
-						parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
-					}
-				}
-			} else { //Real data
-				String shortFile = dataFile.split("/")[1];
-				fileName = "k." + numTopics + "."
-						+ shortFile.substring(0,shortFile.length()-4);
-				parameters.put("k", numTopics);
+
 			}
 			json.put("parameters", parameters);
 			json.put("data", dataList);
@@ -300,20 +244,12 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						if (algMap.keySet().contains(entry.getKey().split("-")[0])) {
-							try {
-								//Disabling hover in JSON because we aren't using it
-								//thisTest.put("Hover", algMap.get(entry.getKey().split("-")[0]).getHover());
-								thisTest.put("Hover", new String[0]);
-							} catch (Exception e) {
-								thisTest.put("Hover", new String[0]);
-							}
-						}
 
 						allTests.put(entry.getKey(), thisTest);
 					}
-					//Makes a fake experiment with cosine similarities
-					if (!generator.equals("")) {
+					//Makes a fake experiment  with cosine similarities
+					if (!generator.equals("") && testIsEnabled("lda")
+							&& testIsEnabled("projector")) {
 						Scanner in = null;
 						Utils.runCommand("python parse_betas.py data/normfile", false);
 						try {
@@ -349,6 +285,7 @@ public class Main {
 			new File ("data/" + dirName).mkdir();
 			File out = new File("data/" + dirName, "experiment." + fileName + "json");
 			if (out.exists()) {
+				//Keep trying to append 0, 1, 2... until we find an unused file name
 				int newFileEnd = 0;
 				String oldFileName = fileName;
 				while (out.exists()) {
@@ -366,6 +303,113 @@ public class Main {
 		} catch (JSONException e) {
 			System.out.println("Error writing to output");
 		}
+	}
+	
+	/**
+	 * Puts useful information into the output JSON, such as the parameters
+	 * used to generate a synthetic dataset and statistics about the dataset
+	 * 
+	 * @param parameters empty when called, afterwards has alpha, beta, k, etc
+	 * @param dataList empty when called, afterwards has sig_words, sig_topics, etc
+	 */
+	public void putInfo(JSONObject parameters, JSONObject dataList) {
+		try {
+			ArrayList<Double> params = new ArrayList<Double>();
+			ArrayList<String> paramNames = new ArrayList<String>();
+			ArrayList<Double> data = new ArrayList<Double>();
+			ArrayList<String> dataNames = new ArrayList<String>();
+	
+			//Synthetic data
+			File documentsOptionsOut = null, documentsOtherOut = null;
+			documentsOptionsOut = new File(
+					"src/datageneration/output/documents_options-out");
+			if (!generator.equals("hlda")) {
+				documentsOtherOut = new File(
+						"src/datageneration/output/documents_other-out");				
+			}
+			//Put the information from documents_options-out into params
+			Scanner line = null;
+			try {
+				line = new Scanner(new FileInputStream(documentsOptionsOut));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			String[] parsedLine = line.nextLine().split(" ");
+			for (int i = 0; i < (parsedLine.length-2)/2; i++) {
+				params.add(Double.parseDouble(parsedLine[3+2*i]));
+				paramNames.add(parsedLine[2+2*i].substring(1));
+			}
+			StringBuffer tmpOutName = new StringBuffer();
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
+				} else {
+					tmpOutName.append(paramNames.get(i)
+							+ (int)Math.floor(params.get(i)) + ".");
+				}
+			}
+			
+			if (documentsOtherOut != null) {
+				//Put the information from documents_other-out into data
+				Scanner lines = null;
+				try {
+					lines = new Scanner(new FileInputStream(documentsOtherOut));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				while (lines.hasNextLine()) {
+					String[] nameAndValue = lines.nextLine().split(" ");
+					dataNames.add(nameAndValue[0]);
+					data.add(Double.parseDouble(nameAndValue[1]));
+				}
+				for (int i = 0; i < data.size(); i++) {
+					dataList.put(dataNames.get(i), data.get(i));
+				}
+			}
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					parameters.put(paramNames.get(i), params.get(i));
+				} else {
+					parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
+				}
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Based on the parameters used to generate synthetic data, get the name
+	 * of the output folder/file 
+	 * 
+	 * @return a string formatted like k15.n1000.l75.m1000.a0.01.b0.25
+	 */
+	public String getOutputFileName() {
+		StringBuffer tmpOutName = new StringBuffer();
+		try {
+			ArrayList<Double> params = new ArrayList<Double>();
+			ArrayList<String> paramNames = new ArrayList<String>();
+
+			File documentsOptionsOut = new File(
+					"src/datageneration/output/documents_options-out");
+			Scanner line = new Scanner(new FileInputStream(documentsOptionsOut));
+			String[] parsedLine = line.nextLine().split(" ");
+			for (int i = 0; i < (parsedLine.length-2)/2; i++) {
+				params.add(Double.parseDouble(parsedLine[3+2*i]));
+				paramNames.add(parsedLine[2+2*i].substring(1));
+			}
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
+				} else {
+					tmpOutName.append(paramNames.get(i)
+							+ (int)Math.floor(params.get(i)) + ".");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return tmpOutName.toString();
 	}
 
 	void handleHeldOutInferenceTests(
@@ -410,7 +454,6 @@ public class Main {
 		if (testIsEnabled("baseline")) {
 			Baseline baseline = new Baseline(trainingSet, terms);
 			runClusteringMethod(baseline, ks, size, false);
-			algMap.put("baseline", baseline);
 		}
 
 		// KNN
@@ -426,7 +469,6 @@ public class Main {
 				knn = new KNN(closest_k[ck], trainingSet, paperIndexer, 
 						terms, knnSimilarityCache);
 				runClusteringMethod(knn, ks, size, false);
-				algMap.put("knn", knn);
 			}
 		}
 
@@ -450,7 +492,6 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
-				algMap.put("LSI", lsi);
 			}
 		}
 		//PLSI
@@ -467,7 +508,6 @@ public class Main {
 						(System.currentTimeMillis() - t1) / 1000.0 
 						+ " seconds.");
 				runClusteringMethod(plsi, ks, size, false);
-				algMap.put("PLSI", plsi);
 			}
 		}
 		//lda
@@ -478,9 +518,19 @@ public class Main {
 				Lda lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
-				algMap.put("lda", lda);
 				handleHeldOutInferenceTests(
 					lda.getName(), lda.getWordTopicMatrix(), ks, size);
+			}
+		}
+		
+		//lda (Mallet)
+		Mallet malletLda = null;
+		if (testIsEnabled("malletLda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				malletLda = new Mallet("lda", trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(malletLda, ks, size, true);
 			}
 		}
 		
@@ -494,7 +544,6 @@ public class Main {
 								terms, dimensions[dk], trainingIndices, 
 								testIndices);
 				runClusteringMethod(projector, ks, size, true);
-				algMap.put("projector", projector);
 			}
 		}
 		
@@ -506,7 +555,6 @@ public class Main {
 				Lda ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
-				algMap.put("ldaT", ldaTrained);
 				handleHeldOutInferenceTests(
 					ldaTrained.getName(), ldaTrained.getWordTopicMatrix(),
 					ks, size);

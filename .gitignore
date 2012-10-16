@@ -24,6 +24,7 @@ Plusone.jar
 /hlda/*
 /ctm/*
 /GibbsLDA/*
+/Mallet/*
 
 /lib/*.jar
 /lib/jars/*.jar
