@@ -53,15 +53,17 @@ public class Mallet extends ClusteringTest {
 		String trainingData = "Mallet/train.txt";
 
 		makeMalletInput(trainingData, trainingSet);
-		//Note: Mallet topic modeling requires the "--keep-sequence option
-		//(no exchangeability assumption)
 		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence "
-				+ "--input " + trainingData + " --output Mallet/train.mallet", false);
+				+ "--input " + trainingData + " --output Mallet/train.mallet", true);
 		
 		System.out.println("Running Mallet LDA");
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet train-topics "
-				+ "--input Mallet/train.mallet --num-topics " + numTopics
-				+ " --output-state Mallet/topic-state.gz", false);
+		Utils.runCommand("lib/mallet-2.0.7/bin/mallet train-topics"
+				+ " --input Mallet/train.mallet --num-topics " + numTopics
+				+ " --inferencer-filename Mallet/train.inferencer"
+				+ " --evaluator-filename Mallet/train.evaluator"
+				+ " --output-state Mallet/topic-state.gz"
+				+ " --optimize-interval 10 --num-iterations 1000", true);
+
 	}
 
 	
@@ -72,14 +74,18 @@ public class Mallet extends ClusteringTest {
 		String testingData = "Mallet/test.txt";
 
 		makeMalletInputTest(testingData, testDocs);
-		//Anything below this line isn't yet finished
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence "
-				+ "--input " + testingData + " --output Mallet/test.mallet"
-				+ "--use-pipe-from Mallet/train.mallet", false);
+		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence"
+				+ " --input " + testingData + " --output Mallet/test.mallet"
+				+ " --use-pipe-from Mallet/train.mallet", true);
 		
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics "
-				+ "--input test.mallet --output-doc-topics Mallet/doc-topic.gz"
-				+ "", false);
+		
+		Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
+				+ " --output-doc-topics Mallet/doc-topics"
+				+ " --inferencer Mallet/train.inferencer", true);
+		
+		Utils.runCommand("lib/mallet-2.0.7/bin/mallet evaluate-topics --input Mallet/test.mallet"
+				+ " --evaluator Mallet/train.evaluator"
+				+ " --output-doc-probs Mallet/doc-probs", true);
 
 		
 		return new double[][]{};
