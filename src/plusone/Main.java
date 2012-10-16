@@ -414,24 +414,24 @@ public class Main {
 
 	void handleHeldOutInferenceTests(
 			String nameBase, SimpleMatrix wordTopicMatrix, int[] ks, int size) {
-		final String enableName =
-				"plusone.held_out_inference.enable_poisson_lda";
 		final String rateName =
-				"plusone.document_length_rate_parameter";
+				"plusone.documentLengthRate";
 		final String alphaName =
-				"plusone.topic_alpha_parameter";
+				"plusone.topicAlpha";
 
-		if (!Boolean.getBoolean(enableName))
+		if (!testIsEnabled("heldOutPoissonLda"))
 			return;
 
-		String lambdaStr = System.getProperty(rateName);
-		String alphaStr = System.getProperty(alphaName);
-		if (null == lambdaStr || null == alphaStr)
+		double lambda;
+		double alpha;
+		try {
+			lambda = Double.parseDouble(System.getProperty(rateName));
+			alpha = Double.parseDouble(System.getProperty(alphaName));
+		} catch (NullPointerException e) {
 			throw new IllegalArgumentException(
-					rateName + " and " + alphaName  + " must be set if " +
-					enableName + " is set.");
-		double lambda = Double.parseDouble(lambdaStr);
-		double alpha = Double.parseDouble(alphaStr);
+				rateName + " and " + alphaName +
+				" must be set if Poisson-LDA held-out inference is enabled.");
+		}
 
 		// Set all topic strengths to alpha.
 		SimpleMatrix topicStrengths =
@@ -444,7 +444,6 @@ public class Main {
 					nameBase, lambda, topicStrengths, wordTopicMatrix,
 					predictionMethod);
 			runClusteringMethod(pldap, ks, size, true);
-			algMap.put(pldap.getName(), pldap);
 		}
 	}
 
@@ -569,7 +568,6 @@ public class Main {
 				Lda ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
-				algMap.put("ldaC", ldaCheat);
 				handleHeldOutInferenceTests(
 					ldaCheat.getName(), ldaCheat.getWordTopicMatrix(),
 					ks, size);
