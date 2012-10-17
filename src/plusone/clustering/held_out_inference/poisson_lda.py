@@ -6,14 +6,13 @@ from    numpy.random.mtrand import dirichlet
 from    scipy.misc          import factorial
 from    sys                 import stdin
 
-def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_word_prob, l, num_iterations = 20):
+def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
+                       test_word_prob, l, num_iterations = 20):
     """ Estimate the distribution of new words in a document.
 
     Arguments:
     topic_strengths -- The parameters to the Dirichlet distribution on topic
-        distributions.  May be an array or a single (zero-dimensional) number.
-        Note that if this is a a 1-dimensional array of length 1, then this
-        function assume's there's only one topic.  Set this to 1 for the uniform
+        distributions.  Set this to an array of ones for the uniform
         distribution.
     word_topic -- A (vocabulary size) x (# topics) matrix; entries should be
         nonnegative and each column should sum to 1.
@@ -32,9 +31,6 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_wo
     vocab_size = word_topic.shape[0]
     num_topics = word_topic.shape[1]
     assert vocab_size == observed_word_freqs.shape[0]
-
-    if 0 == np.ndim(topic_strengths):
-        topic_strengths = topic_strengths * np.ones(num_topics)
     assert num_topics == len(topic_strengths)
 
     def sample_mask(n_observed, rate):
@@ -46,7 +42,8 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_wo
         """
         if 0 < n_observed: return 1
         p_0 = test_word_prob
-        p_1 = (1 - test_word_prob) * rate ** n_observed * exp(- rate) / factorial(n_observed)
+        p_1 = ((1 - test_word_prob) *
+            rate ** n_observed * exp(- rate) / factorial(n_observed))
         if np.random.rand() * (p_0 + p_1) >= p_0:
             return 1
         else:
@@ -95,7 +92,8 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_wo
         word_topic_freqs = np.array(tuple(
             sample_topic_freqs_by_word(
                 n_observed = observed_word_freqs[word],
-                rates_by_topic = l * np.multiply(word_topic[word,:], topic_dist),
+                rates_by_topic =
+                    l * np.multiply(word_topic[word,:], topic_dist),
                 mask = mask[word]
             )
             for word in range(vocab_size)
@@ -113,22 +111,25 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_wo
 def string_to_float_list(s):
     return map(float, s.split())
 
-def read_array_line():
-    return np.array(string_to_float_list(stdin.readline()))
+def read_array_line(line):
+    return np.array(string_to_float_list(line))
 
-def read_2d_array_lines():
-    return np.array(tuple(map(string_to_float_list, stdin.readlines())))
+def read_2d_array_lines(lines):
+    return np.array(map(string_to_float_list, lines))
 
-def print_array_line(a):
-    print " ".join(map(str, a.tolist()))
+def show_array_line(a):
+    return " ".join(map(str, a.tolist()))
 
 if "__main__" == __name__:
     arg_parser = argparse.ArgumentParser(description = """
         Estimates word distributions using a model with Poisson-length documents
         with an LDA model for words, given the topic strengths and word-topic
-        matrix.  Standard input should have k+2 lines: the topic strengths; the
-        observed word frequencies; and the topic-word matrix (one line for each
-        topic).""")
+        matrix.  Standard input should have 1+k+m lines, where k is the number
+        of topics and m is the number of documents.  The first line should
+        be the topic strength vector, as numbers separated by spaces.  k is
+        inferred from the topic strength vector.  The next k lines should be the
+        topic-word matrix (one line for each topic).  The next m lines should be
+        the observed word frequencies of documents.""")
     arg_parser.add_argument("--test_word_prob", required = True, type = float,
         help = "How likely each word is to be held out as a test word.")
     arg_parser.add_argument("--lambda", dest = "l", required = True,
@@ -137,14 +138,17 @@ if "__main__" == __name__:
     arg_parser.add_argument("--num_iterations", required = True, type = int,
         help = "The number of iterations of Gibbs sampling to perform.")
     args = arg_parser.parse_args()
-    topic_strengths = read_array_line()
-    observed_word_freqs = read_array_line()
-    word_topic = np.transpose(read_2d_array_lines())
-    word_dist = estimate_word_dist(
-        topic_strengths = topic_strengths,
-        word_topic = word_topic,
-        observed_word_freqs = observed_word_freqs,
-        test_word_prob = args.test_word_prob,
-        l = args.l,
-        num_iterations = args.num_iterations)
-    print_array_line(word_dist)
+    topic_strengths = read_array_line(stdin.readline())
+    num_topics = topic_strengths.size
+    word_topic = np.transpose(read_2d_array_lines(
+        stdin.readline() for i in range(num_topics)))
+    for line in stdin:
+        observed_word_freqs = read_array_line(line)
+        word_dist = estimate_word_dist(
+            topic_strengths = topic_strengths,
+            word_topic = word_topic,
+            observed_word_freqs = observed_word_freqs,
+            test_word_prob = args.test_word_prob,
+            l = args.l,
+            num_iterations = args.num_iterations)
+        print show_array_line(word_dist)
