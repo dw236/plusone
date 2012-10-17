@@ -1,16 +1,20 @@
-from math import exp
-import numpy as np
-from numpy.random import multinomial, poisson
-from numpy.random.mtrand import dirichlet
-from scipy.misc import factorial
+import  argparse
+from    math                import exp
+import  numpy               as np
+from    numpy.random        import multinomial, poisson
+from    numpy.random.mtrand import dirichlet
+from    scipy.misc          import factorial
+from    sys                 import stdin
 
-def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_word_prob, l, num_iterations = 20, **kwargs):
+def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_word_prob, l, num_iterations = 20):
     """ Estimate the distribution of new words in a document.
 
     Arguments:
     topic_strengths -- The parameters to the Dirichlet distribution on topic
-        distributions.  May be an array or a single number.  Set this to 1 for
-        the uniform distribution.
+        distributions.  May be an array or a single (zero-dimensional) number.
+        Note that if this is a a 1-dimensional array of length 1, then this
+        function assume's there's only one topic.  Set this to 1 for the uniform
+        distribution.
     word_topic -- A (vocabulary size) x (# topics) matrix; entries should be
         nonnegative and each column should sum to 1.
     observed_word_freqs -- A vector of integers: the number of times each
@@ -105,3 +109,42 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs, test_wo
         word_dist_sum += word_dist
 
     return word_dist_sum / num_iterations
+
+def string_to_float_list(s):
+    return map(float, s.split())
+
+def read_array_line():
+    return np.array(string_to_float_list(stdin.readline()))
+
+def read_2d_array_lines():
+    return np.array(tuple(map(string_to_float_list, stdin.readlines())))
+
+def print_array_line(a):
+    print " ".join(map(str, a.tolist()))
+
+if "__main__" == __name__:
+    arg_parser = argparse.ArgumentParser(description = """
+        Estimates word distributions using a model with Poisson-length documents
+        with an LDA model for words, given the topic strengths and word-topic
+        matrix.  Standard input should have k+2 lines: the topic strengths; the
+        observed word frequencies; and the topic-word matrix (one line for each
+        topic).""")
+    arg_parser.add_argument("--test_word_prob", required = True, type = float,
+        help = "How likely each word is to be held out as a test word.")
+    arg_parser.add_argument("--lambda", dest = "l", required = True,
+        type = float,
+        help = "The parameter of the document length Poisson distribution.")
+    arg_parser.add_argument("--num_iterations", required = True, type = int,
+        help = "The number of iterations of Gibbs sampling to perform.")
+    args = arg_parser.parse_args()
+    topic_strengths = read_array_line()
+    observed_word_freqs = read_array_line()
+    word_topic = np.transpose(read_2d_array_lines())
+    word_dist = estimate_word_dist(
+        topic_strengths = topic_strengths,
+        word_topic = word_topic,
+        observed_word_freqs = observed_word_freqs,
+        test_word_prob = args.test_word_prob,
+        l = args.l,
+        num_iterations = args.num_iterations)
+    print_array_line(word_dist)
