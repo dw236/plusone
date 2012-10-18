@@ -7,10 +7,10 @@ import time
 import numpy as np
 from numpy.random.mtrand import poisson as p
 from numpy.random.mtrand import dirichlet
+from scipy.special import gamma
 
 import math
 from math import e
-from math import gamma
 
 import random
 from random import random as rand
