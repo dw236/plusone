@@ -4,6 +4,7 @@ import  numpy               as np
 from    numpy.random        import multinomial, poisson
 from    numpy.random.mtrand import dirichlet
 from    scipy.misc          import factorial
+import  sys
 from    sys                 import stdin
 
 def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
@@ -127,9 +128,11 @@ if "__main__" == __name__:
         matrix.  Standard input should have 1+k+m lines, where k is the number
         of topics and m is the number of documents.  The first line should
         be the topic strength vector, as numbers separated by spaces.  k is
-        inferred from the topic strength vector.  The next k lines should be the
+        inferred from this first line.  The next k lines should be the
         topic-word matrix (one line for each topic).  The next m lines should be
-        the observed word frequencies of documents.""")
+        the observed word frequencies of documents.  Every time this script reads
+        one of those lines, it will output an estimated word distribution before
+        reading the next line.""")
     arg_parser.add_argument("--test_word_prob", required = True, type = float,
         help = "How likely each word is to be held out as a test word.")
     arg_parser.add_argument("--lambda", dest = "l", required = True,
@@ -142,7 +145,9 @@ if "__main__" == __name__:
     num_topics = topic_strengths.size
     word_topic = np.transpose(read_2d_array_lines(
         stdin.readline() for i in range(num_topics)))
-    for line in stdin:
+    while True:
+        line = stdin.readline()
+        if "" == line: break
         observed_word_freqs = read_array_line(line)
         word_dist = estimate_word_dist(
             topic_strengths = topic_strengths,
@@ -152,3 +157,4 @@ if "__main__" == __name__:
             l = args.l,
             num_iterations = args.num_iterations)
         print show_array_line(word_dist)
+        sys.stdout.flush()

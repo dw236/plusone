@@ -182,7 +182,7 @@ public class Main {
 			for (int testGroup=(crossValid ?0:FOLD-1);testGroup<FOLD;testGroup++){	    
 				setupData(testGroup,testWordPercent);
 
-				runClusteringMethods(ks);
+				runClusteringMethods(ks, testWordPercent);
 
 			}
 		}
@@ -413,7 +413,8 @@ public class Main {
 	}
 
 	void handleHeldOutInferenceTests(
-			String nameBase, SimpleMatrix wordTopicMatrix, int[] ks, int size) {
+			String nameBase, SimpleMatrix wordTopicMatrix, int[] ks, int size,
+			double testWordPercent) {
 		final String rateName =
 				"plusone.documentLengthRate";
 		final String alphaName =
@@ -438,16 +439,14 @@ public class Main {
 			new SimpleMatrix(wordTopicMatrix.numCols(), 1);
 		topicStrengths.set(alpha);
 
-		for (PoissonLDAPredictor.PredictionMethod predictionMethod
-			 : PoissonLDAPredictor.PredictionMethod.values()) {
-			ClusteringTest pldap = new PoissonLDAPredictor(
-					nameBase, lambda, topicStrengths, wordTopicMatrix,
-					predictionMethod);
-			runClusteringMethod(pldap, ks, size, true);
-		}
+		ClusteringTest pldap = new PoissonLDAPredictor(
+				nameBase, testWordPercent, lambda, topicStrengths,
+				wordTopicMatrix,
+				PoissonLDAPredictor.PredictionMethod.WORD_DIST);
+		runClusteringMethod(pldap, ks, size, true);
 	}
 
-	public void runClusteringMethods(int[] ks) {
+	public void runClusteringMethods(int[] ks, double testWordPercent) {
 		int size = trainingSet.size() + testingSet.size();
 		// Baseline
 		if (testIsEnabled("baseline")) {
@@ -518,7 +517,8 @@ public class Main {
 						trainingIndices, testIndices);
 				runClusteringMethod(lda, ks, size, true);
 				handleHeldOutInferenceTests(
-					lda.getName(), lda.getWordTopicMatrix(), ks, size);
+					lda.getName(), lda.getWordTopicMatrix(), ks, size,
+					testWordPercent);
 			}
 		}
 		
@@ -556,7 +556,7 @@ public class Main {
 				runClusteringMethod(ldaTrained, ks, size, true);
 				handleHeldOutInferenceTests(
 					ldaTrained.getName(), ldaTrained.getWordTopicMatrix(),
-					ks, size);
+					ks, size, testWordPercent);
 			}
 		}
 		
@@ -570,7 +570,7 @@ public class Main {
 				runClusteringMethod(ldaCheat, ks, size, true);
 				handleHeldOutInferenceTests(
 					ldaCheat.getName(), ldaCheat.getWordTopicMatrix(),
-					ks, size);
+					ks, size, testWordPercent);
 			}
 		}
 		
@@ -592,7 +592,8 @@ public class Main {
 				GibbsLda gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
 				runClusteringMethod(gibbs, ks, size, true);
 				handleHeldOutInferenceTests(
-					gibbs.getName(), gibbs.getWordTopicMatrix(), ks, size);
+					gibbs.getName(), gibbs.getWordTopicMatrix(), ks, size,
+					testWordPercent);
 			}
 		}
 		//CTM

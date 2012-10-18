@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.ejml.simple.SimpleMatrix;
+
 import plusone.Main;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
@@ -134,6 +136,13 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	public Integer getTrainingTf(Integer word) {
 		return trainingTf == null ? 
 				0 : (trainingTf.containsKey(word) ? trainingTf.get(word) : 0);
+	}
+
+	public SimpleMatrix getTrainingTfAsSimpleMatrixRow(int vocabSize) {
+		SimpleMatrix ret = new SimpleMatrix(1, vocabSize);
+		for (int word = 0; word < vocabSize; ++word)
+			ret.set(0, word, getTrainingTf(word));
+		return ret;
 	}
 
 	public Set<Integer> getTrainingWords() {
