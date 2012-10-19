@@ -70,33 +70,11 @@ public class PoissonLDAPredictor extends ClusteringTest {
         }
     }
 
-    static class VectorEntry implements Comparable {
-        public final int index;
-        public final double value;
-        public VectorEntry(int index, double value) {
-            this.index = index;
-            this.value = value;
-        }
-        public int compareTo(Object o) {
-            VectorEntry e = (VectorEntry)o;
-            int c = Double.compare(value, e.value);
-            return 0 == c ? index - e.index : c;
-        }
-    }
-
-    static List<VectorEntry> parseRowMatrix(String s) {
+    static double[] parseRowMatrix(String s) {
         String[] parts = s.split(" ");
-        List<VectorEntry> ret = new ArrayList<VectorEntry>();
+        double[] ret = new double[parts.length];
         for (int i = 0; i < parts.length; ++i)
-            ret.add(new VectorEntry(i, Double.parseDouble(parts[i])));
-        return ret;
-    }
-
-    static double[] indicesByValueDescending(List<VectorEntry> l) {
-        Collections.sort(l);
-        double[] ret = new double[l.size()];
-        for (int i = 0; i < l.size(); ++i)
-            ret[i] = l.get(l.size() - i - 1).index;
+            ret[i] = Double.parseDouble(parts[i]);
         return ret;
     }
 
@@ -155,8 +133,7 @@ public class PoissonLDAPredictor extends ClusteringTest {
                 writeMatrix(testPaper.getTrainingTfAsSimpleMatrixRow(vocabSize),
                             stdin);
                 stdin.flush();
-                predictions[i] =
-                    indicesByValueDescending(parseRowMatrix(stdout.readLine()));
+                predictions[i] = parseRowMatrix(stdout.readLine());
             }
 
             stdin.close();
