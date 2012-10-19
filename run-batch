@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export basedir=$PWD
 
@@ -104,7 +104,7 @@ do
 
                             #Make a JSON out of the generated data
                             java -classpath bin:lib/jars/json.jar -Xmx256m\
-                            datageneration/MakeJSON documents-out false
+                            datageneration/MakeJSON documents-out false || exit 1
 
                             #Run the test
                             ./test data/documents-out.json $generator $k
