@@ -193,8 +193,12 @@ def write(data, args):
         print "plsi and ctm flags cannot both be active (returning None)"
         return None
     
-    output_dir = 'output/'
-    dir = output_dir
+    output_dir = 'output'
+    try:
+        os.mkdir(output_dir)
+    except OSError:
+        pass
+    dir = output_dir + '/'
     dir += "k" + str(args.k) + "."
     dir += "n" + str(args.n) + "."
     dir += "l" + str(args.l) + "."
@@ -211,7 +215,7 @@ def write(data, args):
         dir = dir[:-1]
     try:
         os.mkdir(dir)
-    except:
+    except OSError:
         print "overwriting existing data in directory:", dir, "...",
     
     with open(dir + '/documents-out', 'w') as f:
@@ -261,8 +265,8 @@ def write(data, args):
         f.write('sum_squares_topics ' + str(round(sum_squares_topics, 
                                                   2)) + '\n')
         
-        med = np.median([i[0].dot(i[1]) / (np.sqrt(i[1].dot(i[1])) * \
-                                           np.sqrt(i[0].dot(i[0]))) \
+        med = np.median([np.dot(i[0], i[1]) / (np.sqrt(np.dot(i[1], i[1])) * \
+                                           np.sqrt(np.dot(i[0], i[0]))) \
                                 for i in itertools.combinations(words, 2)])
         if round(med, 2) == 0:
             med = format(med, ".2e")
