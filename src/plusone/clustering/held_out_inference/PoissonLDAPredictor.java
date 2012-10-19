@@ -29,17 +29,20 @@ public class PoissonLDAPredictor extends ClusteringTest {
     final double testWordPercent;
     // The rate of the Poisson distribution of document lengths.
     final double lambda;
+    final int numIterations;
     // topicStrengths is (num topics) x 1
     final SimpleMatrix topicStrengths, wordTopicMatrix;
 
     public PoissonLDAPredictor(
             String nameBase,
-            double testWordPercent, double lambda,
+            double testWordPercent, double lambda, int numIterations,
             SimpleMatrix topicStrengths, SimpleMatrix wordTopicMatrix,
             PredictionMethod predictionMethod) {
-        super(nameBase + "_hoi_" + predictionMethod.toString());
+        super(nameBase + "_h" + Integer.toString(numIterations) + "i" +
+              predictionMethod.ordinal());
         this.testWordPercent = testWordPercent;
         this.lambda = lambda;
+        this.numIterations = numIterations;
         this.topicStrengths = topicStrengths;
         this.predictionMethod = predictionMethod;
         if (PredictionMethod.WORD_DIST != predictionMethod) {
@@ -127,7 +130,7 @@ public class PoissonLDAPredictor extends ClusteringTest {
             PYTHON_COMMAND, POISSON_LDA_PATH,
             "--test_word_prob", Double.toString(testWordPercent),
             "--lambda", Double.toString(lambda),
-            "--num_iterations", "5"  // TODO: Make this variable.
+            "--num_iterations", Integer.toString(numIterations)
         };
         final int vocabSize = wordTopicMatrix.numRows();
 

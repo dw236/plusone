@@ -419,15 +419,19 @@ public class Main {
 				"plusone.documentLengthRate";
 		final String alphaName =
 				"plusone.topicAlpha";
+		final String iterationsName =
+				"plusone.poissonLda.numIterations";
 
 		if (!testIsEnabled("heldOutPoissonLda"))
 			return;
 
 		double lambda;
 		double alpha;
+		int[] numsIterations;
 		try {
 			lambda = Double.parseDouble(System.getProperty(rateName));
 			alpha = Double.parseDouble(System.getProperty(alphaName));
+			numsIterations = parseIntList(System.getProperty(iterationsName));
 		} catch (NullPointerException e) {
 			throw new IllegalArgumentException(
 				rateName + " and " + alphaName +
@@ -439,11 +443,13 @@ public class Main {
 			new SimpleMatrix(wordTopicMatrix.numCols(), 1);
 		topicStrengths.set(alpha);
 
-		ClusteringTest pldap = new PoissonLDAPredictor(
-				nameBase, testWordPercent, lambda, topicStrengths,
-				wordTopicMatrix,
-				PoissonLDAPredictor.PredictionMethod.WORD_DIST);
-		runClusteringMethod(pldap, ks, size, true);
+		for (int numIterations : numsIterations) {
+			ClusteringTest pldap = new PoissonLDAPredictor(
+					nameBase, testWordPercent, lambda, numIterations,
+					topicStrengths, wordTopicMatrix,
+					PoissonLDAPredictor.PredictionMethod.WORD_DIST);
+			runClusteringMethod(pldap, ks, size, true);
+		}
 	}
 
 	public void runClusteringMethods(int[] ks, double testWordPercent) {
