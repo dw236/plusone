@@ -585,9 +585,6 @@ public class Main {
 				Lda ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
-				handleHeldOutInferenceTests(
-					ldaCheat.getName(), ldaCheat.getWordTopicMatrix(),
-					ks, size, testWordPercent);
 			}
 		}
 		
