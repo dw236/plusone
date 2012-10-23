@@ -539,6 +539,17 @@ public class Main {
 			}
 		}
 		
+		//hlda (Mallet)
+		Mallet malletHlda = null;
+		if (testIsEnabled("malletHlda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				malletHlda = new Mallet("hlda", trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(malletHlda, ks, size, true);
+			}
+		}
+		
 		//projector, uses a projection algorithm
 		Projector projector = null;
 		if (testIsEnabled("projector")){
