@@ -788,7 +788,7 @@ public class Main {
 //				test.addMetadata(meta);
 //				List<Double> predictionScores = new ArrayList<Double>();
 				
-				Integer[] predict = topPrdcts.subList(0, k).toArray(new Integer[k]);
+				Integer[] predict = topPrdcts.subList(0, Math.min(topPrdcts.size(), k)).toArray(new Integer[k]);
 
 				double[] result = evaluate(testingPaper, predict, size, k);
 				for (int j = 0; j < 4; ++j) results[ki][j] += result[j];
