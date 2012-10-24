@@ -96,12 +96,22 @@ public class Mallet extends ClusteringTest {
 				break;
 		}
 		
-
-		
 		topicWord = new SimpleMatrix(readTopicWordMatrix("Mallet/word-topics"));
-		
+		writeBeta();
 	}
 
+	private void writeBeta() {
+		System.out.print("Writing beta to Mallet/beta...");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter("beta");
+		
+		for (int row=0; row<topicWord.numRows(); row++) {
+			for (int col=0; col<topicWord.numCols(); col++) {
+				fileWriter.write(topicWord.get(row, col) + " ");
+			}
+			fileWriter.write("\n");
+		}
+		System.out.println("done.");
+	}
 	
 	@Override
 	public double[][] predict(List<PredictionPaper> testDocs) {
@@ -117,7 +127,7 @@ public class Mallet extends ClusteringTest {
 		
 		Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
 				+ " --output-doc-topics Mallet/doc-topics"
-				+ " --inferencer Mallet/train.inferencer", false);
+				+ " --inferencer Mallet/train.inferencer", true);
 		
 		docTopic = new SimpleMatrix(readDocTopicMatrix("Mallet/doc-topics"));
 		

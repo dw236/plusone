@@ -276,6 +276,16 @@ public class Main {
 						JSONObject fakeExperimentLDA = new JSONObject();
 						fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
 						allTests.put("~lda-cosine", fakeExperimentLDA);
+						
+						String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
+						double cosineSimilarityMeanMallet = 0;
+						for (String sim : cosineSimilaritiesMallet) {
+							cosineSimilarityMeanMallet += Double.parseDouble(sim);
+						}
+						cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
+						JSONObject fakeExperimentMallet = new JSONObject();
+						fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
+						allTests.put("~mallet-cosine", fakeExperimentMallet);
 
 					}
 					tests.put(allTests);

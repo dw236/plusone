@@ -6,9 +6,9 @@ from src.datageneration.util import *
 def main(filename):
     """computes cosine similarities for a given experiment
     
-    Computes the cosine similarities between matched topics for projector and
-    LDA to the true topics the model uses to generate the data. Writes the
-    similarities to file.
+    Computes the cosine similarities between matched topics for projector,
+    LDA, and Mallet to the true topics the model uses to generate the data. 
+    Writes the similarities to file.
     
     Args:
         filename: name of the file to be written
@@ -19,20 +19,30 @@ def main(filename):
     projector_beta = 'projector/data/final.beta'
     lda_beta = 'lda/trained/final.beta'
     real_beta = 'src/datageneration/output/results.pickle'
+    mallet_beta = 'Mallet/beta'
     
-    projector_labels = match_beta(projector_beta, real_beta, 
-                                  metric='cosine', plot=False)[-2]
+    projector_labels = match_beta(projector_beta, real_beta, metric='cosine', 
+                                  plot=False)[-2]
     projector_norms = [pair[1] for pair in projector_labels]
     
-    lda_labels = match_beta(lda_beta, real_beta, 
-                            metric='cosine', plot=False)[-2]
+    lda_labels = match_beta(lda_beta, real_beta, metric='cosine', 
+                            plot=False)[-2]
     lda_norms = [pair[1] for pair in lda_labels]
+    
+    mallet_labels = match_beta(mallet_beta, real_beta, metric='cosine',
+                               plot=False)[-2]
+    mallet_norms = [pair[1] for pair in mallet_labels]
     
     with open(filename, 'w') as f:
         for norm in projector_norms: 
             f.write(str(norm) + ' ')
         f.write('\n')
+        
         for norm in lda_norms:
+            f.write(str(norm) + ' ')
+        f.write('\n')
+        
+        for norm in mallet_norms:
             f.write(str(norm) + ' ')
         f.write('\n')
 
