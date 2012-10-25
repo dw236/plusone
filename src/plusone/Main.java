@@ -276,6 +276,16 @@ public class Main {
 						JSONObject fakeExperimentLDA = new JSONObject();
 						fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
 						allTests.put("~lda-cosine", fakeExperimentLDA);
+						
+						String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
+						double cosineSimilarityMeanMallet = 0;
+						for (String sim : cosineSimilaritiesMallet) {
+							cosineSimilarityMeanMallet += Double.parseDouble(sim);
+						}
+						cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
+						JSONObject fakeExperimentMallet = new JSONObject();
+						fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
+						allTests.put("~mallet-cosine", fakeExperimentMallet);
 
 					}
 					tests.put(allTests);
@@ -536,6 +546,17 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				malletLda = new Mallet("lda", trainingSet, wordIndexer, terms, dimensions[dk]);
 				runClusteringMethod(malletLda, ks, size, true);
+			}
+		}
+		
+		//hlda (Mallet)
+		Mallet malletHlda = null;
+		if (testIsEnabled("malletHlda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				malletHlda = new Mallet("hlda", trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(malletHlda, ks, size, true);
 			}
 		}
 		

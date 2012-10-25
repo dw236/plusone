@@ -22,7 +22,9 @@ import org.ejml.simple.SimpleMatrix;
  */
 public class Mallet extends ClusteringTest {
 
-	private String algorithm;
+	private Algorithm algorithm;
+	private enum Algorithm {lda, hlda};
+
 	private List<TrainingPaper> trainingSet;
 	private List<PredictionPaper> testSet;
 	private Indexer<String> wordIndexer;
@@ -42,12 +44,16 @@ public class Mallet extends ClusteringTest {
 		super(name);
 	}
 	
-	public Mallet(String algorithm, List<TrainingPaper> trainingSet, 
+	public Mallet(String algorithmName, List<TrainingPaper> trainingSet, 
 			Indexer<String> wordIndexer,
 			Terms terms, 
 			int numTopics) {
-		this("mallet" + algorithm + "-" + numTopics);
-		this.algorithm = algorithm;
+		this("mallet" + algorithmName + "-" + numTopics);
+		if (algorithmName.equals("lda")) {
+			this.algorithm = Algorithm.lda;
+		} else if (algorithmName.equals("hlda")) {
+			this.algorithm = Algorithm.hlda;
+		}
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
@@ -72,19 +78,40 @@ public class Mallet extends ClusteringTest {
 		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence "
 				+ "--input " + trainingData + " --output Mallet/train.mallet", false);
 		
-		System.out.println("Running Mallet LDA");
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet train-topics"
-				+ " --input Mallet/train.mallet --num-topics " + numTopics
-				+ " --inferencer-filename Mallet/train.inferencer"
-				+ " --evaluator-filename Mallet/train.evaluator"
-				+ " --output-state Mallet/topic-state.gz"
-				+ " --optimize-interval 10 --num-iterations 1000"
-				+ " --word-topic-counts-file Mallet/word-topics", false);
+		switch (algorithm) {
+			case lda:
+				System.out.println("Running Mallet LDA");
+				Utils.runCommand("lib/mallet-2.0.7/bin/mallet train-topics"
+						+ " --input Mallet/train.mallet --num-topics " + numTopics
+						+ " --inferencer-filename Mallet/train.inferencer"
+						//+ " --evaluator-filename Mallet/train.evaluator"
+						//+ " --output-state Mallet/topic-state.gz"
+						+ " --optimize-interval 10 --num-iterations 575"
+						+ " --word-topic-counts-file Mallet/word-topics", false);
+				break;
+			case hlda:
+				System.out.println("Running Mallet HLDA");
+				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda"
+						+ " --input Mallet/train.mallet", false);
+				break;
+		}
 		
 		topicWord = new SimpleMatrix(readTopicWordMatrix("Mallet/word-topics"));
-		
+		writeBeta();
 	}
 
+	private void writeBeta() {
+		System.out.print("Writing beta to Mallet/beta...");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter("beta");
+		
+		for (int row=0; row<topicWord.numRows(); row++) {
+			for (int col=0; col<topicWord.numCols(); col++) {
+				fileWriter.write(topicWord.get(row, col) + " ");
+			}
+			fileWriter.write("\n");
+		}
+		System.out.println("done.");
+	}
 	
 	@Override
 	public double[][] predict(List<PredictionPaper> testDocs) {
@@ -100,7 +127,7 @@ public class Mallet extends ClusteringTest {
 		
 		Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
 				+ " --output-doc-topics Mallet/doc-topics"
-				+ " --inferencer Mallet/train.inferencer", false);
+				+ " --inferencer Mallet/train.inferencer", true);
 		
 		docTopic = new SimpleMatrix(readDocTopicMatrix("Mallet/doc-topics"));
 		
