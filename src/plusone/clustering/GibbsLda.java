@@ -38,14 +38,6 @@ public class GibbsLda extends ClusteringTest {
 		this.numTopics = numTopics;
 		train();
 	}
-	
-    /**
-     * Returns the estimated word-topic matrix, or null if e.g. the model has
-     * not been trained.
-     */
-    public SimpleMatrix getWordTopicMatrix() {
-        return beta;
-    }
 
 	/**
 	 * Runs GibbsLDA on the training set

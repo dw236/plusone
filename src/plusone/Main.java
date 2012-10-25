@@ -594,9 +594,6 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				GibbsLda gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
 				runClusteringMethod(gibbs, ks, size, true);
-				handleHeldOutInferenceTests(
-					gibbs.getName(), gibbs.getWordTopicMatrix(), ks, size,
-					testWordPercent);
 			}
 		}
 		//CTM
