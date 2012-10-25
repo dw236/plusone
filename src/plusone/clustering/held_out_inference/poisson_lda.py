@@ -34,23 +34,16 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
     assert vocab_size == observed_word_freqs.shape[0]
     assert num_topics == len(topic_strengths)
 
-    # Pre-compute the factorials of the word frequencies to speed things up.
-    observed_word_info = [(f, factorial(f)) for f in observed_word_freqs]
-
-    def sample_mask(observation, rate):
+    def sample_mask(n_observed, rate):
         """The mask indicates which words were held out: mask[w] is 1 if word w
         was included, and 0 if word w was held out.  This function samples the
         posterior mask distribution for a single word if words were held out
         with probability test_word_prob, this word would appear with Poisson
         rate rate, and it was observed to appear n_observed times.
         """
-        # Only compute factorial(n_observed) once per word per document,
-        # not in every iterations.
-        n_observed, n_observed_factorial = observation
         if 0 < n_observed: return 1
         p_0 = test_word_prob
-        p_1 = ((1 - test_word_prob) *
-            rate ** n_observed * exp(- rate) / n_observed_factorial)
+        p_1 = (1 - test_word_prob) * exp(- rate)
         if np.random.rand() * (p_0 + p_1) >= p_0:
             return 1
         else:
@@ -83,7 +76,7 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
     for iteration in range(num_iterations):
         # Sample mask conditioned on topic_dist.
         mask = np.array(tuple(
-            sample_mask(observation = observed_word_info[word],
+            sample_mask(n_observed = observed_word_freqs[word],
                         rate = l * word_dist[word])
             for word in range(vocab_size)
         ))
