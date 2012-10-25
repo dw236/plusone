@@ -81,6 +81,8 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
             for word in range(vocab_size)
         ))
 
+        word_topic_rates = l * np.multiply(word_topic, topic_dist)
+
         # word_topic_freqs is a matrix of the same shape as word_topic, but with
         # a different interpretation.  Each entry (w, i) is a nonnegative
         # integer, and is the number of times word w was chosen from topic i.
@@ -92,8 +94,7 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
         word_topic_freqs = np.array(tuple(
             sample_topic_freqs_by_word(
                 n_observed = observed_word_freqs[word],
-                rates_by_topic =
-                    l * np.multiply(word_topic[word,:], topic_dist),
+                rates_by_topic = word_topic_rates[word, :],
                 mask = mask[word]
             )
             for word in range(vocab_size)
