@@ -25,6 +25,8 @@ public class PoissonLDAPredictor extends ClusteringTest {
     static final String POISSON_LDA_PATH =
         "src/plusone/clustering/held_out_inference/poisson_lda.py";
 
+    static final int PROGRESS_INTERVAL = 50;
+
     final PredictionMethod predictionMethod;
     final double testWordPercent;
     // The rate of the Poisson distribution of document lengths.
@@ -106,6 +108,10 @@ public class PoissonLDAPredictor extends ClusteringTest {
         String[] inferenceCommand = {
             // Run the poisson_lda.py script.
             PYTHON_COMMAND, POISSON_LDA_PATH,
+            /* Note: to enable profiling, try something like this instead of
+               the previous line:
+              PYTHON_COMMAND, "-m", "cProfile", "-o", "plda.prof",
+              POISSON_LDA_PATH, */
             "--test_word_prob", Double.toString(testWordPercent),
             "--lambda", Double.toString(lambda),
             "--num_iterations", Integer.toString(numIterations)
@@ -127,8 +133,9 @@ public class PoissonLDAPredictor extends ClusteringTest {
             writeMatrix(wordTopicMatrix.transpose(), stdin);
             stdin.flush();
             for (int i = 0; i < testPapers.size(); ++i) {
-                System.out.printf("PoissonLDAPredictor: paper %d of %d\n", i,
-                                  testPapers.size());
+                if (0 == i % PROGRESS_INTERVAL)
+                    System.out.printf("PoissonLDAPredictor: paper %d of %d\n", i,
+                                      testPapers.size());
                 PredictionPaper testPaper = testPapers.get(i);
                 writeMatrix(testPaper.getTrainingTfAsSimpleMatrixRow(vocabSize),
                             stdin);

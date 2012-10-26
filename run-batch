@@ -25,7 +25,7 @@ table=false
 #Flag to use data already in datageneration/output
 old=false
 
-while getopts “hgpo” OPTION
+while getopts "hgpo" OPTION
 do
     case $OPTION in
         h)

@@ -62,7 +62,7 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
         else:
             # The word was held out.
             assert 0 == n_observed
-            return np.array(tuple(poisson(r) for r in rates_by_topic))
+            return poisson(rates_by_topic)
 
     # topic_dist is our current sample of the distribution of topics in the
     # document.  We initialize it to a uniform sample from the simplex.
