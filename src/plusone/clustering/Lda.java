@@ -86,14 +86,7 @@ public class Lda extends ClusteringTest {
      */
     public SimpleMatrix getWordTopicMatrix() {
         // beta is (# topics) x (# words); we want (# words) x (# topics).
-        // beta is the logarithms and we want the probabilities.
-        SimpleMatrix wordTopic =
-            new SimpleMatrix(beta.numCols(), beta.numRows());
-        for (int wordIndex = 0; wordIndex < beta.numCols(); ++wordIndex)
-            for (int topicIndex = 0; topicIndex < beta.numRows(); ++topicIndex)
-                wordTopic.set(wordIndex, topicIndex,
-                              Math.exp(beta.get(topicIndex, wordIndex)));
-        return wordTopic;
+        return beta.transpose();
     }
 
 	/**
