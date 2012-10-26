@@ -49,20 +49,33 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
         else:
             return 0
 
-    def sample_topic_freqs_by_word(n_observed, rates_by_topic, mask):
-        """Given that a word occurred n_observed times, it was held out (if
-        mask is 0) or not held out (if mask is 1), and the word was produced
-        via topic i according to a Poisson with rate rates_by_topic[i], returns
-        a sample from the posterior distribution on the number of times this
-        word was generated from each topic.
+    def sample_topic_freqs(word_topic_rates, mask):
+        """Given observed_word_freqs, that each word was held out (if mask is
+        0) or not held out (if mask is 1), and each word w was produced via
+        topic i according to a Poisson with rate word_topic_rates[w, i],
+        returns a sample from the posterior distribution on the number of times
+        a word was generated from each topic.
         """
-        if mask:
-            # The word was not held out.
-            return multinomial(n_observed, rates_by_topic / sum(rates_by_topic))
-        else:
-            # The word was held out.
-            assert 0 == n_observed
-            return poisson(rates_by_topic)
+
+        # First, sample the contribution from words where mask was 0.  Each
+        # such word is sampled from a poisson distribution.  The sum of poisson
+        # distributions is poisson, so we only need to sample one poisson for
+        # each topic.
+        topic_freqs = \
+            poisson(np.sum((1 - mask)[:, np.newaxis] * word_topic_rates, 0))
+
+        # For each word where mask was 1, we sample from a multinomial
+        # distribution with probabilities proportional to the word-topic rates
+        # for that word.  For efficiency, we skip over words that didn't occur
+        # at all: multinomial_words is an array of the indices of words for
+        # which we do need to take a sample.
+        multinomial_words = np.arange(vocab_size)[
+            np.array(mask * observed_word_freqs, dtype = bool)]
+        for word in multinomial_words:
+            topic_rates = word_topic_rates[word, :]
+            topic_freqs += multinomial(observed_word_freqs[word],
+                                       topic_rates / sum(topic_rates))
+        return topic_freqs
 
     # topic_dist is our current sample of the distribution of topics in the
     # document.  We initialize it to a uniform sample from the simplex.
@@ -91,17 +104,10 @@ def estimate_word_dist(topic_strengths, word_topic, observed_word_freqs,
         # Conditioned on topic_dist and mask, each column of word_topic_freqs is
         # multinomial (if mask is 1) or a collection of independent poissons
         # (if mask is 0).
-        word_topic_freqs = np.array(tuple(
-            sample_topic_freqs_by_word(
-                n_observed = observed_word_freqs[word],
-                rates_by_topic = word_topic_rates[word, :],
-                mask = mask[word]
-            )
-            for word in range(vocab_size)
-        ))
+        topic_freqs = sample_topic_freqs(word_topic_rates = word_topic_rates, mask = mask)
  
         # Sample topic_dist conditioned on word_topic_freqs.
-        topic_dist = dirichlet(topic_strengths + np.sum(word_topic_freqs, 0))
+        topic_dist = dirichlet(topic_strengths + topic_freqs)
         word_dist = np.dot(word_topic, topic_dist)
 
         # Generate words.
