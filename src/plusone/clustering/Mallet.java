@@ -86,7 +86,7 @@ public class Mallet extends ClusteringTest {
 						+ " --inferencer-filename Mallet/train.inferencer"
 						//+ " --evaluator-filename Mallet/train.evaluator"
 						//+ " --output-state Mallet/topic-state.gz"
-						+ " --optimize-interval 10 --num-iterations 575"
+						+ " --optimize-interval 10 --num-iterations 500"
 						+ " --word-topic-counts-file Mallet/word-topics", false);
 				break;
 			case hlda:
@@ -102,14 +102,16 @@ public class Mallet extends ClusteringTest {
 
 	private void writeBeta() {
 		System.out.print("Writing beta to Mallet/beta...");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter("beta");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter("Mallet/beta");
 		
 		for (int row=0; row<topicWord.numRows(); row++) {
 			for (int col=0; col<topicWord.numCols(); col++) {
-				fileWriter.write(topicWord.get(row, col) + " ");
+				double toWrite = topicWord.get(row, col);
+				fileWriter.write(toWrite + " ");
 			}
 			fileWriter.write("\n");
 		}
+		fileWriter.close();
 		System.out.println("done.");
 	}
 	

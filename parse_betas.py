@@ -21,18 +21,22 @@ def main(filename):
     real_beta = 'src/datageneration/output/results.pickle'
     mallet_beta = 'Mallet/beta'
     
+    print "matching betas..."
+    print "projector"
     projector_labels = match_beta(projector_beta, real_beta, metric='cosine', 
                                   plot=False)[-2]
     projector_norms = [pair[1] for pair in projector_labels]
-    
+    print "lda"
     lda_labels = match_beta(lda_beta, real_beta, metric='cosine', 
                             plot=False)[-2]
     lda_norms = [pair[1] for pair in lda_labels]
-    
+    print "mallet"
     mallet_labels = match_beta(mallet_beta, real_beta, metric='cosine',
-                               plot=False)[-2]
+                               plot=False, mallet=True)[-2]
     mallet_norms = [pair[1] for pair in mallet_labels]
+    print "done"
     
+    print "writing to file...",
     with open(filename, 'w') as f:
         for norm in projector_norms: 
             f.write(str(norm) + ' ')
@@ -45,6 +49,7 @@ def main(filename):
         for norm in mallet_norms:
             f.write(str(norm) + ' ')
         f.write('\n')
+    print "done"
 
 def parse_all(dir):
     """deprecated--feel free to remove

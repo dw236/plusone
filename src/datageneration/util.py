@@ -384,7 +384,7 @@ def write_cheats(data, args, dir):
 
 def match_beta(input_beta='../../projector/data/final.beta',
                real_beta='output/results.pickle', 
-               metric='cosine', plot=True):
+               metric='cosine', plot=True, mallet=False):
     """matches learned topics with real topics by using stable marriage
     
     Takes the topic matrix generated from a learning algorithm and compares it
@@ -398,6 +398,7 @@ def match_beta(input_beta='../../projector/data/final.beta',
         metric: distance metric to compare two topics (currently only supports
                 'cosine' and 'L1')
         plot: flag to plot resulting match
+        mallet: flag to treat input beta differently for Mallet
     
     Returns:
         input_beta: learned topic matrix as a numpy array
@@ -419,6 +420,11 @@ def match_beta(input_beta='../../projector/data/final.beta',
     for line in input_beta:
         lines_to_nums.append([np.exp(float(num)) for num in line])
     input_beta = np.array(lines_to_nums)
+    
+    if mallet:
+        input_beta = np.log(input_beta) + 1e-323
+        for i in range(len(input_beta)):
+            input_beta[i] = normalize(input_beta[i])
     
     r_shape, i_shape = np.shape(real_beta), np.shape(input_beta)
     assert(r_shape[0] == i_shape[0])
