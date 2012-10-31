@@ -86,7 +86,8 @@ public class Mallet extends ClusteringTest {
 						+ " --inferencer-filename Mallet/train.inferencer"
 						//+ " --evaluator-filename Mallet/train.evaluator"
 						//+ " --output-state Mallet/topic-state.gz"
-						+ " --optimize-interval 10 --num-iterations 500"
+						+ " --optimize-interval 10 --num-iterations 300"
+						+ " --use-symmetric-alpha false"
 						+ " --word-topic-counts-file Mallet/word-topics", false);
 				break;
 			case hlda:
@@ -181,7 +182,10 @@ public class Mallet extends ClusteringTest {
 						fileWriter.write(wordWithChars.toString() + " ");
 					} catch (NumberFormatException e) {
 						//Don't have numbers after all, just write them
-						fileWriter.write(wordAsString + " ");
+                        //Put the word in the fakeWordIndexer with numbers removed as well
+                        //to get the case in which we have a word with numbers and characters
+						fakeWordIndexer.put(wordAsString.replaceAll("\\D+", ""), word);
+						fileWriter.write(wordAsString.replaceAll("\\D+", "") + " ");
 					}
 				}
 			}
@@ -223,7 +227,10 @@ public class Mallet extends ClusteringTest {
 						fileWriter.write(wordWithChars.toString() + " ");
 					} catch (NumberFormatException e) {
 						//Don't have numbers after all, just write them
-						fileWriter.write(wordAsString + " ");
+                        //Put the word in the fakeWordIndexer with numbers removed as well
+                        //to get the case in which we have a word with numbers and characters
+						fakeWordIndexer.put(wordAsString.replaceAll("\\D+", ""), word);
+						fileWriter.write(wordAsString.replaceAll("\\D+", "") + " ");
 					}
 				}
 			}
@@ -284,7 +291,12 @@ public class Mallet extends ClusteringTest {
 					continue;
 				}
 				String[] parsedLine = line.split(" ");
-				int wordIndex = fakeWordIndexer.get(parsedLine[1]);
+				//try to get from fakeWordIndexer
+				Integer wordIndex = fakeWordIndexer.get(parsedLine[1]);
+				if (wordIndex == null) {
+					//If it's not there, it was a regular word
+					wordIndex = wordIndexer.indexOf(parsedLine[1]);
+				}
 				for (int i = 2; i < parsedLine.length; i++) {
 					String topicAndCount = parsedLine[i];
 					int topic = Integer.parseInt(topicAndCount.split(":")[0]);
