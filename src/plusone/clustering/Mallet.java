@@ -30,6 +30,7 @@ public class Mallet extends ClusteringTest {
 	private Indexer<String> wordIndexer;
 	private Terms terms;
 	private int numTopics;
+    private int gibbsIterations;
 	
 	private SimpleMatrix topicWord;
 	private SimpleMatrix docTopic;
@@ -46,8 +47,7 @@ public class Mallet extends ClusteringTest {
 	
 	public Mallet(String algorithmName, List<TrainingPaper> trainingSet, 
 			Indexer<String> wordIndexer,
-			Terms terms, 
-			int numTopics) {
+			Terms terms, int numTopics, int gibbsIterations) {
 		this("mallet" + algorithmName + "-" + numTopics);
 		if (algorithmName.equals("lda")) {
 			this.algorithm = Algorithm.lda;
@@ -57,7 +57,8 @@ public class Mallet extends ClusteringTest {
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
-		this.numTopics=numTopics;
+		this.numTopics = numTopics;
+		this.gibbsIterations = gibbsIterations;
 		train();
 	}
 
@@ -86,7 +87,7 @@ public class Mallet extends ClusteringTest {
 						+ " --inferencer-filename Mallet/train.inferencer"
 						//+ " --evaluator-filename Mallet/train.evaluator"
 						//+ " --output-state Mallet/topic-state.gz"
-						+ " --optimize-interval 10 --num-iterations 300"
+						+ " --optimize-interval 10 --num-iterations " + gibbsIterations
 						+ " --use-symmetric-alpha false"
 						+ " --word-topic-counts-file Mallet/word-topics", false);
 				break;
