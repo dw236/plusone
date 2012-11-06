@@ -8,8 +8,7 @@ import pickle #HACK--REMOVE ASAP
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
-                    + ['median', 'sum_squares_words', 'sum_squares_topics'] \
-                    #+ ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
+                    + ['median', 'sum_squares_words', 'sum_squares_topics']
 CHEATS = ['ldaC', 'ldaT']
 PARAMS = ['a', 'b']
 STATISTICS = ['sig_topics', 'sig_words']

@@ -102,14 +102,26 @@ public class Mallet extends ClusteringTest {
 		writeBeta();
 	}
 
+	/**
+	 * Writes learned word-topic matrix to file. First normalizes each row,
+	 * then takes the log (adds small amount of noise to remove 0s)
+	 */
 	private void writeBeta() {
 		System.out.print("Writing beta to Mallet/beta...");
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter("Mallet/beta");
 		
+		double[] totals = new double[topicWord.numRows()];
+		for (int row=0; row<topicWord.numRows(); row++) {
+			for (int col=0; col<topicWord.numCols(); col++) {
+				totals[row] += topicWord.get(row, col);
+			}
+		}
+		
 		for (int row=0; row<topicWord.numRows(); row++) {
 			for (int col=0; col<topicWord.numCols(); col++) {
 				double toWrite = topicWord.get(row, col);
-				fileWriter.write(toWrite + " ");
+				fileWriter.write(Math.log(toWrite / totals[row] + 1e-323) 
+								 + " ");
 			}
 			fileWriter.write("\n");
 		}

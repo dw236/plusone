@@ -251,7 +251,7 @@ public class Main {
 					if (!generator.equals("") && testIsEnabled("lda")
 							&& testIsEnabled("projector")) {
 						Scanner in = null;
-						Utils.runCommand("python parse_betas.py data/normfile", false);
+						Utils.runCommand("python parse_betas.py data/normfile -s", false);
 						try {
 							in = new Scanner( new File( "data/normfile" ) );
 						} catch (Exception e) {
@@ -292,7 +292,7 @@ public class Main {
 				}
 			}
 			json.put("tests", tests);
-			new File ("data/" + dirName).mkdir();
+			new File("data/" + dirName).mkdir();
 			File out = new File("data/" + dirName, "experiment." + fileName + "json");
 			if (out.exists()) {
 				//Keep trying to append 0, 1, 2... until we find an unused file name

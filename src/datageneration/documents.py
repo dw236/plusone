@@ -282,7 +282,7 @@ def write(data, args):
     os.system("cp " + dir + "/* output")
     print "done"
     print "archiving files for future use...",
-    archive_base_dir = output_dir + 'archived/'
+    archive_base_dir = output_dir + '/archived/'
     try:
         os.mkdir(archive_base_dir)
     except:

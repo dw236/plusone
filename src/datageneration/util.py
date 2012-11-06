@@ -3,6 +3,7 @@
 import operator
 import pickle
 import time
+import os
 
 import numpy as np
 from numpy.random.mtrand import poisson as p
@@ -384,7 +385,8 @@ def write_cheats(data, args, dir):
 
 def match_beta(input_beta='../../projector/data/final.beta',
                real_beta='output/results.pickle', 
-               metric='cosine', plot=True, mallet=False):
+               metric='cosine', plot=True, save=False,
+               save_name=None, save_dir='../../data'):
     """matches learned topics with real topics by using stable marriage
     
     Takes the topic matrix generated from a learning algorithm and compares it
@@ -398,8 +400,11 @@ def match_beta(input_beta='../../projector/data/final.beta',
         metric: distance metric to compare two topics (currently only supports
                 'cosine' and 'L1')
         plot: flag to plot resulting match
-        mallet: flag to treat input beta differently for Mallet
-    
+        save: flag to save learned topic matrix to file for future use--the
+              rows are sorted in the order that they are matched
+        save_name: filename of the saved matrix
+        save_dir: directory name of saved matrix
+         
     Returns:
         input_beta: learned topic matrix as a numpy array
         real_beta: real topic matrix as a numpy array
@@ -412,7 +417,7 @@ def match_beta(input_beta='../../projector/data/final.beta',
                         are real_beta indices, column indices are input_beta)
     """
     with open(real_beta, 'r') as f:
-        real_beta = pickle.load(f)[2]
+        docs, doc_topics, real_beta, topics, args = pickle.load(f)
     
     with open(input_beta, 'r') as f:
         input_beta = [line.strip(' \n').split(' ') for line in f.readlines()]
@@ -420,11 +425,6 @@ def match_beta(input_beta='../../projector/data/final.beta',
     for line in input_beta:
         lines_to_nums.append([np.exp(float(num)) for num in line])
     input_beta = np.array(lines_to_nums)
-    
-    if mallet:
-        input_beta = np.log(input_beta) + 1e-323
-        for i in range(len(input_beta)):
-            input_beta[i] = normalize(input_beta[i])
     
     r_shape, i_shape = np.shape(real_beta), np.shape(input_beta)
     assert(r_shape[0] == i_shape[0])
@@ -466,6 +466,39 @@ def match_beta(input_beta='../../projector/data/final.beta',
         plot_dists(real_beta, color='green', scale=0.25)
         plot_dists(reordered_input_beta, color='red', scale=0.25, labels=labels,
                    clear=False)
+    if save:
+        if save_name == None:
+            print "please supply name of beta matrix to be saved"
+            print "WARNING: pickle file not created"
+        else:
+            dir = save_dir + '/'
+            dir += "k" + str(args.k) + "."
+            dir += "n" + str(args.n) + "."
+            dir += "l" + str(args.l) + "."
+            dir += "m" + str(args.m)
+            
+            filename = save_name + "." 
+            filename += "a" + str(args.a) + "."
+            filename += "b" + str(args.b) + ".beta"
+            
+            try:
+                os.mkdir(dir)
+            except OSError as e:
+                if e.errno == 17:
+                    print "found directory:", dir,
+                    print "(existing contents, if any, will be overwritten)"
+                else:
+                    print "an error occurred trying to create directory:", dir
+                    print "(" + str(e) + ")"
+                    print "WARNING: file not written"
+            
+            print "writing to file...",
+            with open(dir + '/' + filename, 'w') as f:
+                for row in reordered_input_beta:
+                    for num in row:
+                        f.write(str(num) + ' ')
+                    f.write('\n')
+            print "done"
 
     return real_beta, input_beta, pairings, labels, male_distances
     
