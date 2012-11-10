@@ -35,8 +35,10 @@ The parameters are as follows:
 		nlist: number of documents
 		llist: length of documents
 		mlist: size of vocabulary
-		alist: dirichlet parameter to control topics distributions for documents
+		alist: dirichlet parameter to control topics distributions for 
+		       documents
 		blist: dirichlet parameter to control word distributions for topics
+
 To control the algorithms used for each experiment, you will need to modify the ./test script and set the "enableTest" field to true for each algorithm.
 
 FOR REAL DATA
