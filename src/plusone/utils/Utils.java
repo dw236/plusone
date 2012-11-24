@@ -41,15 +41,7 @@ public class Utils {
 	    
 		BufferedReader stderr = 
 		    new BufferedReader(new InputStreamReader(p.getErrorStream()));
-		if (streamOutput)
-			System.out.println("Here is the standard output of the command:\n");
 		String s;
-		while ((s = stdout.readLine()) != null) {
-			if (streamOutput) {
-				System.out.println(s);
-			}
-		}
-            
 		// read any errors from the attempted command
 		if (streamOutput)
 			System.out.println("Here is the standard error of the command (if any):\n");
@@ -59,6 +51,15 @@ public class Utils {
 				System.out.println(s);
 			}
 		}
+		if (streamOutput)
+			System.out.println("Here is the standard output of the command:\n");
+		while ((s = stdout.readLine()) != null) {
+			if (streamOutput) {
+				System.out.println(s);
+			}
+		}
+            
+
 	    p.waitFor();
 	}
 	catch (Exception e) {

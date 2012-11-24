@@ -87,14 +87,14 @@ public class Mallet extends ClusteringTest {
 						+ " --inferencer-filename Mallet/train.inferencer"
 						//+ " --evaluator-filename Mallet/train.evaluator"
 						//+ " --output-state Mallet/topic-state.gz"
-						+ " --optimize-interval 10 --num-iterations " + gibbsIterations
+						+ " --num-iterations " + gibbsIterations
 						+ " --use-symmetric-alpha false"
 						+ " --word-topic-counts-file Mallet/word-topics", false);
 				break;
 			case hlda:
 				System.out.println("Running Mallet HLDA");
 				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda"
-						+ " --input Mallet/train.mallet", false);
+						+ " --input Mallet/train.mallet --output-state Mallet/hlda-output.gz", false);
 				break;
 		}
 		
