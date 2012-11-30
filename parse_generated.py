@@ -170,7 +170,9 @@ def write_table(f, results, params, star=False, short=False):
                         to_bold = True
                     score = round(np.mean(results[result][algorithm]['score']),
                                   2)
-                    if is_cheat(algorithm):
+                    if '~' in algorithm:
+                        pass
+                    elif is_cheat(algorithm):
                         if score == scores['best_cheating']:
                             color.add('b', 0xFF)
                             color.add('g', 0x06)
@@ -318,6 +320,8 @@ def get_scores(result, algorithms):
     subsets = algorithms['subsets']
     best_score_names = []
     for algorithm_type in algorithms['types']:
+        if '~' in algorithm_type:
+            continue
         best_score = -np.inf
         to_add = []
         for algorithm in algorithms['names']:
@@ -334,6 +338,8 @@ def get_scores(result, algorithms):
     best_score = -np.inf #does not include cheating algorithms
     list_of_scores = [] #does not include cheating algorithms
     for algorithm in algorithms['names']:
+        if '~' in algorithm:
+            continue
         if result.has_key(algorithm):
             score = round(np.mean(result[algorithm]['score']), 2)
             if is_cheat(algorithm):
