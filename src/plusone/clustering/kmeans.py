@@ -1,6 +1,7 @@
 """framework for projector clustering algorithm"""
 import numpy as np
 from random import sample as rsample
+from random import randint
 from matplotlib.pylab import *
 
 def cos_sim(a, b):
@@ -26,8 +27,10 @@ class Kmeans():
         self.init = init
         if metric == "cosine":
             self.metric = cos_sim
+            self.select = np.argmax
         elif metric == "euclidean":
             self.metric = euclidean_dist
+            self.select = np.argmin
         else:
             raise Exception("unrecognized metric: " + str(metric))
         
@@ -60,7 +63,7 @@ class Kmeans():
         labels = []
         for point in self.points:
             distances = [self.metric(point, center) for center in self.centers]
-            labels.append(np.argmin(distances))
+            labels.append(self.select(distances))
             
         return np.array(labels)
     
@@ -89,3 +92,5 @@ class Kmeans():
                  color + 'x')
 
 test = Kmeans(2, metric='euclidean')
+points = np.array(zip([rsample([1,10], 1)[0] for i in range(15)], 
+                      [randint(10, 20) for i in range(15)]))

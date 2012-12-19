@@ -90,6 +90,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         if pareto:
             alpha = [alpha / i for i in range(1, num_topics + 1)]
             beta = [np.sqrt(beta / i) for i in range(1, vocab_size + 1)]
+            #beta = [beta / i for i in range(1, vocab_size + 1)]
         else:
             alpha = [alpha] * num_topics
             beta = [beta] * vocab_size
@@ -308,14 +309,14 @@ def main():
     parser.add_argument('-w', action="store_true", default=False,
                         help="write flag (false)")
     parser.add_argument('-k', action="store", metavar='num_topics', type=int,
-                        default=10, help="number of latent topics (10)")
+                        default=15, help="number of latent topics (15)")
     parser.add_argument('-n', action="store", metavar='num_docs', type=int,
-                        default=100, help="number of documents to generate \
-                        (100)")
-    parser.add_argument('-l', action="store", type=int, default=50, 
-                        help="average number of words per document (50)")
-    parser.add_argument('-m', action="store", type=int, default=100,
-                        help="size of the vocabulary (100)")
+                        default=1000, help="number of documents to generate \
+                        (1000)")
+    parser.add_argument('-l', action="store", type=int, default=75, 
+                        help="average number of words per document (75)")
+    parser.add_argument('-m', action="store", type=int, default=1000,
+                        help="size of the vocabulary (1000)")
     parser.add_argument('-a', action="store", metavar='alpha', 
                         type=float,  
                         help="parameter for topics (0.1 for lda, \
