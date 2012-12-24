@@ -94,7 +94,8 @@ public class Mallet extends ClusteringTest {
 			case hlda:
 				System.out.println("Running Mallet HLDA");
 				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda"
-						+ " --input Mallet/train.mallet --output-state Mallet/hlda-output.gz", false);
+						+ " --input Mallet/train.mallet --output-state Mallet/hlda-output.gz"
+						+ " --show-progress false", false);
 				break;
 		}
 		
@@ -140,11 +141,19 @@ public class Mallet extends ClusteringTest {
 				+ " --input " + testingData + " --output Mallet/test.mallet"
 				+ " --use-pipe-from Mallet/train.mallet", false);
 		
-		
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
-				+ " --output-doc-topics Mallet/doc-topics"
-				+ " --inferencer Mallet/train.inferencer", true);
-		
+		switch (algorithm) {
+			case lda:
+				Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
+						+ " --output-doc-topics Mallet/doc-topics"
+						+ " --inferencer Mallet/train.inferencer", false);
+				break;
+			case hlda:
+				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda "
+						+ " --testing Mallet/test.mallet"
+						+ " --show-progress false", false);
+				break;
+		}
+			
 		docTopic = new SimpleMatrix(readDocTopicMatrix("Mallet/doc-topics"));
 		
 		/*Utils.runCommand("lib/mallet-2.0.7/bin/mallet evaluate-topics --input Mallet/test.mallet"

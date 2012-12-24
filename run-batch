@@ -99,6 +99,17 @@ do
                                     -b $b -ctm || exit 1
                                 fi
                                 ;;
+                            pareto)
+                                if $old; then
+                                    #Use previously generated data
+                                    cp -r output/k$k.n$n.l$l.m$m.a$a.b$b/* output
+                                else
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b -p || exit 1
+                                fi
+                                ;;
+
                             esac
                             cd $basedir
 

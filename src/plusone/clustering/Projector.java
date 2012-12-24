@@ -4,10 +4,11 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import org.ejml.simple.SimpleMatrix;
 
 import plusone.utils.Indexer;
 import plusone.utils.PaperAbstract;
@@ -66,7 +67,8 @@ public class Projector extends ClusteringTest {
 		if (!new File("projector/data").exists()) {
             new File("projector/data").mkdir();
         }
-		System.out.println("We are getting beta from the projector");
+		//Use the commented block for the custom inference: 
+        /*System.out.println("We are getting beta from the projector");
 		System.out.println("cleaning out projector folder for training...");
 		Utils.runCommand("rm projector/data/documents", false);
 		Utils.runCommand("rm projector/data/test_documents", false);
@@ -78,10 +80,58 @@ public class Projector extends ClusteringTest {
 		betaMatrix = readMatrix("projector/data/final.beta", true);
 		System.out.print("replacing trained beta with projector beta...");
 		Utils.runCommand("cp projector/data/final.beta lda", false);
-		System.out.println("done.");
+		System.out.println("done.");*/
+        System.out.println("We are getting beta from the projector");
+        System.out.println("cleaning out projector folder for training...");
+        Utils.runCommand("rm projector/data/documents", true);
+        Utils.runCommand("rm projector/data/final.beta", true);
+        createProjectorInput("projector/data/documents", trainingSet);
+        while(!Utils.runCommand("./run-projector " + numTopics + " " 
+            + trainingSet.size() + " " + terms.size(), true));
+        betaMatrix = readMatrix("projector/data/final.beta", true);
+        System.out.print("replacing trained beta with projector beta...");
+        Utils.runCommand("cp projector/data/final.beta lda", false);
+        createProjectorInfo("lda/final.other");
+        System.out.println("done.");
 	}
 
-	/**
+    //TODO move this
+    /**
+     * creates the final.other file required for lda inference
+     */
+    private void createProjectorInfo(String filename) {
+    PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+    fileWriter.write("num_topics " + numTopics + " \n");
+    fileWriter.write("num_terms " + terms.size() + " \n");
+    fileWriter.write("alpha " + 
+                        readAlpha("src/datageneration/output/final.other") 
+                         + " \n");
+    fileWriter.close();
+    }
+
+    /**
+    * Reads in the value of alpha from a *.other file, contained in the LDA output
+    * 
+    * @param filename the path to a *.other file
+    * @return the numerical value of alpha
+    */
+    private double readAlpha(String filename) {
+        FileInputStream filecontents = null;
+            try {
+                filecontents = new FileInputStream(filename);
+            } catch (FileNotFoundException e) {
+                System.out.println("Couldn't read LDA alpha");
+                e.printStackTrace();
+        }
+        Scanner lines = new Scanner(filecontents);
+        String alphaLine = lines.nextLine();
+        alphaLine = lines.nextLine();
+        alphaLine = lines.nextLine();
+        String[] splitLine = alphaLine.split(" ");
+        return Double.parseDouble(splitLine[1]);
+    }
+
+    /**
 	 * Creates a file containing the documents to be used for training
 	 * 
 	 * @param filename
@@ -169,10 +219,39 @@ public class Projector extends ClusteringTest {
 
 		return results;
 	}
-	
-	@Override
+    /**
+    * Takes a list of PaperAbstract documents and writes them to file according
+    * to the format specified by lda-c-dist
+    * 
+    * @param filename  name of the file to be created (will be overwritten
+    *                  if it already exists)
+    * @param papers    list of papers to be written to file 
+    */
+    private void createLdaInputTest(String filename, List<PredictionPaper> papers) {
+
+        System.out.print("creating lda test input in file: " 
+        + filename + " ... ");
+
+        PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+
+        for (PredictionPaper paper : papers) {
+            fileWriter.write(paper.getTrainingWords().size() + " ");
+
+            for (int word : paper.getTrainingWords()) {
+                fileWriter.write(word + ":" + paper.getTrainingTf(word) + " ");
+            }
+            fileWriter.write("\n");
+        }
+
+    fileWriter.close();
+
+    System.out.println("done.");
+    }
+
+    @Override
 	public double[][] predict(List<PredictionPaper> testDocs) {
-		this.testSet = testDocs;
+		/*Projector with custom inference:
+        this.testSet = testDocs;
 		System.out.print("writing test indices to file in projector/data...");
 		Utils.writeIndices("projector/data/testIndices", testDocs, testIndices);
 		System.out.println("done.");
@@ -181,7 +260,80 @@ public class Projector extends ClusteringTest {
 		while(!Utils.runCommand("./run-projector-inference " + numTopics + " " 
 				+ testSet.size() + " " + terms.size(), true));
 		
-		return readMatrix("projector/data/predictions", false);
+		return readMatrix("projector/data/predictions", false);*/
+
+        //LDA inference:
+        String testData = "lda/test.dat";
+
+        createLdaInputTest(testData, testDocs);
+        Utils.runCommand("lib/lda-c-dist/lda inf " + 
+                        " lib/lda-c-dist/settings.txt " + "lda/final " + 
+                        testData + " lda/output", false);
+
+        double[][] gammasMatrix = readLdaResultFile("lda/output-gamma.dat",
+                    0, false);
+        double alpha = readAlpha("lda/final.other");
+        for (int i=0; i<gammasMatrix.length; i++) {
+            for (int j=0; j<gammasMatrix[i].length; j++) {
+                gammasMatrix[i][j] -= alpha;
+            }
+        }
+        SimpleMatrix gammas = new SimpleMatrix(gammasMatrix);
+        SimpleMatrix beta = new SimpleMatrix(betaMatrix);
+        SimpleMatrix probabilities = gammas.mult(beta);
+
+        double[][] result = new double[probabilities.numRows()]
+                            [probabilities.numCols()];
+        for (int row=0; row<probabilities.numRows(); row++) {
+            for (int col=0; col<probabilities.numCols(); col++) {
+                result[row][col] = probabilities.get(row, col);
+            }
+        }
+        return result;
+    }
+    
+    /**
+	 * Takes a file output by lda-c-dist and stores it in a matrix.
+	 * 
+	 * @param filename	file to be read
+	 * @param start		TODO use for start (typically 0)
+	 * @param exp		whether to exponentiate the read entries
+	 * @return	a double[][] (matrix) with the contents of filename 
+	 */
+	private double[][] readLdaResultFile(String filename, int start, 
+			boolean exp) {
+		List<String[]> gammas = new ArrayList<String[]>();
+		double[][] results = null;
+		
+		try {
+			FileInputStream fstream = new FileInputStream(filename);
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+
+			int c = 0;
+			while ((strLine = br.readLine()) != null) {
+				if (c >= start) {
+					gammas.add(strLine.trim().split(" "));
+				}
+				c++;
+			}
+
+			results = new double[gammas.size()][];
+			for (int i = 0; i < gammas.size(); i++) {
+				results[i] = new double[gammas.get(i).length];
+				for (int j = 0; j < gammas.get(i).length; j++) {
+					results[i][j] = new Double(gammas.get(i)[j]);
+					if (exp)
+						results[i][j] = Math.exp(results[i][j]);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return results;
 	}
 	
 }
