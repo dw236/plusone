@@ -69,6 +69,16 @@ public class SVDTest {
         double[] expectedSingularValues = {Math.sqrt(61), 5, 2, 1};
         assertArrayEquals(expectedSingularValues, svd.getSingularValues(), eps);
 
+        double[][] expectedNormalizedTopics =
+            {{0, 0, 0, 0, 1, 0},
+             {0, 0, 0.6, 0.8, 0, 0},
+             {0, 1, 0, 0, 0, 0},
+             {1, 0, 0, 0, 0, 0}};
+        double[][] actualNormalizedTopics = svd.getNormalizedTopics();
+        for (int topic = 0; topic < expectedNormalizedTopics.length; ++topic)
+            assertArrayEquals(expectedNormalizedTopics[topic],
+                              actualNormalizedTopics[topic], eps);
+
         double[][] expectedProjections =
             {{0, 0, 0, 1},
              {0, 0, 1, 0},

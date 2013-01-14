@@ -235,4 +235,12 @@ public class SVD {
 	public double[] getSingularValues() {
 		return sigma;
 	}
+
+    /**
+     * Returns an array, each element of which is the word-frequency vector of
+     * one topic, normalized to have l_2 norm equal to 1.
+     */
+    public double[][] getNormalizedTopics() {
+        return beta;
+    }
 }
