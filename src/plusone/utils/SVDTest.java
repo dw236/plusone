@@ -33,7 +33,7 @@ public class SVDTest {
     /**
      * Ask for the first two singular vectors of a simple diagonal matrix.
      */
-    @Test public void singularValuesOfDiagonalMatrixTest() {
+    @Test public void svdFindsSingularValuesOfDiagonalMatrix() {
         Corpus corpus = new Corpus();
         corpus.addPaper(5, 0, 0, 0, 0);
         corpus.addPaper(0, 0, 0, 0, 0);
@@ -49,7 +49,7 @@ public class SVDTest {
     /**
      * See whether SVD's project() method decomposes papers as we expect.
      */
-    @Test public void projectionTest() {
+    @Test public void svdProjectsCorrectly() {
         Corpus corpus = new Corpus();
         corpus.addPaper(1, 0, 0, 0, 0, 0);
         corpus.addPaper(0, 2, 0, 0, 0, 0);
@@ -88,5 +88,29 @@ public class SVDTest {
         for (int doc = 0; doc < expectedProjections.length; ++doc)
             assertArrayEquals(expectedProjections[doc],
                     svd.projection(corpus.getPaperAbstract(doc)), eps);
+    }
+
+    /**
+     * Test whether SVD.predict() is fair to topics of different popularity.
+     */
+    @Test public void svdPredictsTopicsOfDifferentMagnitudesFairly() {
+        Corpus corpus = new Corpus();
+        corpus.addPaper(1000, 1000, 0, 0);
+        corpus.addPaper(0, 0, 1, 1);
+
+        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
+
+        int[] testFrequencies = {1, 0, 1, 0};
+        PaperAbstract testPaper = new PaperAbstract(2, null, null, testFrequencies);
+        testPaper.generateTf(0, null, false);
+
+        double[] predictions = svd.predict(testPaper);
+        /* We shouldn't predict words that have already been seen. */
+        assertEquals(0, predictions[0], eps);
+        assertEquals(0, predictions[2], eps);
+        assertTrue(String.format("The norm-1000 topic got weight %f, but the norm-1 topic got weight %f",
+                       predictions[1], predictions[3]),
+                   Math.abs(predictions[1] - predictions[3]) < eps);
+        assertTrue(String.format("magnitude: %f", predictions[1]), predictions[1] > 0.1);
     }
 };
