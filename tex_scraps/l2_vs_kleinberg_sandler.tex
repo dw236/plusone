@@ -28,7 +28,6 @@ We consider three algorithms to solve Problem~\ref{Problem:InferTopics}.
 Return the vector \(t\) which minimizes \(|w - A t|_2\).
 In other words, orthogonally project \(w\) to \(w' \in \Range(A)\), and then make \(w' = A t\).
 
-(TODO: double-check this part)
 We can also think of this in terms of matrix inverses.
 Let \(A^+\) be the Moore-Penrose pseudoinverse of \(A\): so \(A^+A = I_k\), and the Frobenius norm of \(|A^+|\) is as small as possible.
 The \(\ell_2\) projection algorithm returns the topic vector \(A^+w\).
@@ -36,12 +35,28 @@ The \(\ell_2\) projection algorithm returns the topic vector \(A^+w\).
 \subsection{Kleinberg-Sandler}
 
 The Kleinberg-Sandler algorithm~\cite{kleinberg2004using} uses a different generalized inverse.
-Let \(B\) be a matrix such that \(BA = I_k\), and try to minimize the maximum entry of \(B\).
+Let \(B\) be a matrix such that \(BA = I_k\).
+If there are many such \(B\), pick one with the smallest maximum entry.
 If you want to think in terms of \(\ell_1\) and \(\ell_\infty\), we are minimizing \(|B|_{1,\infty} = \max_{|x|_1 = 1} |B x|_\infty\).
-
-% TODO
+Given a word vector \(w\), this algorithm returns \(Bw\).
 
 \subsection{Maximum Likelihood}
+
+Each word of a document with topic distribution \(t\) is drawn from the distribution \(A t\):
+\[ \Pr[\text{next word is \(j\)} | t] = (A t)_j \ldotp \]
+Given the word counts \(w\), we apply Bayes' rule:
+\begin{align*}
+    \Pr[t | w] \propto & \Pr[t] \Pr[w | t]
+\\  = & \Pr[t] \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{align*}
+It is common to assume \(t\) is drawn from a Dirichlet distribution:
+\begin{equation}
+    \label{Eq:TopicProb}
+    \Pr[t | w] \propto \prod_{i = 1}^k t_i^{\alpha - 1} \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{equation}
+
+Maximizing (\ref{Eq:TopicProb}) is NP hard when \(\alpha < 1\), but for \(\alpha \ge 1\), it can be done in polynomial time~\cite{conf/nips/SontagR11}.
+In any case, we assume we have an algorithm to maximize (\ref{Eq:TopicProb}).
 
 % TODO
 
