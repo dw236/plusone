@@ -9,6 +9,8 @@
 
 \begin{document}
 
+TODO: Summary
+
 \section{Problem Statement}
 
 Fix a \(M \times k\) word-topic matrix \(A\).
@@ -24,6 +26,7 @@ We observe a vector \(w\) of word counts sampled from \(At\).
 We consider three algorithms to solve Problem~\ref{Problem:InferTopics}.
 
 \subsection{\(\ell_2\) Projection}
+\label{Sec:L2Alg}
 
 Return the vector \(t\) which minimizes \(|w - A t|_2\).
 In other words, orthogonally project \(w\) to \(w' \in \Range(A)\), and then make \(w' = A t\).
@@ -33,6 +36,7 @@ Let \(A^+\) be the Moore-Penrose pseudoinverse of \(A\): so \(A^+A = I_k\), and 
 The \(\ell_2\) projection algorithm returns the topic vector \(A^+w\).
 
 \subsection{Kleinberg-Sandler}
+\label{Sec:KSAlg}
 
 The Kleinberg-Sandler algorithm~\cite{kleinberg2004using} uses a different generalized inverse.
 Let \(B\) be a matrix such that \(BA = I_k\).
@@ -41,6 +45,7 @@ If you want to think in terms of \(\ell_1\) and \(\ell_\infty\), we are minimizi
 Given a word vector \(w\), this algorithm returns \(Bw\).
 
 \subsection{Maximum Likelihood}
+\label{Sec:MLAlg}
 
 Each word of a document with topic distribution \(t\) is drawn from the distribution \(A t\):
 \[ \Pr[\text{next word is \(j\)} | t] = (A t)_j \ldotp \]
@@ -56,13 +61,141 @@ It is common to assume \(t\) is drawn from a Dirichlet distribution:
 \end{equation}
 
 Maximizing (\ref{Eq:TopicProb}) is NP hard when \(\alpha < 1\), but for \(\alpha \ge 1\), it can be done in polynomial time~\cite{conf/nips/SontagR11}.
-In any case, we assume we have an algorithm to maximize (\ref{Eq:TopicProb}).
+For the purpose of this evaluation, we assume we have an algorithm to maximize (\ref{Eq:TopicProb}) exactly.
 
-% TODO
+\section{Comparison: Disjoint Topics}
 
-\section{Examples}
+In this section, we assume no word has non-zero weight in more than one topic.
+Given a vector of word counts \(w\), let \(n_i\) be the number of words in topic \(i\): \(n_i = \sum_{A_{ij} > 0} w_j\).
 
-% TODO
+\subsection{Algorithm~\ref{Sec:MLAlg}}
+
+When \(\alpha=1\), the maximum-likelihood algorithm assigns topic \(i\) a weight proportional to \(n_i\), since (\ref{Eq:TopicProb}) becomes
+\[ \Pr[t | w] \propto \prod_{i=1}^k t_i^{n_i} \]
+which is maximized by \(t_i \propto n_i\).
+
+\subsection{Algorithm~\ref{Sec:KSAlg}}
+
+The Kleinberg-Sandler behaves in the same way as Algorithm~\ref{Sec:MLAlg} as the number of samples from \(A t\)  (document length) approaches infinity.
+
+With less data, the behavior of the algorithm is underspecified.
+The matrix \(B\) is chosen to minimize \(\max_{ji} |B_{ji}|\), but the minimum might not be unique.
+One possibility is that the algorithm will behave the same way as Algorithm~\ref{Sec:MLAlg}: since \(A\) has the form
+\[
+    A =
+    \begin{pmatrix}
+        *      &        &
+    \\  \vdots &        &
+    \\  *      &        &
+    \\         & *      &
+    \\         & \vdots &
+    \\         & *      &
+    \\         &        & \vdots
+    \end{pmatrix}
+    ,
+\]
+    where \(*\) denotes a non-zero value and each column sums to \(1\), a possible generalized inverse is
+\[
+    B =
+    \begin{pmatrix}
+        1 & \cdots & 1 &   &        &   &
+    \\    &        &   & 1 & \cdots & 1 &
+    \\    &        &   &   &        &   & \cdots
+    \end{pmatrix}
+    ,
+\]
+    giving \((B w)_i \propto n_i\).
+Indeed, the minimum value of \(\max_{ji} |B_{ji}|\) will always be \(1\), and because of the requirement that \(B A_i = e_i\) for any topic \(i\), we will always have \(B_{ji} = 1\) whenever \(A_{ij} > 0\).
+On the other hand, there is some flexibility in the other entries of \(B\): for example, if
+\[
+    A =
+    \begin{pmatrix}
+        1/2 & 0
+    \\  1/2 & 0
+    \\  0   & 1
+    \end{pmatrix}
+    ,
+\]
+    then Algorithm~\ref{Sec:KSAlg} might choose
+\(
+    B =
+    \begin{pmatrix}
+         1 & 1 & 0
+    \\  -1 & 1 & 1
+    \end{pmatrix}
+\)
+instead of
+\(
+    B =
+    \begin{pmatrix}
+        1 & 1 & 0
+    \\  0 & 0 & 1
+    \end{pmatrix}
+\).
+With a very large number of samples, \(w_1\) and \(w_2\) will both be very close to equal and so it will not matter which matrix the algorithm chooses.
+
+\subsection{Algorithm~\ref{Sec:L2Alg}}
+
+The \(\ell_2\) projection algorithm behaves well when the topics are uniform distributions or when the number of samples is large, but it behaves strangely when the topics are non-uniform and the document is short.
+
+\subsubsection{Uniform Topics}
+
+Suppose the \(i\)-th topic is the uniform distribution over \(M_i\) words:
+\[
+    A =
+    \begin{pmatrix}
+        1/M_1  &        &        &
+    \\  \vdots &        &        &
+    \\  1/M_1  &        &        &
+    \\         & 1/M_2  &        &
+    \\         & \vdots &        &
+    \\         & 1/M_2  &        &
+    \\         &        & \vdots &
+    \\         &        &        & 1/M_k
+    \end{pmatrix}
+\]
+(TODO: diagram)
+
+In this case, the \(\ell_2\) projection algorithm assigns topic \(i\) a weight proportional to the number of observed words from that topic.
+This is the same behavior as Algorithm~\ref{Sec:MLAlg} with \(\alpha=1\), or Algorithm~\ref{Sec:KSAlg} when it decides to set the unspecified entries of \(B\) to zero:
+\[
+    A^+ = B =
+    \begin{pmatrix}
+        1 & \cdots & 1 &   &        &   &        &
+    \\    &        &   & 1 & \cdots & 1 &        &
+    \\    &        &   &   &        &   & \cdots &
+    \\    &        &   &   &        &   &        & 1
+    \end{pmatrix}
+    \ldotp
+\]
+
+\subsubsection{Non-Uniform Topics}
+
+Suppose
+\[
+    A =
+    \begin{pmatrix}
+        1 - \epsilon & 0
+    \\  \epsilon     & 0
+    \\  0            & 1
+    \end{pmatrix}
+    \ldotp
+\]
+Then the pseudoinverse is (approximately)
+\[
+    A^+ \approx
+    \begin{pmatrix}
+        1 + \epsilon & \epsilon & 0
+    \\  0            & 0        & 1
+    \end{pmatrix}
+    \ldotp
+\]
+Consider two documents \(w = \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}\) and  \(w' = \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\).
+Then \(A^+ w \approx \begin{pmatrix} 1 + \epsilon \\ 1 \end{pmatrix}\), which is almost fair to both topics, but \(A^+ w' \approx \begin{pmatrix} \epsilon \\ 1 \end{pmatrix}\): the evidence of word 2 is ignored.
+
+\section{Comparison: Overlapping Topics}
+
+(TODO)
 
 \bibliography{bib}{}
 \bibliographystyle{plain}
