@@ -111,6 +111,6 @@ public class SVDTest {
         assertTrue(String.format("The norm-1000 topic got weight %f, but the norm-1 topic got weight %f",
                        predictions[1], predictions[3]),
                    Math.abs(predictions[1] - predictions[3]) < eps);
-        assertTrue(String.format("magnitude: %f", predictions[1]), predictions[1] > 0.1);
+        assertTrue(String.format("magnitude: %f", predictions[1]), predictions[1] > eps);
     }
 };
