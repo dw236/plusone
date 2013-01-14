@@ -192,6 +192,13 @@ public class SVD {
 		return result;
 	}
 	
+    /**
+     * Projects a vector of word frequencies to topic space.
+     *
+     * NB: if a paper is exactly equal to a topic 1, this won't return (1, 0, 0,
+     * ...): instead, it will return (M, 0, 0, ...), where M is the l2 norm of
+     * the topic (and of the document).
+     */
 	public double[] projection(PaperAbstract paper){
 		double[] doct = new double[numTerms];
 		for (Integer word : paper.getTrainingWords()) {

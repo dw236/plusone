@@ -7,8 +7,10 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class SVDTest {
+    final static double eps = 1e-2;
+
     protected static class Corpus {
-        List<TrainingPaper> papers = new ArrayList<TrainingPaper>();
+        List<PaperAbstract> papers = new ArrayList<PaperAbstract>();
 
         public Corpus() {
         }
@@ -19,31 +21,19 @@ public class SVDTest {
             papers.add(paper);
         }
 
+        public PaperAbstract getPaperAbstract(int i) {
+            return papers.get(i);
+        }
+
         public List<TrainingPaper> asTrainingPapers() {
-            return papers;
+            return new ArrayList<TrainingPaper>(papers);
         }
     }
 
-    /*
-    protected static void assertArrayEquals(double[] expecteds, double[] actuals,
-                                            double delta) {
-        assertEquals(expecteds.length, actuals.length);
-        for (int i = 0; i < expecteds.length; ++i)
-            assertEquals(expecteds[i], actuals[i]);
-    }
-    */
-
     /**
-     * Ask for the first two singular vectors of the diagonal matrix
-     *
-     *   5 0 0 0 0
-     *   0 0 0 0 0
-     *   0 0 2 0 0
-     *   0 0 0 7 0
-     *
-     *   (five columns for five words, and four rows for four documents).
+     * Ask for the first two singular vectors of a simple diagonal matrix.
      */
-    @Test public void singularValuesOfDiagonalMatrix() {
+    @Test public void singularValuesOfDiagonalMatrixTest() {
         Corpus corpus = new Corpus();
         corpus.addPaper(5, 0, 0, 0, 0);
         corpus.addPaper(0, 0, 0, 0, 0);
@@ -53,6 +43,40 @@ public class SVDTest {
         SVD svd = new SVD(2, corpus.asTrainingPapers(), 5);
 
         double[] expectedSingularValues = {7, 5};
-        assertArrayEquals(expectedSingularValues, svd.getSingularValues(), 1e-4);
+        assertArrayEquals(expectedSingularValues, svd.getSingularValues(), eps);
+    }
+
+    /**
+     * See whether SVD's project() method decomposes papers as we expect.
+     */
+    @Test public void projectionTest() {
+        Corpus corpus = new Corpus();
+        corpus.addPaper(1, 0, 0, 0, 0, 0);
+        corpus.addPaper(0, 2, 0, 0, 0, 0);
+        corpus.addPaper(0, 0, 3, 4, 0, 0);
+        corpus.addPaper(0, 0, 0, 0, 5, 0);
+        corpus.addPaper(0, 0, 0, 0, 6, 0);
+
+        SVD svd = new SVD(4, corpus.asTrainingPapers(), 6);
+
+        /* We expect the following topics:
+         *   [0, 0, 0, 0, sqrt(61), 0]  sigma = sqrt(61)
+         *   [0, 0, 3, 4, 0, 0]  sigma = 5
+         *   [0, 2, 0, 0, 0, 0]  sigma = 2
+         *   [1, 0, 0, 0, 0, 0]  sigma = 1
+         */
+
+        double[] expectedSingularValues = {Math.sqrt(61), 5, 2, 1};
+        assertArrayEquals(expectedSingularValues, svd.getSingularValues(), eps);
+
+        double[][] expectedProjections =
+            {{0, 0, 0, 1},
+             {0, 0, 1, 0},
+             {0, 1, 0, 0},
+             {5 / Math.sqrt(61), 0, 0, 0},
+             {6 / Math.sqrt(61), 0, 0, 0}};
+        for (int doc = 0; doc < expectedProjections.length; ++doc)
+            assertArrayEquals(expectedProjections[doc],
+                    svd.projection(corpus.getPaperAbstract(doc)), eps);
     }
 };
