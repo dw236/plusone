@@ -5,5 +5,6 @@
         <dependency name="commons-lang" org="commons-lang" rev="2.6"/>
         <dependency name="jericho-html" org="net.htmlparser.jericho" rev="3.2"/>
         <dependency name="json" org="org.json" rev="20090211"/>
+        <dependency name="junit" org="junit" rev="4.11"/>
     </dependencies>
 </ivy-module>

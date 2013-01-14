@@ -35,11 +35,11 @@ public class SVD {
 	public int numTerms;
 	private Random rand=new Random();
 
-	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int num) {
+	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms) {
 
 		this.DIMENSION = DIMENSION;
 		this.trainingSet = trainingSet;
-		numTerms = num;
+		this.numTerms = numTerms;
 
 		long t1 = System.currentTimeMillis();
 		System.out.println("[SVD] training with " + DIMENSION + 
