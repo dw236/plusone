@@ -2,7 +2,11 @@
 
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{mathtools}
 
+\newcommand{\DefEq}{\stackrel{\mathrm{def}}{=}}
+
+\DeclareMathOperator{\D}{d}
 \DeclareMathOperator{\Range}{range}
 
 \newtheorem{Problem}{Problem}
@@ -56,12 +60,16 @@ Given the word counts \(w\), we apply Bayes' rule:
 \end{align*}
 It is common to assume \(t\) is drawn from a Dirichlet distribution:
 \begin{equation}
-    \label{Eq:TopicProb}
+    \label{Eq:TopicProbWithAlpha}
     \Pr[t | w] \propto \prod_{i = 1}^k t_i^{\alpha - 1} \prod_{j=1}^M (A t)_j^{w_j} \ldotp
 \end{equation}
-
 Maximizing (\ref{Eq:TopicProb}) is NP hard when \(\alpha < 1\), but for \(\alpha \ge 1\), it can be done in polynomial time~\cite{conf/nips/SontagR11}.
-For the purpose of this evaluation, we assume we have an algorithm to maximize (\ref{Eq:TopicProb}) exactly.
+For this analysis we will assume \(t\) is drawn from the uniform distribution (\(\alpha=1\)):
+\begin{equation}
+    \label{Eq:TopicProb}
+    \Pr[t | w] \propto \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{equation}
+Our algorithm then maximizes (\ref{Eq:TopicProb}) exactly.
 
 \section{Comparison: Disjoint Topics}
 
@@ -70,7 +78,7 @@ Given a vector of word counts \(w\), let \(n_i\) be the number of words in topic
 
 \subsection{Algorithm~\ref{Sec:MLAlg}}
 
-When \(\alpha=1\), the maximum-likelihood algorithm assigns topic \(i\) a weight proportional to \(n_i\), since (\ref{Eq:TopicProb}) becomes
+The maximum-likelihood algorithm assigns topic \(i\) a weight proportional to \(n_i\), since (\ref{Eq:TopicProb}) becomes
 \[ \Pr[t | w] \propto \prod_{i=1}^k t_i^{n_i} \]
 which is maximized by \(t_i \propto n_i\).
 
@@ -157,7 +165,7 @@ Suppose the \(i\)-th topic is the uniform distribution over \(M_i\) words:
 (TODO: diagram)
 
 In this case, the \(\ell_2\) projection algorithm assigns topic \(i\) a weight proportional to the number of observed words from that topic.
-This is the same behavior as Algorithm~\ref{Sec:MLAlg} with \(\alpha=1\), or Algorithm~\ref{Sec:KSAlg} when it decides to set the unspecified entries of \(B\) to zero:
+This is the same behavior as Algorithm~\ref{Sec:MLAlg}, or Algorithm~\ref{Sec:KSAlg} when it decides to set the unspecified entries of \(B\) to zero:
 \[
     A^+ = B =
     \begin{pmatrix}
@@ -195,7 +203,79 @@ Then \(A^+ w \approx \begin{pmatrix} 1 + \epsilon \\ 1 \end{pmatrix}\), which is
 
 \section{Comparison: Overlapping Topics}
 
-(TODO)
+\subsection{Example}
+
+\[
+    A =
+    \begin{pmatrix}
+        1/2 & 0
+    \\  1/2 & 1/2
+    \\  0   & 1/2
+    \end{pmatrix}
+\]
+
+Here, the three algorithms all do different things.
+
+The maximum-likelihood algorithm predicts \(t_1 \propto w_1\) and \(t_2 \propto w_3\), and ignores the overlapping word \(w_2\), because (\ref{Eq:TopicProb}) becomes
+\[ \Pr[t | w] \propto t_1^{w_1} t_2^{w_3} \]
+
+The \(\ell_2\) projection and Kleinberg-Sandler algorithms, respectively, use the generalized inverses
+\[
+    A^+ =
+    \begin{pmatrix}
+         4/3 & 2/3 & -2/3
+    \\  -2/3 & 2/3 &  4/3
+    \end{pmatrix}
+\]
+    and
+\[
+    B =
+    \begin{pmatrix}
+         1 & 1 & -1
+    \\  -1 & 1 &  1
+    \end{pmatrix}
+    \ldotp
+\]
+
+\subsection{Example}
+
+\[
+    A =
+    \begin{pmatrix}
+        1/2 & 0
+    \\  1/2 & 1/2
+    \\  0   & 1/2
+    \end{pmatrix}
+\]
+
+Again, the three algorithms all do different things.
+
+The \(\ell_2\) projection and Kleinberg-Sandler algorithms, respectively, use the generalized inverses
+\[
+    A^+ =
+    \begin{pmatrix}
+        10/7 & 1/7 & -2/7
+    \\  -4/7 & 8/7 &  5/7
+    \end{pmatrix}
+\]
+    and
+\[
+    B =
+    \begin{pmatrix}
+        6/5               & 3/5        & -6/5
+    \\  -(1 + \delta) / 2 & 1 + \delta & 1 - 2 \delta
+    \end{pmatrix}
+    ,
+\]
+where the value of \(\delta \in [-1/10, 1/5]\) is undetermined.
+
+The maximum-likelihood algorithm will choose the vector \(t\) which maximizes
+\[ p \DefEq \Pr[ t | w ] \propto t_1^{w_1} (t_1 + 2 t_2)^{w_2} t_2^{w_3} \ldotp \]
+Substituting \(t_2 = 1 - t_1\) and differentiating \(\log p\) with respect to \(t_1\), we have
+\[ \frac {\D} {\D t_1} \log p = \frac {w_1} {t_1} - \frac {w_2} {2 - t_1} - \frac {w_3} {1 - t_1} \ldotp \]
+The optimal \(t\) will either be an extreme \(t \in \big\{ \begin{psmallmatrix} 1 \\ 0 \end{psmallmatrix}, \begin{psmallmatrix} 0 \\ 1 \end{psmallmatrix} \big\}\) or satisfy
+\[ t_1 (t_1 + 2 t_2) w_1 - t_1 t_2 w_2 - t_1 (t_1 + 2 t_2) w_3 = 0 \ldotp \]
+To see a plot of \(t_1\) with respect to \(w_1\) and \(w_3\), run the maxima batch file \texttt{overlapping\_topics\_ml.wxm}.
 
 \bibliography{bib}{}
 \bibliographystyle{plain}

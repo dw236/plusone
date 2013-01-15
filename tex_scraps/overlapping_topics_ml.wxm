@@ -1,0 +1,29 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 12.09.0 ] */
+
+/* [wxMaxima: input   start ] */
+logp: w1*log(t) + (1-w1-w3)*log(2-t) + w3*log(1-t);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+lpd: diff(logp, t, 1);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+[s1,s2]: solve([lpd=0],[t]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+if 1>0 then 5 else 6;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+f:if(w1+w3>1) then infinity else rhs(s1);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+plot3d(f, [w1,0,1], [w3,0,1], [grid, 50, 50])$
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$
