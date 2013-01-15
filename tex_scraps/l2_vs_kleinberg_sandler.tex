@@ -273,9 +273,13 @@ The maximum-likelihood algorithm will choose the vector \(t\) which maximizes
 \[ p \DefEq \Pr[ t | w ] \propto t_1^{w_1} (t_1 + 2 t_2)^{w_2} t_2^{w_3} \ldotp \]
 Substituting \(t_2 = 1 - t_1\) and differentiating \(\log p\) with respect to \(t_1\), we have
 \[ \frac {\D} {\D t_1} \log p = \frac {w_1} {t_1} - \frac {w_2} {2 - t_1} - \frac {w_3} {1 - t_1} \ldotp \]
-The optimal \(t\) will either be an extreme \(t \in \big\{ \begin{psmallmatrix} 1 \\ 0 \end{psmallmatrix}, \begin{psmallmatrix} 0 \\ 1 \end{psmallmatrix} \big\}\) or satisfy
-\[ t_1 (t_1 + 2 t_2) w_1 - t_1 t_2 w_2 - t_1 (t_1 + 2 t_2) w_3 = 0 \ldotp \]
+Equating this to zero, we see that the optimal \(t\) will either be an extreme \(t \in \big\{ \begin{psmallmatrix} 1 \\ 0 \end{psmallmatrix}, \begin{psmallmatrix} 0 \\ 1 \end{psmallmatrix} \big\}\) or satisfy
+\begin{equation}
+    \label{Eq:OverlappingMLEq}
+    (t_1 + 2 t_2) t_2 w_1 - t_1 t_2 w_2 - t_1 (t_1 + 2 t_2) w_3 = 0 \ldotp
+\end{equation}
 To see a plot of \(t_1\) with respect to \(w_1\) and \(w_3\), run the maxima batch file \texttt{overlapping\_topics\_ml.wxm}.
+Notice that (\ref{Eq:OverlappingMLEq}) is always satisfied when \(w = A t\), so for a large enough number of samples the maximum-likelihood algorithm will perform well.
 
 \bibliography{bib}{}
 \bibliographystyle{plain}
