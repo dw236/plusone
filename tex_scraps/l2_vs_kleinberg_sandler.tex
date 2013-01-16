@@ -13,7 +13,13 @@
 
 \begin{document}
 
-TODO: Summary
+\section{Summary}
+
+We compare three algorithms for inferring topic distributions from word distributions:
+    \(\ell_2\) projection; Kleinberg and Sandler's omniscient algorithm~\cite{kleinberg2004using}; and maximum-likelihood inference.
+We find that all algorithms perform well when the document is long enough.
+\(\ell_2\) behaves well when the topics are disjoint uniform distributions, but we show a case where it arguably makes a bad prediction.
+The Kleinberg-Sandler algorithm may show strange results even when the topics are disjoint uniform distributions.
 
 \section{Problem Statement}
 
