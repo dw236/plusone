@@ -36,7 +36,6 @@ We observe a vector \(w\) of word counts sampled from \(At\).
 We consider three algorithms to solve Problem~\ref{Problem:InferTopics}.
 
 \subsection{\(\ell_2\) Projection}
-\label{Sec:L2Alg}
 
 Return the vector \(t\) which minimizes \(|w - A t|_2\).
 In other words, orthogonally project \(w\) to \(w' \in \Range(A)\), and then make \(w' = A t\).
@@ -46,7 +45,6 @@ Let \(A^+\) be the Moore-Penrose pseudoinverse of \(A\): so \(A^+A = I_k\), and 
 The \(\ell_2\) projection algorithm returns the topic vector \(A^+w\).
 
 \subsection{Kleinberg-Sandler}
-\label{Sec:KSAlg}
 
 The Kleinberg-Sandler algorithm~\cite{kleinberg2004using} uses a different generalized inverse.
 Let \(B\) be a matrix such that \(BA = I_k\).
@@ -55,7 +53,6 @@ If you want to think in terms of \(\ell_1\) and \(\ell_\infty\), we are minimizi
 Given a word vector \(w\), this algorithm returns \(Bw\).
 
 \subsection{Maximum Likelihood}
-\label{Sec:MLAlg}
 
 Each word of a document with topic distribution \(t\) is drawn from the distribution \(A t\):
 \[ \Pr[\text{next word is \(j\)} | t] = (A t)_j \ldotp \]
@@ -75,26 +72,26 @@ For this analysis we will assume \(t\) is drawn from the uniform distribution (\
     \label{Eq:TopicProb}
     \Pr[t | w] \propto \prod_{j=1}^M (A t)_j^{w_j} \ldotp
 \end{equation}
-Our algorithm then maximizes (\ref{Eq:TopicProb}) exactly.
+The maximum-likelihood algorithm then can maximize (\ref{Eq:TopicProb}) exactly.
 
 \section{Comparison: Disjoint Topics}
 
 In this section, we assume no word has non-zero weight in more than one topic.
 Given a vector of word counts \(w\), let \(n_i\) be the number of words in topic \(i\): \(n_i = \sum_{A_{ij} > 0} w_j\).
 
-\subsection{Algorithm~\ref{Sec:MLAlg}}
+\subsection{Maximum Likelihood}
 
 The maximum-likelihood algorithm assigns topic \(i\) a weight proportional to \(n_i\), since (\ref{Eq:TopicProb}) becomes
 \[ \Pr[t | w] \propto \prod_{i=1}^k t_i^{n_i} \]
 which is maximized by \(t_i \propto n_i\).
 
-\subsection{Algorithm~\ref{Sec:KSAlg}}
+\subsection{Kleinberg-Sandler}
 
-The Kleinberg-Sandler behaves in the same way as Algorithm~\ref{Sec:MLAlg} as the number of samples from \(A t\)  (document length) approaches infinity.
+The behavior of the Kleinberg-Sandler algorithm becomes the same as the maximum-likelihood algorithm as the number of samples from \(A t\) (the document length) approaches infinity.
 
 With less data, the behavior of the algorithm is underspecified.
 The matrix \(B\) is chosen to minimize \(\max_{ji} |B_{ji}|\), but the minimum might not be unique.
-One possibility is that the algorithm will behave the same way as Algorithm~\ref{Sec:MLAlg}: since \(A\) has the form
+One possibility is that the algorithm will behave the same way as maximum-likelihood: since \(A\) has the form
 \[
     A =
     \begin{pmatrix}
@@ -130,7 +127,7 @@ On the other hand, there is some flexibility in the other entries of \(B\): for 
     \end{pmatrix}
     ,
 \]
-    then Algorithm~\ref{Sec:KSAlg} might choose
+    then Kleinberg-Sandler might choose
 \(
     B =
     \begin{pmatrix}
@@ -148,7 +145,7 @@ instead of
 \).
 With a very large number of samples, \(w_1\) and \(w_2\) will both be very close to equal and so it will not matter which matrix the algorithm chooses.
 
-\subsection{Algorithm~\ref{Sec:L2Alg}}
+\subsection{\(\ell_2\) Projection}
 
 The \(\ell_2\) projection algorithm behaves well when the topics are uniform distributions or when the number of samples is large, but it behaves strangely when the topics are non-uniform and the document is short.
 
@@ -168,10 +165,9 @@ Suppose the \(i\)-th topic is the uniform distribution over \(M_i\) words:
     \\         &        &        & 1/M_k
     \end{pmatrix}
 \]
-(TODO: diagram)
 
 In this case, the \(\ell_2\) projection algorithm assigns topic \(i\) a weight proportional to the number of observed words from that topic.
-This is the same behavior as Algorithm~\ref{Sec:MLAlg}, or Algorithm~\ref{Sec:KSAlg} when it decides to set the unspecified entries of \(B\) to zero:
+This is the same behavior as the maximum-likelihood algorithm, or Kleinberg-Sandler when it decides to set the unspecified entries of \(B\) to zero:
 \[
     A^+ = B =
     \begin{pmatrix}
@@ -293,7 +289,7 @@ If \(w\) is of the form \(w = A t\), then the correct \(t\) maximizes (\ref{Eq:O
     Notice that (\ref{Eq:OverlappingMLEq}) is always satisfied when \(w = A t\).
     }.
 When the number of samples is large, this will approximately be the case, so we expect the maximum-likelihood algorithm will perform well.
-To see a plot of the maximum-likelihood \(t_1\) with respect to \(w_1 / (w_1 + w_2 + w_3)\) and \(w_3 / (w_1 + w_2 + w_3)\), run the maxima batch file \texttt{overlapping\_topics\_ml.wxm}.
+To see a plot of the maximum-likelihood \(t_1\) with respect to \(w_1 / (w_1 + w_2 + w_3)\) and \(w_3 / (w_1 + w_2 + w_3)\), run the Maxima batch file \texttt{overlapping\_topics\_ml.wxm}.
 
 \bibliography{bib}{}
 \bibliographystyle{plain}
