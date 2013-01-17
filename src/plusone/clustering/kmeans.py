@@ -1,8 +1,10 @@
 """framework for projector clustering algorithm"""
 import numpy as np
+from numpy.lib.npyio import loadtxt 
 from random import sample as rsample
 from random import randint
 from matplotlib.pylab import *
+import argparse
 
 def cos_sim(a, b):
     return a.dot(b) / (np.sqrt(a.dot(a)) * np.sqrt(b.dot(b)))
@@ -90,7 +92,47 @@ class Kmeans():
                  color + 'o')
             plot(self.centers[cluster][0], self.centers[cluster][1],
                  color + 'x')
+    
+    def write_labels(self, filename):
+        with open(filename, 'w') as f:
+            for label in self.labels:
+                f.write(str(label + 1) + ' ')
+            f.write('\n')
+            
 
-test = Kmeans(2, metric='euclidean')
-points = np.array(zip([rsample([1,10], 1)[0] for i in range(15)], 
-                      [randint(10, 20) for i in range(15)]))
+def main():
+    parser = argparse.ArgumentParser(description="Fuzzy kmeans algorithm \
+                                     (default values are in parentheses)")
+    parser.add_argument('f', metavar="filename", action="store",
+                        help="filename of datapoints to be clustered")
+    parser.add_argument('-k', action="store", metavar='num_clusters', type=int,
+                        default=2, 
+                        help="number of clusters to split data into (2)")
+    parser.add_argument('-m', action="store", metavar='metric', 
+                        default='euclidean', 
+                        help='distance metric used for clustering (euclidean)')
+    parser.add_argument('-w', action="store_true", default=False,
+                        help='flag to write cluster labels (False)')
+    
+    args = parser.parse_args()
+    
+    if args.f == None:
+        print "no points supplied: using default random points"
+        points = np.array(zip([rsample([1,10], 1)[0] for i in range(15)], 
+                              [randint(10, 20) for i in range(15)]))
+    else:
+        print "loading points from", args.f
+        points = loadtxt(args.f)
+        print "points succesfully loaded [ shape:", np.shape(points), "]"
+        
+    cluster = Kmeans(args.k, metric=args.m)
+    cluster.cluster(points)
+    
+    if args.w:
+        print "writing cluster labels to file: ../../../projector/data/labels"
+        cluster.write_labels('../../../projector/data/labels')
+    
+    return points, cluster
+
+if __name__ == '__main__':
+    points, km = main()
