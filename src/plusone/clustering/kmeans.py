@@ -111,8 +111,8 @@ def main():
     parser.add_argument('-m', action="store", metavar='metric', 
                         default='euclidean', 
                         help='distance metric used for clustering (euclidean)')
-    parser.add_argument('-w', action="store_true", default=False,
-                        help='flag to write cluster labels (False)')
+    parser.add_argument('-w', action="store", metavar='write_filename',
+                        help='filename for writing cluster labels (False)')
     
     args = parser.parse_args()
     
@@ -128,9 +128,9 @@ def main():
     cluster = Kmeans(args.k, metric=args.m)
     cluster.cluster(points)
     
-    if args.w:
-        print "writing cluster labels to file: ../../../projector/data/labels"
-        cluster.write_labels('../../../projector/data/labels')
+    if args.w != None:
+        print "writing cluster labels to file:", args.w
+        cluster.write_labels(args.w)
     
     return points, cluster
 
