@@ -60,10 +60,10 @@ public class SVDTest {
         SVD svd = new SVD(4, corpus.asTrainingPapers(), 6);
 
         /* We expect the following topics:
-         *   [0, 0, 0, 0, sqrt(61), 0]  sigma = sqrt(61)
-         *   [0, 0, 3, 4, 0, 0]  sigma = 5
-         *   [0, 2, 0, 0, 0, 0]  sigma = 2
-         *   [1, 0, 0, 0, 0, 0]  sigma = 1
+         *   [0, 0, 0  , 0  , 1, 0]  sigma = sqrt(61)
+         *   [0, 0, 0.6, 0.8, 0, 0]  sigma = 5
+         *   [0, 1, 0  , 0  , 0, 0]  sigma = 2
+         *   [1, 0, 0  , 0  , 0, 0]  sigma = 1
          */
 
         double[] expectedSingularValues = {Math.sqrt(61), 5, 2, 1};
@@ -81,10 +81,10 @@ public class SVDTest {
 
         double[][] expectedProjections =
             {{0, 0, 0, 1},
-             {0, 0, 1, 0},
-             {0, 1, 0, 0},
-             {5 / Math.sqrt(61), 0, 0, 0},
-             {6 / Math.sqrt(61), 0, 0, 0}};
+             {0, 0, 2, 0},
+             {0, 5, 0, 0},
+             {5, 0, 0, 0},
+             {6, 0, 0, 0}};
         for (int doc = 0; doc < expectedProjections.length; ++doc)
             assertArrayEquals(expectedProjections[doc],
                     svd.projection(corpus.getPaperAbstract(doc)), eps);
@@ -108,9 +108,31 @@ public class SVDTest {
         /* We shouldn't predict words that have already been seen. */
         assertEquals(0, predictions[0], eps);
         assertEquals(0, predictions[2], eps);
+        /* The remaining words should be predicted with equal weight. */
         assertTrue(String.format("The norm-1000 topic got weight %f, but the norm-1 topic got weight %f",
                        predictions[1], predictions[3]),
                    Math.abs(predictions[1] - predictions[3]) < eps);
         assertTrue(String.format("magnitude: %f", predictions[1]), predictions[1] > eps);
+    }
+
+    @Test public void svdProjectsToOverlappingTopics() {
+        Corpus corpus = new Corpus();
+        corpus.addPaper(1, 1, 1, 0);
+        corpus.addPaper(0, 1, 1, 2);
+
+        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
+
+        int[] testFrequencies = {0, 1, 0, 0};
+        PaperAbstract testPaper = new PaperAbstract(2, null, null, testFrequencies);
+        testPaper.generateTf(0, null, false);
+
+        double[] predictions = svd.predict(testPaper);
+        /* We shouldn't predict words that have already been seen. */
+        assertEquals(0, predictions[1], eps);
+        /* The remaining words should be predicted with nonzero weights of a
+         * certain ratio. */
+        assertTrue(Math.abs(predictions[2]) > eps);
+        assertEquals(predictions[2] * 0.8, predictions[0], eps);
+        assertEquals(predictions[2] * 0.4, predictions[3], eps);
     }
 };

@@ -193,11 +193,12 @@ public class SVD {
 	}
 	
     /**
-     * Projects a vector of word frequencies to topic space.
+     * Projects a vector of word frequencies to topic space, and returns a
+     * topic vector.
      *
-     * NB: if a paper is exactly equal to a topic 1, this won't return (1, 0, 0,
-     * ...): instead, it will return (1/M, 0, 0, ...), where M is the l2 norm of
-     * the topic (and of the document).
+     * In other words, given word frequencies w, returns t such that beta*t is
+     * as close as possible to w in l2 distance.  Note that the columns of beta
+     * are normalized.
      */
 	public double[] projection(PaperAbstract paper){
 		double[] doct = new double[numTerms];
@@ -207,7 +208,7 @@ public class SVD {
 
 		double[] dock = new double[DIMENSION];
 		for (int i = 0; i < dock.length; i ++) {
-			dock[i] = dotProduct(doct, beta[i]) / sigma[i];	    
+			dock[i] = dotProduct(doct, beta[i]);	    
 		}
 		return dock;
 	}
