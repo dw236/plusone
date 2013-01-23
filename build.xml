@@ -41,7 +41,7 @@
     <fileset dir="${lib}"/>
   </path>
 
-  <target name="init" depends="retrieve">
+  <target name="init"> <!--depends="retrieve"-->
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
   </target>

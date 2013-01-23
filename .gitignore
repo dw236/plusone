@@ -26,7 +26,6 @@ Plusone.jar
 /GibbsLDA/*
 /Mallet/*
 
-/lib/*.jar
 /lib/jars/*.jar
 /lib/lda-c-dist/lda
 /lib/lda-c-dist/result
