@@ -146,6 +146,7 @@ class Kmeans():
         """only works for 2D points
         """
         if clear:
+            figure()
             clf()
         
         colors = 'brgmyck'
@@ -195,7 +196,7 @@ def main():
                         help='flag to use fuzzy clustering (False)')
     parser.add_argument('-i', action="store_true", default=False,
                         help='flag to use random init (False)')
-    parser.add_argument('-q', action="store_true", default=True,
+    parser.add_argument('-q', action="store_true", default=False,
                         help='flag to plot output (True)')
     
     args = parser.parse_args()
@@ -219,7 +220,9 @@ def main():
         
     cluster = Kmeans(args.k, init=init, metric=args.m, type=type)
     cluster.cluster(points, 100)
-    if not args.q:
+    if args.q:
+        print "suppressing plot of output"
+    else:
         cluster.plot()
     
     if args.w != None:
