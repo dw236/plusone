@@ -9,6 +9,11 @@ import argparse
 def cos_sim(a, b):
     return a.dot(b) / (np.sqrt(a.dot(a)) * np.sqrt(b.dot(b)))
 
+def dist_cos(a, b):
+    """use cosine similarity as a distribution
+    """
+    return np.exp(cos_sim(a, b))
+
 def euclidean_dist(a, b):
     return np.linalg.linalg.norm(a - b)
 
@@ -58,6 +63,9 @@ class Kmeans():
         elif metric == "euclidean":
             self.metric = euclidean_dist
             self.select = np.argmin
+        elif metric == "distcos":
+            self.metric = dist_cos
+            self.select = None
         else:
             raise Exception("unrecognized metric: " + str(metric))
         
@@ -69,12 +77,20 @@ class Kmeans():
             self.centers = rsample(points, self.k)
             self.labels = self.assign()
         elif self.init == "random":
-            self.labels = np.array([np.random.randint(0, self.k)
-                                    for point in len(self.points)])
+            if self.type == "normal":
+                self.labels = np.array([np.random.randint(0, self.k)
+                                        for point in self.points])
+            elif self.type == "fuzzy":
+                labels = []
+                for point in self.points:
+                    cluster = np.zeros(self.k)
+                    cluster[np.random.randint(0, self.k)] += 1
+                    labels.append(np.array(cluster))
+                self.labels = np.array(labels)
         self.centers = self.update()
         while iterations <= max_iter:
             if iterations % 10 == 0:
-                print iterations
+                print iterations#, self.centers
             new_labels = self.assign()
             if all(new_labels == self.labels):
                 print "converged in", iterations, "iterations"
@@ -95,6 +111,7 @@ class Kmeans():
         labels = []
         for point in self.points:
             distances = [self.metric(point, center) for center in self.centers]
+            #print distances
             if self.type == 'normal':
                 labels.append(self.select(distances))
             elif self.type == 'fuzzy':
@@ -125,9 +142,12 @@ class Kmeans():
         
         return np.array(centers)
     
-    def plot(self):
+    def plot(self, clear=True):
         """only works for 2D points
         """
+        if clear:
+            clf()
+        
         colors = 'brgmyck'
         
         for cluster in range(self.k):
@@ -135,20 +155,26 @@ class Kmeans():
             if self.type == 'normal':
                 cluster_points = self.points[np.where(self.labels 
                                                       == cluster)[0]]
-                plot([point[0] for point in cluster_points], 
-                     [point[1] for point in cluster_points],
-                     color + 'o')
             elif self.type == 'fuzzy':
-                plot([point[0] for point in points],
-                     [point[1] for point in points],
-                     'bo')
+                labels = np.array([np.argmax(label) for label in self.labels])
+                cluster_points = self.points[np.where(labels
+                                                      == cluster)[0]]
+            plot([point[0] for point in cluster_points], 
+                 [point[1] for point in cluster_points],
+                 color + 'o')
+
             plot(self.centers[cluster][0], self.centers[cluster][1],
                  color + 'x')
+            show()
     
     def write_labels(self, filename):
         with open(filename, 'w') as f:
             for label in self.labels:
-                f.write(str(label + 1) + ' ')
+                if self.type == 'normal':
+                    to_write = label
+                elif self.type == 'fuzzy':
+                    to_write = np.argmax(label)
+                f.write(str(to_write + 1) + ' ')
             f.write('\n')
             
 
@@ -169,6 +195,8 @@ def main():
                         help='flag to use fuzzy clustering (False)')
     parser.add_argument('-i', action="store_true", default=False,
                         help='flag to use random init (False)')
+    parser.add_argument('-q', action="store_true", default=True,
+                        help='flag to plot output (True)')
     
     args = parser.parse_args()
     
@@ -185,12 +213,14 @@ def main():
     else:
         type = "normal"
     if args.i:
-        init = "points"
-    else:
         init = "random"
+    else:
+        init = "points"
         
     cluster = Kmeans(args.k, init=init, metric=args.m, type=type)
-    cluster.cluster(points)
+    cluster.cluster(points, 100)
+    if not args.q:
+        cluster.plot()
     
     if args.w != None:
         print "writing cluster labels to file:", args.w
