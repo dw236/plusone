@@ -35,6 +35,9 @@ public class SVD {
 	public int numTerms;
 	private Random rand=new Random();
 
+    /* Set to true to bring back an old bug. */
+    protected boolean oldBehavior0 = false;
+
 	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms) {
 
 		this.DIMENSION = DIMENSION;
@@ -69,6 +72,10 @@ public class SVD {
 		System.out.format("[SVD] took %.3f seconds.\n",
 				(System.currentTimeMillis() - t1)/1000.0);
 	}
+
+    public void setOldBehavior0(boolean b) {
+        oldBehavior0 = b;
+    }
 
 /*	private Map<Integer, Double> getReducedDocument(int index) {
 		Map<Integer, Double> result = new HashMap<Integer, Double>();
@@ -208,7 +215,12 @@ public class SVD {
 
 		double[] dock = new double[DIMENSION];
 		for (int i = 0; i < dock.length; i ++) {
-			dock[i] = dotProduct(doct, beta[i]);	    
+            if (oldBehavior0) {
+                /* This is what used to happen here. */
+                dock[i] = dotProduct(doct, beta[i]) / sigma[i];
+            } else {
+                dock[i] = dotProduct(doct, beta[i]);	    
+            }
 		}
 		return dock;
 	}

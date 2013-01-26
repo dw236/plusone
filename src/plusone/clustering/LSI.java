@@ -38,7 +38,11 @@ public class LSI extends ClusteringTest {
     public int numTerms;
 
     public LSI(int DIMENSION, List<TrainingPaper> trainingSet, Terms terms) {
-	super("LSI-" + DIMENSION);
+        this(DIMENSION, trainingSet, terms, "LSI");
+    }
+
+    public LSI(int DIMENSION, List<TrainingPaper> trainingSet, Terms terms, String nameBase) {
+	super(nameBase + "-" + DIMENSION);
 	this.DIMENSION = DIMENSION;
 	numTerms=terms.size();
 

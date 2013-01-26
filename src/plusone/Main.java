@@ -506,6 +506,10 @@ public class Main {
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
+
+				LSIOld0 lsio0 = new LSIOld0(dimensions[dk], trainingSet, terms);
+
+				runClusteringMethod(lsio0, ks, size,false);
 			}
 		}
 		//PLSI

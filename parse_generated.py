@@ -42,7 +42,7 @@ def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
     return results, flat_results
 
 def flatten_result(new_result):
-    result = {option:new_result[3][option] for option in UNIVERSALS}
+    result = dict((option, new_result[3][option]) for option in UNIVERSALS)
     for param in PARAMS:
          result[param] = new_result[3][param]
     for algorithm in sorted(new_result[2]):
