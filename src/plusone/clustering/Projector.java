@@ -95,7 +95,7 @@ public class Projector extends ClusteringTest {
         		+ trainingSet.size() + " " + terms.size(), true);
         Utils.runCommand("python src/plusone/clustering/kmeans.py " +
         		"projector/data/projected -k " + 
-        		numTopics + " -m cosine -w projector/data/labels", true);
+        		numTopics + " -m distcos -w projector/data/labels -t -q", true);
         Utils.runCommand("./run-projector-train " + numTopics +  " " + 
         		trainingSet.size() + " " + terms.size(), true);
         /* uncomment to use projector kmeans

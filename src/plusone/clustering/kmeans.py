@@ -9,8 +9,27 @@ import argparse
 def cos_sim(a, b):
     return a.dot(b) / (np.sqrt(a.dot(a)) * np.sqrt(b.dot(b)))
 
+def dist_cos(a, b):
+    """use cosine similarity as a distribution
+    """
+    return np.exp(cos_sim(a, b))
+
 def euclidean_dist(a, b):
     return np.linalg.linalg.norm(a - b)
+
+def get_points(filename):
+    try:
+        points = loadtxt(filename)
+    except:
+        print "loadtxt failed--reading points manually"
+        with open(filename, 'r') as f:
+            lines = [line.strip(' \n').split(' ') for line in f.readlines()]
+            points = []
+            for line in lines:
+                points.append([float(num) for num in line])
+        points = np.array(points)
+    
+    return points
 
 class Kmeans():
     """
@@ -19,40 +38,67 @@ class Kmeans():
     points: datapoints to be clustered
     labels: the cluster each datapoint belongs to
     """
-    def __init__(self, k, init="points", metric="cosine"):
+    RECOGNIZED_INITS = ['points', 'random']
+    RECOGNIZED_TYPES = ['normal', 'fuzzy']
+    
+    def __init__(self, k, init="points", metric="cosine", type="fuzzy"):
         """
         init: how to initialize the cluster centers (defaults to picking random
         observations as clusters)
         metric: distance metric for datapoints
+        type: standard kmeans clustering (normal) or fuzzy clustering (fuzzy)
         """
         self.k = k
-        self.init = init
+        if init in self.RECOGNIZED_INITS:
+            self.init = init
+        else:
+            raise Exception("unrecognized initialization: " + str(init))
+        if type in self.RECOGNIZED_TYPES:
+            self.type = type
+        else:
+            raise Exception("unrecognized type: " + str(type))
         if metric == "cosine":
             self.metric = cos_sim
             self.select = np.argmax
         elif metric == "euclidean":
             self.metric = euclidean_dist
             self.select = np.argmin
+        elif metric == "distcos":
+            self.metric = dist_cos
+            self.select = None
         else:
             raise Exception("unrecognized metric: " + str(metric))
         
-    def cluster(self, points):
+    def cluster(self, points, max_iter=np.inf):
         self.points = points
         iterations = 0
         
         if self.init == "points":
             self.centers = rsample(points, self.k)
             self.labels = self.assign()
-            self.centers = self.update()
-            while True:
-                new_labels = self.assign()
-                if all(new_labels == self.labels):
-                    print "converged in", iterations, "iterations"
-                    break
-                else:
-                    iterations += 1
-                    self.labels = new_labels
-                    self.centers = self.update()
+        elif self.init == "random":
+            if self.type == "normal":
+                self.labels = np.array([np.random.randint(0, self.k)
+                                        for point in self.points])
+            elif self.type == "fuzzy":
+                labels = []
+                for point in self.points:
+                    cluster = np.zeros(self.k)
+                    cluster[np.random.randint(0, self.k)] += 1
+                    labels.append(np.array(cluster))
+                self.labels = np.array(labels)
+        self.centers = self.update()
+        while iterations <= max_iter:
+            if iterations % 10 == 0:
+                print iterations#, self.centers
+            new_labels = self.assign()
+            if all(new_labels == self.labels):
+                print "converged in", iterations, "iterations"
+                break
+            else:
+                iterations += 1
+                self.labels = new_labels
+                self.centers = self.update()
 
     def assign(self, points=None):
         """
@@ -65,38 +111,71 @@ class Kmeans():
         labels = []
         for point in self.points:
             distances = [self.metric(point, center) for center in self.centers]
-            labels.append(self.select(distances))
+            #print distances
+            if self.type == 'normal':
+                labels.append(self.select(distances))
+            elif self.type == 'fuzzy':
+                distances = np.array(distances)
+                labels.append(distances / sum(distances))
             
         return np.array(labels)
     
     def update(self):
         """
+        n: number of points
+        m: dimension of each point
         """
         centers = []
+        n, m = np.shape(self.points)
         for cluster in range(self.k):
-            cluster_points = self.points[np.where(self.labels == cluster)[0]]
-            centers.append(np.sum(cluster_points, axis=0) / len(cluster_points))
+            if self.type == 'normal':
+                cluster_points = self.points[np.where(self.labels == cluster)
+                                             [0]]
+                centers.append(np.sum(cluster_points, axis=0) 
+                               / len(cluster_points))
+            elif self.type == 'fuzzy':
+                contribution = self.labels[:,cluster]
+                contributions = np.array([ones(m) * label 
+                                          for label in contribution])
+                centers.append(np.sum(self.points * contributions, axis=0)
+                               / np.sum(contribution))
         
         return np.array(centers)
     
-    def plot(self):
+    def plot(self, clear=True):
         """only works for 2D points
         """
+        if clear:
+            figure()
+            clf()
+        
         colors = 'brgmyck'
         
         for cluster in range(self.k):
             color = colors[cluster % len(colors)]
-            cluster_points = self.points[np.where(self.labels == cluster)[0]]
+            if self.type == 'normal':
+                cluster_points = self.points[np.where(self.labels 
+                                                      == cluster)[0]]
+            elif self.type == 'fuzzy':
+                labels = np.array([np.argmax(label) for label in self.labels])
+                cluster_points = self.points[np.where(labels
+                                                      == cluster)[0]]
             plot([point[0] for point in cluster_points], 
                  [point[1] for point in cluster_points],
                  color + 'o')
+
             plot(self.centers[cluster][0], self.centers[cluster][1],
                  color + 'x')
+            show()
     
     def write_labels(self, filename):
         with open(filename, 'w') as f:
             for label in self.labels:
-                f.write(str(label + 1) + ' ')
+                if self.type == 'normal':
+                    to_write = label
+                elif self.type == 'fuzzy':
+                    to_write = np.argmax(label)
+                f.write(str(to_write + 1) + ' ')
             f.write('\n')
             
 
@@ -111,8 +190,14 @@ def main():
     parser.add_argument('-m', action="store", metavar='metric', 
                         default='euclidean', 
                         help='distance metric used for clustering (euclidean)')
-    parser.add_argument('-w', action="store", metavar='write_filename',
+    parser.add_argument('-w', action="store", metavar='write filename',
                         help='filename for writing cluster labels (False)')
+    parser.add_argument('-t', action="store_true", default=False, 
+                        help='flag to use fuzzy clustering (False)')
+    parser.add_argument('-i', action="store_true", default=False,
+                        help='flag to use random init (False)')
+    parser.add_argument('-q', action="store_true", default=False,
+                        help='flag to plot output (True)')
     
     args = parser.parse_args()
     
@@ -122,11 +207,23 @@ def main():
                               [randint(10, 20) for i in range(15)]))
     else:
         print "loading points from", args.f
-        points = loadtxt(args.f)
+        points = get_points(args.f)
         print "points succesfully loaded [ shape:", np.shape(points), "]"
+    if args.t:
+        type = "fuzzy"
+    else:
+        type = "normal"
+    if args.i:
+        init = "random"
+    else:
+        init = "points"
         
-    cluster = Kmeans(args.k, metric=args.m)
-    cluster.cluster(points)
+    cluster = Kmeans(args.k, init=init, metric=args.m, type=type)
+    cluster.cluster(points, 100)
+    if args.q:
+        print "suppressing plot of output"
+    else:
+        cluster.plot()
     
     if args.w != None:
         print "writing cluster labels to file:", args.w
