@@ -1,0 +1,53 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.6)
+The top-level auxiliary file: tbd.aux
+The style file: plain.bst
+Database file #1: di.bib
+Warning--to sort, need author or key in Classic3
+Warning--to sort, need author or key in AP
+Warning--to sort, need author or key in KosNIPS
+Warning--empty author in AP
+Warning--empty author in KosNIPS
+Warning--empty author in Classic3
+Warning--empty booktitle in Arora2012
+You've used 18 entries,
+            2118 wiz_defined-function locations,
+            607 strings with 6735 characters,
+and the built_in function-call counts, 4935 in all, are:
+= -- 471
+> -- 243
+< -- 1
++ -- 96
+- -- 77
+* -- 322
+:= -- 858
+add.period$ -- 52
+call.type$ -- 18
+change.case$ -- 89
+chr.to.int$ -- 0
+cite$ -- 25
+duplicate$ -- 184
+empty$ -- 386
+format.name$ -- 77
+if$ -- 1020
+int.to.chr$ -- 0
+int.to.str$ -- 18
+missing$ -- 11
+newline$ -- 89
+num.names$ -- 34
+pop$ -- 85
+preamble$ -- 1
+purify$ -- 71
+quote$ -- 0
+skip$ -- 131
+stack$ -- 0
+substring$ -- 230
+swap$ -- 26
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 72
+warning$ -- 7
+while$ -- 40
+width$ -- 20
+write$ -- 180
+(There were 7 warnings)

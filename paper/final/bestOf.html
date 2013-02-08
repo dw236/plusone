@@ -1,0 +1,78 @@
+<script src="sorttable.js"></script>
+<head> <style type="text/css"> span.dropt {border-bottom: none; background: transparent;}     span.dropt:hover {text-decoration: none; background: transparent; z-index: 6; }     span.dropt span {position: absolute; left: -9999px;     margin: 20px 0 0 0px; padding: 3px 3px 3px 3px;     border-style:solid; border-color:black; border-width:1px; z-index: 6;}     span.dropt:hover span {left: 2%; background: #ffffff;}     span.dropt span {position: absolute; left: -9999px;     margin: 4px 0 0 0px; padding: 3px 3px 3px 3px;     border-style:solid; border-color:black; border-width:1px;}     span.dropt:hover span {margin: 20px 0 0 170px; background: #ffffff; z-index:6;} </style></head>
+<table border="1">
+	<th colspan="-8">Parameters bestOf(k=15,30,50)</th>
+</table>
+<table border="1" class="sortable">
+	<tr>
+		<th>     </th>
+		<th>Baseline</th>
+		<th>GibbsLda</th>
+		<th>LSI</th>
+		<th>PLSI</th>
+		<th>knn-25</th>
+		<th>lda</th>
+		<th>projector</th>
+	</tr>
+	<tr>
+		<td>AP</td>
+		<td>0.14</td>
+		<td>0.21</td>
+		<td>0.24</td>
+		<td>0.15</td>
+		<td>0.25</td>
+		<td>0.2</td>
+		<td>0.21</td>
+	</tr>
+	<tr>
+		<td>Cisi</td>
+		<td>0.09</td>
+		<td>0.12</td>
+		<td>0.09</td>
+		<td>0.1</td>
+		<td>0.14</td>
+		<td>0.12</td>
+		<td>0.1</td>
+	</tr>
+	<tr>
+		<td>Cran</td>
+		<td>0.17</td>
+		<td>0.21</td>
+		<td>0.19</td>
+		<td>0.17</td>
+		<td>0.25</td>
+		<td>0.23</td>
+		<td>0.21</td>
+	</tr>
+	<tr>
+		<td>Kos</td>
+		<td>0.21</td>
+		<td>0.38</td>
+		<td>0.26</td>
+		<td>0.19</td>
+		<td>0.38</td>
+		<td>0.38</td>
+		<td>0.3</td>
+	</tr>	
+	<tr>
+		<td>Med</td>
+		<td>0.08</td>
+		<td>0.11</td>
+		<td>0.16</td>
+		<td>0.08</td>
+		<td>0.17</td>
+		<td>0.11</td>
+		<td>0.16</td>
+	</tr>
+	<tr>
+		<td>NIPS</td>
+		<td>0.64</td>
+		<td>0.77</td>
+		<td>0.47</td>
+		<td>0.64</td>
+		<td>0.75</td>
+		<td>0.73</td>
+		<td>0.57</td>
+	</tr>
+</table>
+<br></br>
