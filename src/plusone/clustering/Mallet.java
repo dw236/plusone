@@ -31,11 +31,12 @@ public class Mallet extends ClusteringTest {
 	private Terms terms;
 	private int numTopics;
     private int gibbsIterations;
+    private boolean synthetic;
 	
 	private SimpleMatrix topicWord;
 	private SimpleMatrix docTopic;
 	
-	/* We replace all of the numbers with strings, so we have to
+	/* We replace all of the numbers in synthetic documents with strings, so we have to
 	 * remember what their indices were (outputs of Mallet reference
 	 * the new strings)
 	 */
@@ -47,7 +48,7 @@ public class Mallet extends ClusteringTest {
 	
 	public Mallet(String algorithmName, List<TrainingPaper> trainingSet, 
 			Indexer<String> wordIndexer,
-			Terms terms, int numTopics, int gibbsIterations) {
+			Terms terms, int numTopics, int gibbsIterations, boolean synthetic) {
 		this("mallet" + algorithmName + "-" + numTopics);
 		if (algorithmName.equals("lda")) {
 			this.algorithm = Algorithm.lda;
@@ -59,6 +60,7 @@ public class Mallet extends ClusteringTest {
 		this.terms = terms;
 		this.numTopics = numTopics;
 		this.gibbsIterations = gibbsIterations;
+		this.synthetic = synthetic;
 		train();
 	}
 
@@ -88,7 +90,7 @@ public class Mallet extends ClusteringTest {
 						//+ " --evaluator-filename Mallet/train.evaluator"
 						//+ " --output-state Mallet/topic-state.gz"
 						+ " --num-iterations " + gibbsIterations
-						+ " --use-symmetric-alpha false"
+						+ " --use-symmetric-alpha " + (synthetic ? "true" : "false")
 						+ " --word-topic-counts-file Mallet/word-topics", false);
 				break;
 			case hlda:
@@ -194,7 +196,7 @@ public class Mallet extends ClusteringTest {
 			for (int word : p.getTrainingWords()) {
 				for (int i = 0; i < p.getTrainingTf(word); i++) {
 					String wordAsString = wordIndexer.get(word);
-					try {
+					if (synthetic) {
 						StringBuffer wordWithChars = new StringBuffer();
 						for (int j = 0; j < wordAsString.length(); j++) {
 							int jthCharAsInt = Integer.parseInt("" + wordAsString.charAt(j));
@@ -202,12 +204,8 @@ public class Mallet extends ClusteringTest {
 						}
 						fakeWordIndexer.put(wordWithChars.toString(), word);
 						fileWriter.write(wordWithChars.toString() + " ");
-					} catch (NumberFormatException e) {
-						//Don't have numbers after all, just write them
-                        //Put the word in the fakeWordIndexer with numbers removed as well
-                        //to get the case in which we have a word with numbers and characters
-						fakeWordIndexer.put(wordAsString.replaceAll("\\D+", ""), word);
-						fileWriter.write(wordAsString.replaceAll("\\D+", "") + " ");
+					} else {
+						fileWriter.write(wordAsString + " ");
 					}
 				}
 			}
@@ -239,7 +237,7 @@ public class Mallet extends ClusteringTest {
 			for (int word : p.getTrainingWords()) {
 				for (int i = 0; i < p.getTrainingTf(word); i++) {
 					String wordAsString = wordIndexer.get(word);
-					try {
+					if (synthetic) {
 						StringBuffer wordWithChars = new StringBuffer();
 						for (int j = 0; j < wordAsString.length(); j++) {
 							int jthCharAsInt = Integer.parseInt("" + wordAsString.charAt(j));
@@ -247,12 +245,8 @@ public class Mallet extends ClusteringTest {
 						}
 						fakeWordIndexer.put(wordWithChars.toString(), word);
 						fileWriter.write(wordWithChars.toString() + " ");
-					} catch (NumberFormatException e) {
-						//Don't have numbers after all, just write them
-                        //Put the word in the fakeWordIndexer with numbers removed as well
-                        //to get the case in which we have a word with numbers and characters
-						fakeWordIndexer.put(wordAsString.replaceAll("\\D+", ""), word);
-						fileWriter.write(wordAsString.replaceAll("\\D+", "") + " ");
+					} else {
+						fileWriter.write(wordAsString + " ");
 					}
 				}
 			}
@@ -313,17 +307,24 @@ public class Mallet extends ClusteringTest {
 					continue;
 				}
 				String[] parsedLine = line.split(" ");
-				//try to get from fakeWordIndexer
-				Integer wordIndex = fakeWordIndexer.get(parsedLine[1]);
-				if (wordIndex == null) {
-					//If it's not there, it was a regular word
+				Integer wordIndex;
+				boolean pass = false;
+				if(synthetic) {
+					wordIndex = fakeWordIndexer.get(parsedLine[1]);
+				} else {
 					wordIndex = wordIndexer.indexOf(parsedLine[1]);
+					if (wordIndex == -1) {
+						//Mallet ignores numbers, which causes us to lose some words
+						pass = true;
+					}
 				}
-				for (int i = 2; i < parsedLine.length; i++) {
-					String topicAndCount = parsedLine[i];
-					int topic = Integer.parseInt(topicAndCount.split(":")[0]);
-					int count = Integer.parseInt(topicAndCount.split(":")[1]);
-					ret[topic][wordIndex] = count;
+				if (!pass) {
+					for (int i = 2; i < parsedLine.length; i++) {
+						String topicAndCount = parsedLine[i];
+						int topic = Integer.parseInt(topicAndCount.split(":")[0]);
+						int count = Integer.parseInt(topicAndCount.split(":")[1]);
+						ret[topic][wordIndex] = count;
+					}
 				}
 			}
 		} catch (FileNotFoundException e) {

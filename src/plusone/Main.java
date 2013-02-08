@@ -550,7 +550,8 @@ public class Main {
 			int gibbsIterations = Integer.parseInt(System.getProperty("plusone.mallet.gibbsIterations", 
 					"500"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				malletLda = new Mallet("lda", trainingSet, wordIndexer, terms, dimensions[dk], gibbsIterations);
+				malletLda = new Mallet("lda", trainingSet, wordIndexer, terms, 
+						dimensions[dk], gibbsIterations, !generator.equals(""));
 				runClusteringMethod(malletLda, ks, size, true);
 			}
 		}
@@ -563,7 +564,8 @@ public class Main {
 			int gibbsIterations = Integer.parseInt(System.getProperty("plusone.mallet.gibbsIterations", 
 					"500"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				malletHlda = new Mallet("hlda", trainingSet, wordIndexer, terms, dimensions[dk], gibbsIterations);
+				malletHlda = new Mallet("hlda", trainingSet, wordIndexer, terms, 
+						dimensions[dk], gibbsIterations, !generator.equals(""));
 				runClusteringMethod(malletHlda, ks, size, true);
 			}
 		}
