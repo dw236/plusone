@@ -40,6 +40,7 @@ class Kmeans():
     """
     RECOGNIZED_INITS = ['points', 'random']
     RECOGNIZED_TYPES = ['normal', 'fuzzy']
+    TOLERANCE = 1e-3
     
     def __init__(self, k, init="points", metric="cosine", type="fuzzy"):
         """
@@ -92,7 +93,9 @@ class Kmeans():
             if iterations % 10 == 0:
                 print iterations#, self.centers
             new_labels = self.assign()
-            if all(new_labels == self.labels):
+            if all(new_labels == self.labels) or (np.all(abs(new_labels - 
+                                                             self.labels) 
+                                                  < self.TOLERANCE)):
                 print "converged in", iterations, "iterations"
                 break
             else:
@@ -172,11 +175,19 @@ class Kmeans():
         with open(filename, 'w') as f:
             for label in self.labels:
                 if self.type == 'normal':
-                    to_write = label
+                    to_write = str(label + 1) + ' ' 
                 elif self.type == 'fuzzy':
-                    to_write = np.argmax(label)
-                f.write(str(to_write + 1) + ' ')
+                    to_write = ' '.join([str(dimension) 
+                                         for dimension in label]) + ' \n'
+                f.write(to_write)
             f.write('\n')
+    
+    def write_centers(self, filename):
+        with open(filename, 'w') as f:
+            for center in self.centers:
+                for dimension in center:
+                    f.write(str(dimension) + ' ')
+                f.write('\n')
             
 
 def main():
@@ -228,6 +239,9 @@ def main():
     if args.w != None:
         print "writing cluster labels to file:", args.w
         cluster.write_labels(args.w)
+        centers_filename = args.w[:-6] + 'centers' #hack--remove ASAP
+        print "writing centers to file: ", centers_filename
+        cluster.write_centers(centers_filename)
     
     return points, cluster
 

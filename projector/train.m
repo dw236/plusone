@@ -5,15 +5,17 @@ docProj = load('data/projected');
 V = load('data/V');
 ID = load('data/labels');
 
-centers = zeros(dim,dim-1);
-sizes = zeros(1,dim);
-for i=1:numDoc
-    sizes(ID(i))=sizes(ID(i))+1;
-    centers(ID(i),:)=centers(ID(i),:)+docProj(i,:);
-end
-for i=1:dim
-    centers(i,:)=centers(i,:)/sizes(i);
-end
+% centers = zeros(dim,dim-1);
+% sizes = zeros(1,dim);
+% for i=1:numDoc
+%     sizes(ID(i))=sizes(ID(i))+1;
+%     centers(ID(i),:)=centers(ID(i),:)+docProj(i,:);
+% end
+% for i=1:dim
+%     centers(i,:)=centers(i,:)/sizes(i);
+% end
+
+centers = load('data/centers');
 
 hyperPlane = zeros(dim,dim-1);
 bounds=zeros(1,dim);

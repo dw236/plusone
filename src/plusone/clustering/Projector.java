@@ -90,7 +90,7 @@ public class Projector extends ClusteringTest {
         Utils.runCommand("rm projector/data/projected", true);
         Utils.runCommand("rm projector/data/V", true);
         createProjectorInput("projector/data/documents", trainingSet);
-        //comment these next three lines to use projector kmeans
+        //uncomment these next three lines to use kmeans.py
         Utils.runCommand("./run-projector-prepare " + numTopics + " "
         		+ trainingSet.size() + " " + terms.size(), true);
         Utils.runCommand("python src/plusone/clustering/kmeans.py " +
