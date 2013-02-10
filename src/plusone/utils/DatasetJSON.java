@@ -36,9 +36,7 @@ public class DatasetJSON {
     void loadInPlaceFromPath(String filename) {	
 		try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			JSONObject json = new JSONObject( in.readLine() );
 						
-			JSONArray users = json.getJSONArray( "users" );
 			if (isIndexed(filename)) {
 				initializeIndexer(filename);
 			}
@@ -47,8 +45,8 @@ public class DatasetJSON {
 			JSONObject user;
 			JSONArray items = null, scores = null, tags = null;
 			HashMap<Integer, Integer> tf = null;
-			for( int i = 0; i < users.length(); i++ ) {
-				user = users.getJSONObject( i );
+			user = new JSONObject( in.readLine() );
+			while (user != null) {
 				tf = new HashMap<Integer, Integer>();
 				items = user.getJSONArray( "items" );
 				try	{
@@ -95,6 +93,11 @@ public class DatasetJSON {
 				}
 				documents.add(p);
 				paperIndexer.add(p);
+				try {
+					user = new JSONObject( in.readLine() );
+				} catch (NullPointerException e) {
+					user = null;
+				}
 			}
 		} catch(Exception e) {
 		    e.printStackTrace();
@@ -124,9 +127,8 @@ public class DatasetJSON {
     	JSONObject user; JSONArray items;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" );
-			for (int i = 0; i < users.length(); i++) {
-				user = users.getJSONObject( i );
+			user = new JSONObject( in.readLine() );
+			while (user != null) {
 				items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					try {
@@ -135,10 +137,14 @@ public class DatasetJSON {
 						return false;
 					}
 				}
-			}
+				try {
+					user = new JSONObject( in.readLine() );
+				} catch (NullPointerException e) {
+					user = null;
+				}			}
 			return true;
     	} catch (Exception e) {
-    		System.out.println("Something went wrong with isIndexed");
+    		e.printStackTrace();
     		return false;
     	}
     }
@@ -154,9 +160,8 @@ public class DatasetJSON {
     	JSONObject user; JSONArray items, tags;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" );
-			for (int i = 0; i < users.length(); i++) {
-				user = users.getJSONObject( i );
+			user = new JSONObject( in.readLine() );
+			while (user != null) {
 				items = user.getJSONArray( "items" );
 				try {
 					tags = user.getJSONArray("tags");
@@ -164,7 +169,11 @@ public class DatasetJSON {
 				} catch (Exception e) {
 					//If we fall into this statement every time, return false
 				}
-			}
+				try {
+					user = new JSONObject( in.readLine() );
+				} catch (NullPointerException e) {
+					user = null;
+				}			}
     	} catch (Exception e) {
     		e.printStackTrace();
     		return false;
@@ -178,23 +187,25 @@ public class DatasetJSON {
      */
     private void initializeIndexer(String filename) {
     	int maxIndex = -1;
-    	JSONArray users, items;
     	JSONObject user;
+    	JSONArray items;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-	    	JSONObject json = new JSONObject( in.readLine() );
-			users = json.getJSONArray( "users" );
-			for (int i = 0; i < users.length(); i++) {
-				 user = users.getJSONObject( i );
+			user = new JSONObject( in.readLine() );
+			while (user != null) {
 				 items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					if (Integer.parseInt(items.getString(j)) > maxIndex) {
 						maxIndex = Integer.parseInt(items.getString(j));
 					}
 				}
-
-			}
+				try {
+					user = new JSONObject( in.readLine() );
+				} catch (NullPointerException e) {
+					user = null;
+				}			}
     	} catch (Exception e) {
+    		e.printStackTrace();
     		System.out.println("Couldn't initialize indexer for pre-indexed files");
     	}
     	for (int i = 0; i < maxIndex; i++) {

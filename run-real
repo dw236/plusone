@@ -6,7 +6,8 @@ export basedir=$PWD
 klist=(15 30 50 75 100)
 #Datasets to use
 #datalist=("cacm.json" "cisi.json" "cran.json" "med.json" "kos.json" "nips.json")
-datalist=("med.json")
+datalist=("20Newsgroups.json")
+#datalist=("med.json")
 #datalist=("ap.json")
 #datalist=("stackoverflow.json")
 #datalist=("lastfmsubset.json")
