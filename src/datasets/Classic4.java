@@ -94,10 +94,6 @@ public class Classic4 {
 			}
 		}
 
-		JSONObject json = new JSONObject();
-		
-		JSONArray docs = new JSONArray();
-
 	    for( Integer user : hm.keySet() ) {
 	    	JSONObject doc = new JSONObject();
 	    	doc.put( "id", user );
@@ -111,10 +107,8 @@ public class Classic4 {
 
 	    	doc.put( "items", terms );
 	    	//doc.put( "scores", scores );
-	    	docs.put( doc );
+	    	out.println( doc );
 	    }
-    	json.put( "users", docs );
-    	out.println( json.toString() );
     	out.close();
     	System.out.println("done!");
 	}

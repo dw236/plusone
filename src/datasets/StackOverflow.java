@@ -34,11 +34,10 @@ public class StackOverflow {
     	}
    
     	//ArrayList<String> stopWords = makeStopWords();
-    	
+    	System.out.println(new Scanner(input).nextLine());
 		JSONObject inJson = new JSONObject(new Scanner(input).nextLine());
-		JSONObject outJson = new JSONObject();
+		System.out.println(inJson);
 		JSONArray questions = inJson.getJSONArray("questions");
-		JSONArray docs = new JSONArray();
 		int id = 0; boolean skip = false;
 		
 		for (int i = 0; i < questions.length(); i++) {
@@ -69,7 +68,7 @@ public class StackOverflow {
 				outUser.put("id", id++);
 				outUser.put("items", questionText);
 				outUser.put("tags", tagText);
-				docs.put(outUser);
+				out.println(outUser);
 			} else {
 				skip = false;
 			}
@@ -91,13 +90,11 @@ public class StackOverflow {
 					}
 					outUser.put("id", id++);
 					outUser.put("items", answerText);
-					docs.put(outUser);
+					out.println(outUser);
 				}
 			}
 		}
 		
-    	outJson.put( "users", docs );
-    	out.println( outJson.toString() );
     	out.close();
     	System.out.println("Done!");
 	}

@@ -21,17 +21,15 @@ public class BagOfWords {
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws Throwable {
-		String filename = "data/docword.nytimes.txt";
+		String realName = "nips";
+		String filename = "data/docword." + realName + ".txt";
+		HashMap<Integer, String> wordMap = processWordmap("data/vocab." + realName + ".txt");
 		System.out.println("Processing " + filename + "...");
 		File input = new File(filename);
     	PrintWriter out = new PrintWriter( new BufferedWriter(
     			new FileWriter( filename + ".json" ) ) );
     	//ArrayList<String> stopWords = makeStopWords();
     	
-		JSONObject json = new JSONObject();
-		
-		JSONArray docs = new JSONArray();
-
 		Scanner lines = new Scanner(input);
 		int numDocs = Integer.parseInt(lines.nextLine());
 		lines.nextLine();
@@ -49,7 +47,7 @@ public class BagOfWords {
 			if (docId != currentDocId) {
 				doc.put("id", currentDocId);
 				doc.put("items", document);
-				docs.put(doc);
+				out.println(doc);
 				document = new ArrayList<String>();
 		    	doc = new JSONObject();
 				currentDocId += 1;
@@ -59,17 +57,25 @@ public class BagOfWords {
 				}
 			}
 			for (int i = 0; i < count; i++) {
-				document.add(wordId + "");
+				document.add(wordMap.get(wordId) + "");
 			}
 		}
 		doc.put("id", currentDocId);
 		doc.put("items", document);
-		docs.put(doc);
+		out.println(doc);
 		
-    	json.put( "users", docs );
-    	out.println( json.toString() );
     	out.close();
     	System.out.println("Done!");
+	}
+	
+	private static HashMap<Integer, String> processWordmap(String filename) throws Throwable {
+		HashMap<Integer, String> output = new HashMap<Integer,String>();
+		Scanner lines = new Scanner(new File(filename));
+		int i = 0;
+		while(lines.hasNextLine()) {
+			output.put(i++, lines.nextLine());
+		}
+		return output;
 	}
 	
 	private static ArrayList<String> makeStopWords() throws Throwable {

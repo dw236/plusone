@@ -25,9 +25,6 @@ public class TwentyNewsgroups {
 		File inputDir = new File(dirName);
     	PrintWriter out = new PrintWriter( new BufferedWriter(new FileWriter( "data/20Newsgroups.json" ) ) );
     	
-		JSONObject outJson = new JSONObject();
-		JSONArray users = new JSONArray();
-
     	//ArrayList<String> stopWords = makeStopWords();
     	int id = 0;
     	for (File firstSubDir : inputDir.listFiles()) {
