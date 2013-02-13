@@ -12,7 +12,7 @@ def cos_sim(a, b):
 def dist_cos(a, b):
     """use cosine similarity as a distribution
     """
-    return np.exp(cos_sim(a, b))
+    return np.exp(10 * cos_sim(a, b))
 
 def euclidean_dist(a, b):
     return np.linalg.linalg.norm(a - b)
@@ -30,6 +30,15 @@ def get_points(filename):
         points = np.array(points)
     
     return points
+
+def get_top(dist, num):
+    """
+    dist: distribution
+    num: number of elements to keep
+    """
+    threshold = sorted(dist, reverse=True)[:num][-1]
+    dist[dist < threshold] = 0
+    return dist / np.sum(dist)
 
 class Kmeans():
     """
@@ -119,6 +128,7 @@ class Kmeans():
                 labels.append(self.select(distances))
             elif self.type == 'fuzzy':
                 distances = np.array(distances)
+                #distances = get_top(distances, 5) #Hack -- remove ASAP
                 labels.append(distances / sum(distances))
             
         return np.array(labels)
