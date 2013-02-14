@@ -46,8 +46,8 @@ public class PLSI extends ClusteringTest{
 	protected double[][] docDistr;
 	protected double[] topicDistr;
 	protected double beta=1.0;
-	InputStreamReader converter = new InputStreamReader(System.in);
-	BufferedReader in = new BufferedReader(converter);
+//	InputStreamReader converter = new InputStreamReader(System.in);
+//	BufferedReader in = new BufferedReader(converter);
 
 
 	public PLSI(List<TrainingPaper> trainingDocuments, int vocabSize) {
@@ -150,16 +150,22 @@ public class PLSI extends ClusteringTest{
 
 	public void train(int numTopics){
 		init(numTopics);
+		this.testName="PLSI-"+numTopics;
 //		System.out.println("start training");
 		double lkh = likelihood();
 		boolean stop=false;
+		int round=0;
 		while (!stop){
 			Estep();
 			Mstep();
+			round++;
+			if ((round % 10) ==0)
+			{
 			double newlkh= likelihood();
-			if (Math.abs(lkh-newlkh)<.01)
+			if (newlkh-lkh<.01)
 				stop=true;
 			lkh=newlkh;	
+			}
 		} 
 	}
 

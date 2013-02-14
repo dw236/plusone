@@ -1,0 +1,317 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathtools}
+
+\newcommand{\DefEq}{\stackrel{\mathrm{def}}{=}}
+
+\DeclareMathOperator{\D}{d}
+\DeclareMathOperator{\Range}{range}
+
+\newtheorem{Problem}{Problem}
+
+\begin{document}
+
+\section{Summary}
+
+We consider three algorithms for inferring topic distributions from word distributions:
+    \(\ell_2\) projection; Kleinberg and Sandler's omniscient algorithm~\cite{kleinberg2004using}; and maximum-likelihood inference.
+We describe the three algorithms and compare them on very simple examples.
+\begin{itemize}
+\item All three algorithms recover good topic distributions when the word-topic matrix has full rank and the document is long enough (Section~\ref{Sec:ManySamplesGoodPerformance}).
+\item \(\ell_2\) projection behaves well when the topics are disjoint uniform distributions (Section~\ref{Sec:L2DisjointUniform}), but we show a case where it arguably makes a bad prediction (Section~\ref{Sec:L2DisjointNonUniform}).
+\item The Kleinberg-Sandler algorithm may show strange results even in the sample case where the topics are disjoint uniform distributions over words (Section~\ref{Sec:KSDisjoint}).
+\end{itemize}
+
+\section{Problem Statement}
+
+Fix a \(M \times k\) word-topic matrix \(A\).
+Suppose there is a document with topic distribution \(t\).
+We observe a vector \(w\) of word counts sampled from \(At\).
+\begin{Problem}
+    \label{Problem:InferTopics}
+    Given the words \(w\), estimate the topic distribution \(t\).
+\end{Problem}
+
+\section{Algorithms}
+
+We consider three algorithms to solve Problem~\ref{Problem:InferTopics}.
+
+\subsection{\(\ell_2\) Projection}
+
+Return the vector \(t\) which minimizes \(|w - A t|_2\).
+In other words, orthogonally project \(w\) to \(w' \in \Range(A)\), and then make \(w' = A t\).
+
+We can also think of this in terms of matrix inverses.
+Let \(A^+\) be the Moore-Penrose pseudoinverse of \(A\): so \(A^+A = I_k\), and the Frobenius norm of \(|A^+|\) is as small as possible.
+The \(\ell_2\) projection algorithm returns the topic vector \(A^+w\).
+
+For long documents, the empirical word vector \(w\) will be close to \(A t\), so \(A^+ w\) will be close to \(t\).
+
+\subsection{Kleinberg-Sandler}
+
+The Kleinberg-Sandler omniscient%
+    \footnote{It is called omniscient to distinguish it from algorithms that are not allowed to see \(A\).}
+    algorithm~\cite{kleinberg2004using} uses a different generalized inverse.
+Let \(B\) be a matrix such that \(BA = I_k\).
+If there are many such \(B\), pick one with the smallest maximum entry\footnote{%
+    This still might leave many choices, so the behavior of this algorithm isn't completely determined.}.
+If you want to think in terms of \(\ell_1\) and \(\ell_\infty\), we are minimizing \(|B|_{1,\infty} = \max_{|x|_1 = 1} |B x|_\infty\).
+Given a word vector \(w\), the Kleinberg-Sandler algorithm algorithm returns \(Bw\).
+
+\subsection{Maximum Likelihood}
+
+Each word of a document with topic distribution \(t\) is drawn from the distribution \(A t\):
+\[ \Pr[\text{next word is \(j\)} | t] = (A t)_j \ldotp \]
+Given the word counts \(w\), we apply Bayes' rule:
+\begin{align*}
+    \Pr[t | w] \propto & \Pr[t] \Pr[w | t]
+\\  = & \Pr[t] \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{align*}
+It is common to assume \(t\) is drawn from a Dirichlet distribution:
+\begin{equation}
+    \label{Eq:TopicProbWithAlpha}
+    \Pr[t | w] \propto \prod_{i = 1}^k t_i^{\alpha - 1} \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{equation}
+Maximizing (\ref{Eq:TopicProb}) is NP hard when \(\alpha < 1\), but for \(\alpha \ge 1\), it can be done in polynomial time~\cite{conf/nips/SontagR11}.
+For this analysis we will assume \(t\) is drawn from the uniform distribution (\(\alpha=1\)):
+\begin{equation}
+    \label{Eq:TopicProb}
+    \Pr[t | w] \propto \prod_{j=1}^M (A t)_j^{w_j} \ldotp
+\end{equation}
+The maximum-likelihood algorithm then can maximize (\ref{Eq:TopicProb}) exactly.
+
+\section{Good Performance With Many Samples}
+\label{Sec:ManySamplesGoodPerformance}
+
+When the number of samples is large, \(w\) will be close to \(A t\).
+Here we argue that if \(w = A t\) exactly, all three algorithms will recover \(t\) exactly so long as \(A\) has full rank.
+
+The \(\ell_2\) projection and Kleinberg-Sandler algorithms recover \(t\) because \(A^+\) and \(B\) are generalized inverses of \(A\): so \(A^+ A t = B A t = t\).
+
+The maximum-likelihood algorithm recovers \(t\) exactly because (\ref{Eq:TopicProb}) is maximized when \(A t\) matches the empirical word distribution.
+
+\section{Comparison: Disjoint Topics}
+
+In this section, we assume no word has non-zero weight in more than one topic.
+Given a vector of word counts \(w\), let \(n_i\) be the number of words in topic \(i\): \(n_i = \sum_{A_{ij} > 0} w_j\).
+
+\subsection{Maximum Likelihood}
+
+The maximum-likelihood algorithm assigns topic \(i\) a weight proportional to \(n_i\), since (\ref{Eq:TopicProb}) becomes
+\[ \Pr[t | w] \propto \prod_{i=1}^k t_i^{n_i} \]
+which is maximized by \(t_i \propto n_i\).
+
+\subsection{Kleinberg-Sandler}
+\label{Sec:KSDisjoint}
+
+As the number of samples from \(A t\) (the document length) approaches infinity, the behaviors of the Kleinberg-Sandler and maximum-likelihood algorithms become the same.
+
+With less data, the behavior of Kleinberg-Sandler is underspecified.
+The matrix \(B\) is chosen to minimize \(\max_{ji} |B_{ji}|\), but the minimum might not be unique.
+One possibility is that the algorithm will behave the same way as maximum-likelihood: since \(A\) has the form
+\[
+    A =
+    \begin{pmatrix}
+        *      &        &
+    \\  \vdots &        &
+    \\  *      &        &
+    \\         & *      &
+    \\         & \vdots &
+    \\         & *      &
+    \\         &        & \vdots
+    \end{pmatrix}
+    ,
+\]
+    where \(*\) denotes a non-zero value and each column sums to \(1\), a possible generalized inverse is
+\[
+    B =
+    \begin{pmatrix}
+        1 & \cdots & 1 &   &        &   &
+    \\    &        &   & 1 & \cdots & 1 &
+    \\    &        &   &   &        &   & \cdots
+    \end{pmatrix}
+    ,
+\]
+    giving \((B w)_i \propto n_i\).
+Indeed, the minimum value of \(\max_{ji} |B_{ji}|\) will always be \(1\), and because of the requirement that \(B A_i = e_i\) for any topic \(i\), we will always have \(B_{ji} = 1\) whenever \(A_{ij} > 0\).
+On the other hand, there is some flexibility in the other entries of \(B\): for example, if
+\[
+    A =
+    \begin{pmatrix}
+        1/2 & 0
+    \\  1/2 & 0
+    \\  0   & 1
+    \end{pmatrix}
+    ,
+\]
+    then Kleinberg-Sandler might choose
+\(
+    B =
+    \begin{pmatrix}
+         1 & 1 & 0
+    \\  -1 & 1 & 1
+    \end{pmatrix}
+\)
+instead of
+\(
+    B =
+    \begin{pmatrix}
+        1 & 1 & 0
+    \\  0 & 0 & 1
+    \end{pmatrix}
+\).
+With a very large number of samples, \(w_1\) and \(w_2\) will both be very close to equal and so it will not matter which matrix the algorithm chooses.
+
+\subsection{\(\ell_2\) Projection}
+
+The \(\ell_2\) projection algorithm behaves well when the topics are uniform distributions or when the number of samples is large, but it behaves strangely when the topics are non-uniform and the document is short.
+
+\subsubsection{Uniform Topics}
+\label{Sec:L2DisjointUniform}
+
+Suppose the \(i\)-th topic is the uniform distribution over \(M_i\) words:
+\[
+    A =
+    \begin{pmatrix}
+        1/M_1  &        &        &
+    \\  \vdots &        &        &
+    \\  1/M_1  &        &        &
+    \\         & 1/M_2  &        &
+    \\         & \vdots &        &
+    \\         & 1/M_2  &        &
+    \\         &        & \vdots &
+    \\         &        &        & 1/M_k
+    \end{pmatrix}
+\]
+
+In this case, the \(\ell_2\) projection algorithm assigns topic \(i\) a weight proportional to the number of observed words from that topic.
+This is the same behavior as the maximum-likelihood algorithm, and is one possible behavior of the Kleinberg-Sandler algorithm.
+\[
+    A^+ = B =
+    \begin{pmatrix}
+        1 & \cdots & 1 &   &        &   &        &
+    \\    &        &   & 1 & \cdots & 1 &        &
+    \\    &        &   &   &        &   & \cdots &
+    \\    &        &   &   &        &   &        & 1
+    \end{pmatrix}
+\]
+
+\subsubsection{Non-Uniform Topics}
+\label{Sec:L2DisjointNonUniform}
+
+Suppose
+\[
+    A =
+    \begin{pmatrix}
+        1 - \epsilon & 0
+    \\  \epsilon     & 0
+    \\  0            & 1
+    \end{pmatrix}
+    \ldotp
+\]
+Then the pseudoinverse is (approximately)
+\[
+    A^+ \approx
+    \begin{pmatrix}
+        1 + \epsilon & \epsilon & 0
+    \\  0            & 0        & 1
+    \end{pmatrix}
+    \ldotp
+\]
+Consider two documents \(w = \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}\) and  \(w' = \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\).
+Then \(A^+ w \approx \begin{pmatrix} 1 + \epsilon \\ 1 \end{pmatrix}\), which is almost fair to both topics, but \(A^+ w' \approx \begin{pmatrix} \epsilon \\ 1 \end{pmatrix}\): the evidence of word 2 is ignored.
+
+\section{Comparison: Overlapping Topics}
+
+\subsection{Example}
+
+\[
+    A =
+    \begin{pmatrix}
+        1/2 & 0
+    \\  1/2 & 1/2
+    \\  0   & 1/2
+    \end{pmatrix}
+\]
+
+Here, the three algorithms all do different things.
+
+The maximum-likelihood algorithm predicts \(t_1 \propto w_1\) and \(t_2 \propto w_3\), and ignores the overlapping word \(w_2\), because (\ref{Eq:TopicProb}) becomes
+\[ \Pr[t | w] \propto t_1^{w_1} t_2^{w_3} \]
+
+The \(\ell_2\) projection and Kleinberg-Sandler algorithms, respectively, use the generalized inverses
+\[
+    A^+ =
+    \begin{pmatrix}
+         4/3 & 2/3 & -2/3
+    \\  -2/3 & 2/3 &  4/3
+    \end{pmatrix}
+\]
+    and
+\[
+    B =
+    \begin{pmatrix}
+         1 & 1 & -1
+    \\  -1 & 1 &  1
+    \end{pmatrix}
+    \ldotp
+\]
+
+\subsection{Example}
+
+\[
+    A =
+    \begin{pmatrix}
+        2/3 & 0
+    \\  1/3 & 2/3
+    \\  0   & 1/3
+    \end{pmatrix}
+\]
+
+Again, the three algorithms all do different things.
+
+The \(\ell_2\) projection and Kleinberg-Sandler algorithms, respectively, use the generalized inverses
+\[
+    A^+ =
+    \begin{pmatrix}
+        10/7 & 1/7 & -2/7
+    \\  -4/7 & 8/7 &  5/7
+    \end{pmatrix}
+\]
+    and
+\[
+    B =
+    \begin{pmatrix}
+        6/5               & 3/5        & -6/5
+    \\  -(1 + \delta) / 2 & 1 + \delta & 1 - 2 \delta
+    \end{pmatrix}
+    ,
+\]
+where the value of \(\delta \in [-1/10, 1/5]\) is undetermined.
+
+The maximum-likelihood algorithm will choose the topic distribution \(t\) which maximizes
+\begin{equation}
+    \label{Eq:OverlappingMLExpr}
+    p \DefEq \Pr[ t | w ] \propto t_1^{w_1} (t_1 + 2 t_2)^{w_2} t_2^{w_3}
+    \ldotp
+\end{equation}
+%If \(w\) is of the form \(w = A t\), then the correct \(t\) maximizes (\ref{Eq:OverlappingMLExpr}).
+%%     \footnote{%
+%%         Substituting \(t_2 = 1 - t_1\) and differentiating \(\log p\) with respect to \(t_1\), we have
+%%         \[ \frac {\D} {\D t_1} \log p = \frac {w_1} {t_1} - \frac {w_2} {2 - t_1} - \frac {w_3} {1 - t_1} \ldotp \]
+%%         Equating this to zero, we see that the optimal \(t\) will either be an extreme \(t \in \big\{ \begin{psmallmatrix} 1 \\ 0 \end{psmallmatrix}, \begin{psmallmatrix} 0 \\ 1 \end{psmallmatrix} \big\}\) or satisfy
+%%         \begin{equation}
+%%             \label{Eq:OverlappingMLEq}
+%%             (t_1 + 2 t_2) t_2 w_1 - t_1 t_2 w_2 - t_1 (t_1 + 2 t_2) w_3 = 0 \ldotp
+%%         \end{equation}
+%%     Notice that (\ref{Eq:OverlappingMLEq}) is always satisfied when \(w = A t\).
+%%     }.
+%When the number of samples is large, this will approximately be the case, so we expect the maximum-likelihood algorithm will perform well.
+To see a plot of the maximum-likelihood \(t_1\) with respect to \(w_1 / (w_1 + w_2 + w_3)\) and \(w_3 / (w_1 + w_2 + w_3)\), run the Maxima batch file \texttt{overlapping\_topics\_ml.wxm}.
+
+\bibliography{bib}{}
+\bibliographystyle{plain}
+
+\end{document}

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Number of topics (taken from command line)
+if [ "$1" ];then
+    k=$1
+fi
+#Number of docs (taken from command line)
+if [ "$2" ];then
+    n=$2
+fi
+#Vocab size (taken from command line)
+if [ "$3" ];then
+    m=$3
+fi
+#Alpha (percentage of points to encapsulate)
+a=1 
+#Beta (resize parameter)
+b=1
+
+#run matlab program
+matlab -nodesktop -nosplash -nojvm <<-EOF
+cd projector;
+G = predictTopics('data/documents', $n, $m, $k, 0.9, 1);
+exit
+EOF

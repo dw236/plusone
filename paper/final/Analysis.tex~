@@ -1,0 +1,105 @@
+\subsection{An handle}
+
+We wish to experiments from the previous section to explain the change
+in performance of the algorithms.  There we defined the notion of
+typical number of words in the supprt of a topic, or sig\_words, and
+the notion of a typical number of topics in a document.  Clearly, if
+both get very large one gets to a trivial topic model. 
+
+Here we derive an easy to compute a quantity based on sig\_words,
+sig\_topics, the total number of topics, and the corpus size
+to predict when learning the models becomes difficult.
+
+Again, in the previous section, we provided results for a totally
+cheating method that knew all the parameters of both topic and
+documents.  We also included a ``topic'' cheater method that knew the
+topic distributions while not knowing anything about document topics
+(other than the words in the document.)  Finally, the remainder of the
+methods were only given the actual documents.
+
+We view the first method as optimal.  What more could one do, then
+know all the parameters? Thus, we wish to understand when knowing just
+the topic matrix is sufficient and when our algorithm performs
+worse than the topic cheater.  We compute a quantity that is
+reasonably predictive of  both events.  Moreover, the
+point at which the algorithm performs slowly against the
+cheater would perhaps be when the algorithm fails to learn
+the topics well.  We examine this aspect later in this section.
+
+The quantity is a heuristic accounting of when the distribution is
+distinguished from chaos.  That is, the structure of the document
+generation should have the probability cooccurrence in documents of
+two words $i$ and $j$ differ significantly from what would be expected
+if they were independently chose: $p_i \times p_j$, if $p_i$ and $p_j$
+are their probabilities in the corpus.
+
+This can, of course, be calculated precisely from the topic and
+document distributions.  But we give simple calculations that
+provide insight based on a rather small set of parameters.
+
+\subsection{Uniform Cases.}
+
+Let $k$ be total number of topics.
+Let $v$ be the vocabulary size.
+
+Let $t$ be the number of topics in a document (assuming uniform
+distribution over selected topics.)
+
+Let $w$ be the size of a topic (assuming uniform distribution
+over selected words.)
+
+Let $l$ be the number of words in the document.
+
+%% {\bf Calculation 1:} Expected cooccurence relatively to uniform.
+
+%% The expected cooccurence for uniform is ${l \choose 2} \frac{1}{v}\right)^2$.
+
+%% Expected cooccurence for topic model is:
+
+We assume that topics are generated a priori. 
+
+\section*{\bf Sparse Case:  topics largely disjoint.}
+
+Here, we assume topics are disjoint. 
+
+The number of significant words is $s=wk$. 
+
+For a document, $t$ topics are chosen, 
+and each word is chosen uniformly from $w$.
+
+For two words in the same topic.  The chance
+that any two words are this pair is.
+
+$$(\frac{t}{k}) \left( \frac{1}{tw}\right)^2.$$
+
+For words in different topics, we have
+
+$$((\frac{t}{k})^2 (\frac{1}{tw})^2 = 
+\left( \frac{1}{kw}\right)^2.$$
+
+The difference is a facotr of $t/k$.  When this is large we should
+expect to be able to recover the topics easily. 
+
+\section*{\bf Medium Dense Case.}
+
+We assume that topics overlap a great deal and any particular word
+pair is not likely to be in more than one topic together.
+
+
+We add the parameter of expected number of
+topics per word.  This is multiplicity or $m = kw/v$.  
+
+To simplify the calculations, we assume that the few pairs of words
+share more than one topic.
+
+For two words in the same topic.  The probability of
+the any pair being these two is
+
+$$ \left(\frac{t}{k}\right) (\frac{1}{tw})^2.$$
+
+For words in different topics, we have
+
+$$  \left(\frac{mt}{k}\right)^2 \left(\frac{1}{tw}\right)^2 =  \left(\frac{1}{v}\right)^2.$$
+
+
+Here the difference is a factor of $\frac{t}{k} (tw/v)^2 = \frac{t}{k}(m)^2$. 

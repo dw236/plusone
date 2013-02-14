@@ -6,6 +6,7 @@ def crp(L=10, gamma=1.0):
     for l in range(1, L):
         tables.new_customer()
     print tables.sparse_seats()
+    
     return tables
 
 class Restaurant(object):
@@ -26,8 +27,8 @@ class Restaurant(object):
         table = util.sample(cdf)
         
         print "new customer has arrived!", self.customers
-        print "customers are sitting at tables", self.sparse_seats()
-        print "customer will sit with probabilities:", self.probabilities
+        #print "customers are sitting at tables", self.sparse_seats()
+        #print "customer will sit with probabilities:", self.probabilities
         print "customer has chosen to sit at table", table
         
         if table not in self.seats:

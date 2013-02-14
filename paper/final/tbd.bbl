@@ -1,0 +1,97 @@
+\begin{thebibliography}{10}
+
+\bibitem{AP}
+Ap.
+\newblock http://www.cs.princeton.edu/~blei/lda-c/index.html.
+
+\bibitem{KosNIPS}
+Kos, nips.
+\newblock http://archive.ics.uci.edu/ml/datasets/Bag+of+Words.
+
+\bibitem{Classic3}
+Med, cran, cisi.
+\newblock
+  http://www.dataminingresearch.com/index.php/2010/09/classic3-classic4-datase%
+ts/.
+
+\bibitem{AnandLDA}
+Animashree Anandkumar, Dean~P. Foster, Daniel Hsu, Sham~M. Kakade, and Yi-Kai
+  Liu.
+\newblock Two svds suffice: Spectral decompositions for probabilistic topic
+  modeling and latent dirichlet allocation.
+\newblock {\em CoRR}, abs/1204.6703, 2012.
+
+\bibitem{Arora2012}
+Sanjeev Arora, Rong Ge, and Ankur Moitra.
+\newblock {Learning Topic Models — Going beyond SVD}.
+\newblock 2012.
+
+\bibitem{LDAcode}
+David~M. Blei.
+\newblock lda-c, 2003.
+
+\bibitem{BleiCACM}
+David~M. Blei.
+\newblock Probabilistic topic models.
+\newblock {\em Commun. ACM}, 55(4):77--84, 2012.
+
+\bibitem{BleiCM}
+David~M. Blei, Thomas~L. Griffiths, Michael~I. Jordan, and Joshua~B. Tenenbaum.
+\newblock Hierarchical topic models and the nested chinese restaurant process.
+\newblock In Sebastian Thrun, Lawrence~K. Saul, and Bernhard Sch{\"o}lkopf,
+  editors, {\em NIPS}. MIT Press, 2003.
+
+\bibitem{Blei2003a}
+David~M Blei, Andrew~Y Ng, and Michael~I Jordan.
+\newblock {Latent Dirichlet Allocation}.
+\newblock {\em The Journal of Machine Learning Research}, 3:993--1022, 2003.
+
+\bibitem{Hofmann04}
+Thomas Hofmann.
+\newblock Latent semantic models for collaborative filtering.
+\newblock {\em ACM Trans. Inf. Syst.}, 22(1):89--115, 2004.
+
+\bibitem{MoitraValiant}
+Adam~Tauman Kalai, Ankur Moitra, and Gregory Valiant.
+\newblock Disentangling gaussians.
+\newblock {\em Commun. ACM}, 55(2):113--120, 2012.
+
+\bibitem{MLComp}
+Percy Lang.
+\newblock Mlcomp.
+\newblock http://mlcomp.org, 2010.
+
+\bibitem{McCallumMALLET}
+Andrew~Kachites McCallum.
+\newblock Mallet: A machine learning for language toolkit.
+\newblock http://mallet.cs.umass.edu, 2002.
+
+\bibitem{MosselRoch}
+Elchanan Mossel and S{\'e}bastien Roch.
+\newblock Learning nonsingular phylogenies and hidden markov models.
+\newblock {\em CoRR}, abs/cs/0502076, 2005.
+
+\bibitem{BleiCBA}
+Indraneel Mukherjee and David~M. Blei.
+\newblock Relative performance guarantees for approximate inference in latent
+  dirichlet allocation.
+\newblock In Daphne Koller, Dale Schuurmans, Yoshua Bengio, and L{\'e}on
+  Bottou, editors, {\em NIPS}, pages 1129--1136. Curran Associates, Inc., 2008.
+
+\bibitem{Papadimitriou1997}
+Christos~H Papadimitriou, Prabhakar Raghavan, Hisao Tamaki, and Santosh
+  Vempala.
+\newblock {Latent Semantic Indexing : A Probabilistic Analysis}.
+\newblock In {\em PODS}, 1997.
+
+\bibitem{GibbsLDA}
+Xuan-Hieu Phan and Cam-Tu Nguyen.
+\newblock Gibbslda++: A c/c++ implementation of latent dirichlet allocation.
+\newblock http://gibbslda.sourceforge.net/, 2008.
+
+\bibitem{VempalaW04}
+Santosh Vempala and Grant Wang.
+\newblock A spectral algorithm for learning mixture models.
+\newblock {\em J. Comput. Syst. Sci.}, 68(4):841--860, 2004.
+
+\end{thebibliography}

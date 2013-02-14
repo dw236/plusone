@@ -1,10 +1,13 @@
 package plusone.utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import org.ejml.simple.SimpleMatrix;
 
 import plusone.Main;
 import plusone.utils.TrainingPaper;
@@ -88,16 +91,58 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 					terms[word].totalCount += tf.get(word);
 			}
 		}
-
+		if (test && testingTf.isEmpty()) {
+			System.err.println("WARNING: Test document is empty");
+		}
 		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
 			norm += entry.getValue() * entry.getValue();
 		}
 		norm = Math.sqrt(norm);
 	}
+	
+	/**
+	 * A specialized version of generateTf for tagged data
+	 * 
+	 * @param myTags the tags for the document
+	 * @param testWordpercent percent of tags we expect to hold out
+	 * @param terms the terms for the document
+	 */
+	public void generateTagTf(ArrayList<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
+		trainingTf = new HashMap<Integer, Integer>();
+		testingTf = new HashMap<Integer, Integer>();
+		Random randGen = Main.getRandomGenerator();
+		
+		for (Integer word : tf.keySet()) {
+			if (terms != null)
+				terms[word].addDoc(this, true);
+			
+			int freq = tf.get(word);
+			if (myTags.contains(word) && randGen.nextDouble() < testWordpercent) {
+				testingTf.put(word, freq);
+			} else {
+				trainingTf.put(word, freq);
+				norm += freq * freq;
+			}
+		}
+		
+		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
+			norm += entry.getValue() * entry.getValue();
+		}
+		
+		norm = Math.sqrt(norm);
+	}
+	
 
 	public Integer getTrainingTf(Integer word) {
 		return trainingTf == null ? 
 				0 : (trainingTf.containsKey(word) ? trainingTf.get(word) : 0);
+	}
+
+	public SimpleMatrix getTrainingTfAsSimpleMatrixRow(int vocabSize) {
+		SimpleMatrix ret = new SimpleMatrix(1, vocabSize);
+		for (int word = 0; word < vocabSize; ++word)
+			ret.set(0, word, getTrainingTf(word));
+		return ret;
 	}
 
 	public Set<Integer> getTrainingWords() {

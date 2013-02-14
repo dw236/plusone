@@ -15,33 +15,27 @@ import plusone.utils.TrainingPaper;
 import plusone.utils.LocalSVDish;
 import plusone.utils.Results;
 import plusone.utils.LocalCOSample;
+import plusone.utils.Utils;
 
-import plusone.clustering.Baseline;
-import plusone.clustering.ClusteringTest;
-import plusone.clustering.CommonNeighbors;
-import plusone.clustering.DTRandomWalkPredictor;
-import plusone.clustering.KNN;
-import plusone.clustering.KNNLocalSVDish;
-import plusone.clustering.KNNWithCitation;
-import plusone.clustering.LSI;
-import plusone.clustering.CO;
-import plusone.clustering.PLSI;
-//import plusone.clustering.SVDAndKNN;
+import plusone.clustering.*;
+import plusone.clustering.held_out_inference.PoissonLDAPredictor;
 
-import plusone.clustering.Lda;
-//import plusone.clustering.KNNRandomWalkPredictor;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 
+import org.ejml.simple.SimpleMatrix;
 import org.json.*;
 
 
@@ -53,24 +47,39 @@ public class Main {
 	private static Indexer<PaperAbstract> paperIndexer;
 
 	private static Terms terms;
+	
+	private static String dataFile;
 
 	private static MetadataLogger metadataLogger;
 	private static Random randGen;
 
-	private Map<PaperAbstract, Integer> indices;
+	private HashMap<PaperAbstract, Integer> trainingIndices;
+	private Map<PaperAbstract, Integer> testIndices;
 	private Map<String,Results>[] allResults;
 	// Document sets
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
 	
-	private double ldaPerplexity;
+	private static int numTopics;
+	
+	private static String generator;
 
 	private static int FOLD; // cross validation parameter
 	private static DatasetJSON dataset;
+	
+	private static boolean tagged;
+	private static HashMap<Integer, ArrayList<Integer>> tagMap;
 
 	public static void load_data(String filename) {
 		dataset = DatasetJSON.loadDatasetFromPath(filename);
+		tagged = dataset.isTagged(filename);
+		tagMap = dataset.getTagMap();
 		wordIndexer = dataset.getWordIndexer();
+		PlusoneFileWriter wordMap = new PlusoneFileWriter("data/wordMap.txt");
+		for (int i = 0; i < wordIndexer.size(); i++) {
+			wordMap.write(wordIndexer.get(i) + "\n");
+		}
+		wordMap.close();
 		paperIndexer = dataset.getPaperIndexer();
 	}
 
@@ -80,17 +89,36 @@ public class Main {
 		// split into training documents and testing documents
 		trainingSet=new ArrayList<TrainingPaper>();
 		testingSet = new ArrayList<PredictionPaper>();
-		for (int i = 0; i < documents.size(); i ++) {
-			if (documents.get(i).getGroup()==testGroup) {
-				testingSet.add((PredictionPaper)documents.get(i));
-				indices.put(documents.get(i), i);
-			} else {
-				trainingSet.add((TrainingPaper)documents.get(i));
-			}
-		}
-		
-		System.out.println("Training size:" + trainingSet.size());
-		System.out.println("Testing size:" + testingSet.size());
+
+//		for (int i = 0; i < documents.size(); i ++) {
+//			if (tagged) {
+//				//Because documents.get(i).getIndex() == i
+//				if (tagMap.keySet().contains(i)) {
+//					testingSet.add((PredictionPaper)documents.get(i));
+//					testIndices.put(documents.get(i), i);
+//				} else {
+//					trainingSet.add((TrainingPaper)documents.get(i));
+//					trainingIndices.put(documents.get(i), i);
+//				}
+//			} else {
+//				if (documents.get(i).getGroup()==testGroup) {
+//					testingSet.add((PredictionPaper)documents.get(i));
+//					testIndices.put(documents.get(i), i);
+//				} else {
+//					trainingSet.add((TrainingPaper)documents.get(i));
+//					trainingIndices.put(documents.get(i), i);
+//				}
+//			}
+//		}
+//		
+//		System.out.println("Training size:" + trainingSet.size());
+//		System.out.println("Testing size:" + testingSet.size());
+
+		double[] trainPercents = 
+			parseDoubleList(System.getProperty("plusone.trainPercents", 
+					"0.3,0.5"));
+		System.out.println("train percent: " + trainPercents[0]);
+		splitByTrainPercent(trainPercents[0], documents);
 		
 		// Held out words
 		Terms.Term[] terms = new Terms.Term[wordIndexer.size()];
@@ -98,13 +126,36 @@ public class Main {
 			terms[i] = new Terms.Term(i);
 		}
 
-		for (TrainingPaper a : trainingSet){
-			((PaperAbstract)a).generateTf(testWordPercent, terms, false);
+		if (tagged) {
+			for (TrainingPaper a : trainingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, terms, false);
+			}
+	
+			for (PredictionPaper a : testingSet){
+				((PaperAbstract)a).generateTagTf(tagMap.get(a.getIndex()),
+					testWordPercent, terms);
+			}
+		} else {
+			for (TrainingPaper a : trainingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, terms, false);
+			}
+	
+			for (PredictionPaper a : testingSet){
+				((PaperAbstract)a).generateTf(testWordPercent, null, true);
+			}
 		}
+		
+		//Find average number of non-heldout words in each of the test docs
+		double avgWordsPerTestDoc = 0.0;
+		for (PredictionPaper p : testingSet) {
+			for (Integer i : p.getTrainingWords()) {
+				avgWordsPerTestDoc += p.getTrainingTf(i);
+			}
+		}
+		
+		avgWordsPerTestDoc /= testingSet.size();
+		System.out.println("Average number of words per test doc:" + avgWordsPerTestDoc);
 
-		for (PredictionPaper a : testingSet){
-			((PaperAbstract)a).generateTf(testWordPercent, null, true);
-		}
 		this.terms = new Terms(terms);
 		System.out.println("Data ready for experiment");
 	}
@@ -131,22 +182,50 @@ public class Main {
 			for (int testGroup=(crossValid ?0:FOLD-1);testGroup<FOLD;testGroup++){	    
 				setupData(testGroup,testWordPercent);
 
-				runClusteringMethods(ks);
+				runClusteringMethods(ks, testWordPercent);
 
 			}
 		}
 		outputResults(ks, testWordPercents);
 	}
 
-	/** Outputs the results of the tests into the data folder.
+	/** 
+	 * Outputs the results of the tests into the data folder.
 	 * 
 	 * @param ks an array containing how many words each test should predict
 	 * @param twpNames an array containing the percentage of held out words for each test
-	 * @throws JSONException
 	 */
 	private void outputResults(int[] ks, double[] twpNames) {
+		JSONObject json = new JSONObject();
 		try {
-			JSONObject json = new JSONObject();
+			String fileName = ""; String dirName = "";
+			JSONObject dataList = new JSONObject();
+			JSONObject parameters = new JSONObject();
+			if (generator.equals("")) {
+				//Real data
+				String shortFile = dataFile.split("/")[1];
+				fileName = "k." + numTopics + "."
+						+ shortFile.substring(0,shortFile.length()-4);
+				parameters.put("k", numTopics);
+			} else {
+				//Synthetic data
+				putInfo(parameters, dataList);
+				
+				//Find where alpha is so we can correctly split dir/file name
+				int alphaLoc = 0;
+				String tmpOutName = getOutputFileName();
+				for (int i = 0; i < tmpOutName.length(); i++) {
+					if (tmpOutName.charAt(i) == 'a') {
+						alphaLoc = i;
+					}
+				}
+				dirName = tmpOutName.substring(0, alphaLoc - 1);
+				fileName = tmpOutName.substring(alphaLoc);
+
+			}
+			json.put("parameters", parameters);
+			json.put("data", dataList);
+			
 			JSONArray tests = new JSONArray();
 			for (int i = 0; i < twpNames.length; i++) {
 				for(int ki=0;ki<ks.length;ki++){
@@ -165,19 +244,68 @@ public class Main {
 						thisTest.put("Predicted_Var" , variance[0]);
 						thisTest.put("idf score_Var" , variance[1]);
 						thisTest.put("tfidf score_Var" , variance[2]);
-						if (entry.getKey().equals("Lda")) {
-							thisTest.put("Perplexity", ldaPerplexity);
-						}
+
 						allTests.put(entry.getKey(), thisTest);
+					}
+					//Makes a fake experiment  with cosine similarities
+					if (!generator.equals("") && testIsEnabled("lda")
+							&& testIsEnabled("projector")) {
+						Scanner in = null;
+						Utils.runCommand("python parse_betas.py data/normfile -s", false);
+						try {
+							in = new Scanner( new File( "data/normfile" ) );
+						} catch (Exception e) {
+							System.out.println("Couldnt find cosine similarity file");
+						}
+						String[] cosineSimilarities = in.nextLine().split(" ");
+						double cosineSimilarityMean = 0;
+						for (String sim : cosineSimilarities) {
+							cosineSimilarityMean += Double.parseDouble(sim);
+						}
+						cosineSimilarityMean /= cosineSimilarities.length; 
+						JSONObject fakeExperiment = new JSONObject();
+						fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
+						allTests.put("~projector-cosine", fakeExperiment);
+						
+						String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
+						double cosineSimilarityMeanLDA = 0;
+						for (String sim : cosineSimilaritiesLDA) {
+							cosineSimilarityMeanLDA += Double.parseDouble(sim);
+						}
+						cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
+						JSONObject fakeExperimentLDA = new JSONObject();
+						fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
+						allTests.put("~lda-cosine", fakeExperimentLDA);
+						
+						String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
+						double cosineSimilarityMeanMallet = 0;
+						for (String sim : cosineSimilaritiesMallet) {
+							cosineSimilarityMeanMallet += Double.parseDouble(sim);
+						}
+						cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
+						JSONObject fakeExperimentMallet = new JSONObject();
+						fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
+						allTests.put("~mallet-cosine", fakeExperimentMallet);
+
 					}
 					tests.put(allTests);
 				}
 			}
 			json.put("tests", tests);
-			Date date = new Date();
-			String outName = "experiment" + date.getTime() +".json";
-			File out = new File("data", outName);
-			System.out.println("Wrote to " + outName);
+			new File("data/" + dirName).mkdir();
+			File out = new File("data/" + dirName, "experiment." + fileName + "json");
+			if (out.exists()) {
+				//Keep trying to append 0, 1, 2... until we find an unused file name
+				int newFileEnd = 0;
+				String oldFileName = fileName;
+				while (out.exists()) {
+					fileName = new String(oldFileName.concat(newFileEnd + "."));
+					newFileEnd++;
+					out = new File("data/" + dirName, "experiment." + fileName + "json");
+				}
+			}
+			System.out.println("Wrote to data/" + dirName + "/experiment."
+					+ fileName + "json");
 	
 			PlusoneFileWriter writer = new PlusoneFileWriter(out);
 			writer.write(json.toString());
@@ -186,9 +314,155 @@ public class Main {
 			System.out.println("Error writing to output");
 		}
 	}
+	
+	/**
+	 * Puts useful information into the output JSON, such as the parameters
+	 * used to generate a synthetic dataset and statistics about the dataset
+	 * 
+	 * @param parameters empty when called, afterwards has alpha, beta, k, etc
+	 * @param dataList empty when called, afterwards has sig_words, sig_topics, etc
+	 */
+	public void putInfo(JSONObject parameters, JSONObject dataList) {
+		try {
+			ArrayList<Double> params = new ArrayList<Double>();
+			ArrayList<String> paramNames = new ArrayList<String>();
+			ArrayList<Double> data = new ArrayList<Double>();
+			ArrayList<String> dataNames = new ArrayList<String>();
+	
+			//Synthetic data
+			File documentsOptionsOut = null, documentsOtherOut = null;
+			documentsOptionsOut = new File(
+					"src/datageneration/output/documents_options-out");
+			if (!generator.equals("hlda")) {
+				documentsOtherOut = new File(
+						"src/datageneration/output/documents_other-out");				
+			}
+			//Put the information from documents_options-out into params
+			Scanner line = null;
+			try {
+				line = new Scanner(new FileInputStream(documentsOptionsOut));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			String[] parsedLine = line.nextLine().split(" ");
+			for (int i = 0; i < (parsedLine.length-2)/2; i++) {
+				params.add(Double.parseDouble(parsedLine[3+2*i]));
+				paramNames.add(parsedLine[2+2*i].substring(1));
+			}
+			StringBuffer tmpOutName = new StringBuffer();
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
+				} else {
+					tmpOutName.append(paramNames.get(i)
+							+ (int)Math.floor(params.get(i)) + ".");
+				}
+			}
+			
+			if (documentsOtherOut != null) {
+				//Put the information from documents_other-out into data
+				Scanner lines = null;
+				try {
+					lines = new Scanner(new FileInputStream(documentsOtherOut));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				while (lines.hasNextLine()) {
+					String[] nameAndValue = lines.nextLine().split(" ");
+					dataNames.add(nameAndValue[0]);
+					data.add(Double.parseDouble(nameAndValue[1]));
+				}
+				for (int i = 0; i < data.size(); i++) {
+					dataList.put(dataNames.get(i), data.get(i));
+				}
+			}
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					parameters.put(paramNames.get(i), params.get(i));
+				} else {
+					parameters.put(paramNames.get(i), (int)Math.floor(params.get(i)));
+				}
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Based on the parameters used to generate synthetic data, get the name
+	 * of the output folder/file 
+	 * 
+	 * @return a string formatted like k15.n1000.l75.m1000.a0.01.b0.25
+	 */
+	public String getOutputFileName() {
+		StringBuffer tmpOutName = new StringBuffer();
+		try {
+			ArrayList<Double> params = new ArrayList<Double>();
+			ArrayList<String> paramNames = new ArrayList<String>();
 
+			File documentsOptionsOut = new File(
+					"src/datageneration/output/documents_options-out");
+			Scanner line = new Scanner(new FileInputStream(documentsOptionsOut));
+			String[] parsedLine = line.nextLine().split(" ");
+			for (int i = 0; i < (parsedLine.length-2)/2; i++) {
+				params.add(Double.parseDouble(parsedLine[3+2*i]));
+				paramNames.add(parsedLine[2+2*i].substring(1));
+			}
+			for (int i = 0; i < params.size(); i++) {
+				if (paramNames.get(i).equals("a") || paramNames.get(i).equals("b")) {
+					tmpOutName.append(paramNames.get(i) + params.get(i) + ".");
+				} else {
+					tmpOutName.append(paramNames.get(i)
+							+ (int)Math.floor(params.get(i)) + ".");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return tmpOutName.toString();
+	}
 
-	public void runClusteringMethods(int[] ks) {
+	void handleHeldOutInferenceTests(
+			String nameBase, SimpleMatrix wordTopicMatrix, int[] ks, int size,
+			double testWordPercent) {
+		final String rateName =
+				"plusone.documentLengthRate";
+		final String alphaName =
+				"plusone.topicAlpha";
+		final String iterationsName =
+				"plusone.poissonLda.numIterations";
+
+		if (!testIsEnabled("heldOutPoissonLda"))
+			return;
+
+		double lambda;
+		double alpha;
+		int[] numsIterations;
+		try {
+			lambda = Double.parseDouble(System.getProperty(rateName));
+			alpha = Double.parseDouble(System.getProperty(alphaName));
+			numsIterations = parseIntList(System.getProperty(iterationsName));
+		} catch (NullPointerException e) {
+			throw new IllegalArgumentException(
+				rateName + " and " + alphaName +
+				" must be set if Poisson-LDA held-out inference is enabled.");
+		}
+
+		// Set all topic strengths to alpha.
+		SimpleMatrix topicStrengths =
+			new SimpleMatrix(wordTopicMatrix.numCols(), 1);
+		topicStrengths.set(alpha);
+
+		for (int numIterations : numsIterations) {
+			ClusteringTest pldap = new PoissonLDAPredictor(
+					nameBase, testWordPercent, lambda, numIterations,
+					topicStrengths, wordTopicMatrix,
+					PoissonLDAPredictor.PredictionMethod.WORD_DIST);
+			runClusteringMethod(pldap, ks, size, true);
+		}
+	}
+
+	public void runClusteringMethods(int[] ks, double testWordPercent) {
 		int size = trainingSet.size() + testingSet.size();
 		// Baseline
 		if (testIsEnabled("baseline")) {
@@ -226,39 +500,142 @@ public class Main {
 		LSI lsi;
 		if (testIsEnabled("lsi")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.svdDimensions", 
-					"1,5,10,20"));
+					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
 
 				runClusteringMethod(lsi, ks, size,false);
 
+				LSIOld0 lsio0 = new LSIOld0(dimensions[dk], trainingSet, terms);
+
+				runClusteringMethod(lsio0, ks, size,false);
 			}
 		}
 		//PLSI
 		PLSI plsi;
 		if (testIsEnabled("plsi")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.plsi.dimensions", 
-					"1,5,10,20"));
+					"10,30,50"));
 			plsi = new PLSI(trainingSet, terms.size());
 			for (int dk = 0; dk < dimensions.length; dk ++) {
+				long t1 = System.currentTimeMillis();
+				System.out.println("PLSI with " + dimensions[dk]+" topics starts model training");
 				plsi.train(dimensions[dk]);
+				System.out.println("model training took " +
+						(System.currentTimeMillis() - t1) / 1000.0 
+						+ " seconds.");
 				runClusteringMethod(plsi, ks, size, false);
-
 			}
 		}
 		//lda
-		Lda lda = null;
 		if (testIsEnabled("lda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				Lda lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
+						trainingIndices, testIndices);
+				runClusteringMethod(lda, ks, size, true);
+				handleHeldOutInferenceTests(
+					lda.getName(), lda.getWordTopicMatrix(), ks, size,
+					testWordPercent);
+			}
+		}
+		
+		//lda (Mallet)
+		Mallet malletLda = null;
+		if (testIsEnabled("malletLda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			int gibbsIterations = Integer.parseInt(System.getProperty("plusone.mallet.gibbsIterations", 
+					"500"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				malletLda = new Mallet("lda", trainingSet, wordIndexer, terms, 
+						dimensions[dk], gibbsIterations, !generator.equals(""));
+				runClusteringMethod(malletLda, ks, size, true);
+			}
+		}
+		
+		//hlda (Mallet)
+		Mallet malletHlda = null;
+		if (testIsEnabled("malletHlda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"10,30,50"));
+			int gibbsIterations = Integer.parseInt(System.getProperty("plusone.mallet.gibbsIterations", 
+					"500"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				malletHlda = new Mallet("hlda", trainingSet, wordIndexer, terms, 
+						dimensions[dk], gibbsIterations, !generator.equals(""));
+				runClusteringMethod(malletHlda, ks, size, true);
+			}
+		}
+		
+		//projector, uses a projection algorithm
+		Projector projector = null;
+		if (testIsEnabled("projector")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+			"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				projector = new Projector("projector", trainingSet, wordIndexer, 
+								terms, dimensions[dk], trainingIndices, 
+								testIndices);
+				runClusteringMethod(projector, ks, size, true);
+			}
+		}
+		
+		//ldaT, cheats on training but not testing
+		if (testIsEnabled("ldaTrained")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				lda = new Lda(trainingSet, wordIndexer, terms, dimensions[dk],
-						indices);
-				runClusteringMethod(lda, ks, size, true);
-
+				Lda ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
+						trainingIndices, testIndices);
+				runClusteringMethod(ldaTrained, ks, size, true);
+				handleHeldOutInferenceTests(
+					ldaTrained.getName(), ldaTrained.getWordTopicMatrix(),
+					ks, size, testWordPercent);
 			}
-			ldaPerplexity = lda.getPerplexity();
+		}
+		
+		//ldaC, cheats in both training and testing
+		if (testIsEnabled("ldaCheat")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				Lda ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
+						trainingIndices, testIndices);
+				runClusteringMethod(ldaCheat, ks, size, true);
+			}
+		}
+		
+		//HLDA
+		Hlda hlda = null;
+		if (testIsEnabled("hlda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				hlda = new Hlda(trainingSet, wordIndexer, terms);
+				runClusteringMethod(hlda, ks, size, true);
+			}
+		}
+		//GibbsLda
+		if (testIsEnabled("gibbsLda")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				GibbsLda gibbs = new GibbsLda(trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(gibbs, ks, size, true);
+			}
+		}
+		//CTM
+		Ctm ctm = null;
+		if (testIsEnabled("ctm")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+					"20"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				ctm = new Ctm(trainingSet, wordIndexer, terms, dimensions[dk]);
+				runClusteringMethod(ctm, ks, size, true);
+			}
 		}
 		// KNNSVDish
 		int[] closest_k_svdish = parseIntList(System.getProperty("plusone.closestKSVDishValues", 
@@ -408,9 +785,19 @@ public class Main {
 
 				if (queue.size() < largestK || 
 						(double)itemScores[i] > queue.peek().score) {
-					if (queue.size() >= largestK)
-						queue.poll();
-					queue.add(new ItemAndScore(i, itemScores[i], true));
+					if (tagged) {
+						if (wordIndexer.get(i).length() >= 4 &&
+								wordIndexer.get(i).substring(0, 4).equals("tag ")) {
+							if (queue.size() >= largestK)
+								queue.poll();
+							queue.add(new ItemAndScore(i, itemScores[i], true));
+						}
+					} else {
+						if (queue.size() >= largestK)
+							queue.poll();
+						
+						queue.add(new ItemAndScore(i, itemScores[i], true));
+					}
 				}
 			}
 
@@ -425,8 +812,8 @@ public class Main {
 //				MetadataLogger.TestMetadata meta = getMetadataLogger().getTestMetadata("k=" + k + test.testName);
 //				test.addMetadata(meta);
 //				List<Double> predictionScores = new ArrayList<Double>();
-
-				Integer[] predict = topPrdcts.subList(0, k).toArray(new Integer[k]);
+				
+				Integer[] predict = topPrdcts.subList(0, Math.min(topPrdcts.size(), k)).toArray(new Integer[k]);
 
 				double[] result = evaluate(testingPaper, predict, size, k);
 				for (int j = 0; j < 4; ++j) results[ki][j] += result[j];
@@ -545,10 +932,24 @@ public class Main {
 		trainingSet = new ArrayList<TrainingPaper>();
 		testingSet = new ArrayList<PredictionPaper>();
 		for (int i = 0; i < documents.size(); i ++) {
-			if (randGen.nextDouble() < trainPercent)
-				trainingSet.add((TrainingPaper)documents.get(i));
-			else
-				testingSet.add((PredictionPaper)documents.get(i));
+			if (tagged) {
+				//Because documents.get(i).getIndex() == i
+				if (tagMap.keySet().contains(i) && randGen.nextDouble() < trainPercent) {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				} else {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				}
+			} else {
+				if (randGen.nextDouble() < trainPercent) {
+					trainingSet.add((TrainingPaper)documents.get(i));
+					trainingIndices.put(documents.get(i), i);
+				} else {
+					testingSet.add((PredictionPaper)documents.get(i));
+					testIndices.put(documents.get(i), i);
+				}
+			}
 		}
 		System.out.println("trainingSet size: " + trainingSet.size());
 		System.out.println("testingSet size: " + testingSet.size());
@@ -589,15 +990,17 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		String data_file = System.getProperty("plusone.dataFile", "med.out");
+		dataFile = System.getProperty("plusone.dataFile", "med.out");
 
-		if (!new File(data_file).exists()) {
+		if (!new File(dataFile).exists()) {
 			System.out.println("Data file does not exist.");
 			System.exit(0);
 		}
 
 		long randSeed = 
 				new Long(System.getProperty("plusone.randomSeed", "0"));
+		generator = System.getProperty("plusone.generator");
+		numTopics = Integer.parseInt(System.getProperty("plusone.lda.dimensions"));
 
 		randGen = new Random(randSeed);
 		metadataLogger = new MetadataLogger();
@@ -610,9 +1013,9 @@ public class Main {
 		String experimentPath = System.getProperty("plusone.outPath", 
 				"experiment");
 
-		load_data(data_file);
+		load_data(dataFile);
 		//main.splitByTrainPercent(trainPercent, dataset.getDocuments());
-		System.out.println("data file " + data_file);
+		System.out.println("data file " + dataFile);
 		//System.out.println("train percent " + trainPercent);
 		//System.out.println("test word percent " + testWordPercent);
 		System.out.println("Number of Documents: "+ dataset.getDocuments().size());
@@ -621,7 +1024,8 @@ public class Main {
 		for (PaperAbstract paper:dataset.getDocuments())
 			paper.setGroup(randGen.nextInt(FOLD));
 
-		main.indices = new HashMap<PaperAbstract, Integer>();
+		main.trainingIndices = new HashMap<PaperAbstract, Integer>();
+		main.testIndices = new HashMap<PaperAbstract, Integer>();
 		main.runExperiments(experimentPath);
 		/* These values can be set on the command line.  For example, to set
 		 * testWordPercents to {0.4,0.5}, pass the command-line argument

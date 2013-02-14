@@ -35,13 +35,13 @@
   <property name="src" location="src"/>
   <property name="build" location="build"/>
   <property name="dist"  location="dist"/>
-  <property name="lib" location="lib"/>
+  <property name="lib" location="lib/jars"/>
 
   <path id="library.jars">
     <fileset dir="${lib}"/>
   </path>
 
-  <target name="init" depends="retrieve">
+  <target name="init"> <!--depends="retrieve"-->
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
   </target>
@@ -50,6 +50,18 @@
         description="compile the source " >
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}" destdir="${build}" debug="on" classpathref="library.jars" includeantruntime="false"/>
+  </target>
+
+  <target name="test" depends="compile">
+      <junit fork="true">
+          <classpath>
+              <path refid="library.jars"/>
+              <path location="${build}"/>
+          </classpath>
+          <test name="plusone.utils.SVDTest">
+              <formatter type="plain" usefile="false"/>
+          </test>
+      </junit>
   </target>
 
   <!--

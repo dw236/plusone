@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
 
 public class Utils {
 
@@ -28,29 +30,36 @@ public class Utils {
      * @param streamOutput	a flag to determine whether or not to display
      * 						any output the command might give
      */
-    public static void runCommand(String command, boolean streamOutput) {
-
+    public static boolean runCommand(String command, boolean streamOutput) {
+    
+	boolean success = true;
 	System.out.println("Running command: " + command);
 	try {
 	    Process p = Runtime.getRuntime().exec(command);
-	    if (streamOutput) {
-		BufferedReader stdInput = 
+		BufferedReader stdout = 
 		    new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    
-		BufferedReader stdError = 
+		BufferedReader stderr = 
 		    new BufferedReader(new InputStreamReader(p.getErrorStream()));
-		System.out.println("Here is the standard output of the command:\n");
 		String s;
-		while ((s = stdInput.readLine()) != null) {
-		    System.out.println(s);
+		// read any errors from the attempted command
+		if (streamOutput)
+			System.out.println("Here is the standard error of the command (if any):\n");
+		while ((s = stderr.readLine()) != null) {
+			success = false;
+			if (streamOutput) {
+				System.out.println(s);
+			}
+		}
+		if (streamOutput)
+			System.out.println("Here is the standard output of the command:\n");
+		while ((s = stdout.readLine()) != null) {
+			if (streamOutput) {
+				System.out.println(s);
+			}
 		}
             
-		// read any errors from the attempted command
-		System.out.println("Here is the standard error of the command (if any):\n");
-		while ((s = stdError.readLine()) != null) {
-		    System.out.println(s);
-		}
-	    }
+
 	    p.waitFor();
 	}
 	catch (Exception e) {
@@ -58,6 +67,18 @@ public class Utils {
 	    e.printStackTrace();
 	    System.exit(-1);
 	}
-
+	return success;
+    }
+    
+    public static void writeIndices(String filename, 
+    		List<PredictionPaper> testDocs, 
+    		Map<PaperAbstract, Integer> testIndices) {
+    	PlusoneFileWriter fileWriter = 
+			new PlusoneFileWriter(filename);
+		for (PredictionPaper paper : testDocs) {
+			fileWriter.write(testIndices.get(paper) + " ");
+		}
+		fileWriter.write("\n");
+		fileWriter.close();
     }
 }

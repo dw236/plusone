@@ -1,0 +1,22 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Directory to clear (taken from command line)
+if [ "$1" ];then
+    dir=$1
+fi
+clear=false
+
+case "$dir" in
+lda)
+	clear=true
+    ;;
+projector/data)
+	clear=true
+	;;
+esac
+
+if $clear; then
+	rm $dir/*
+fi

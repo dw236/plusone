@@ -8,47 +8,57 @@ cd lib/lda-c-dist; make || exit
 # compile using ant
 cd $basedir; ant -f build.xml || exit
 
-#data = {'med.out.1', 'test.5000.data'}
-data='med.out'
+data=""
 if [ "$1" ];then
     data=$1
+else
+    echo "Please specify an input data file."
 fi
-userdata=$data.`whoami`
+[ "$data" ] || exit 1
 
-echo $userdata
+#takes in name of generator for synthetic data
+generator=""
+if [ "$2" ];then
+    generator=$2
+fi
 
-# download test.data if it doesn't exist
-
-#if test ! -f /tmp/$data.`whoami`; then
-#   cd /tmp/
-#   wget http://www.falsifian.org/a/9xwk/$data --output-document=$userdata
-#   cd $basedir
-#fi
+numTopics=15
+if [ "$3" ];then
+    numTopics=$3
+fi
 
 out_dir=.
-if [ "$2" ];then
-    out_dir=$2
+if [ "$4" ];then
+    out_dir=$4
 fi
+
+ldaTrain=false
+case "$generator" in
+lda)
+    ldaTrain=true
+    ;;
+esac
+
 #mkdir $out_dir || exit
 echo Output will go in data
 
-#0.1,0.3,0.5,0.7,0.9 \
 args=\
-"-Dplusone.dataFile=$data \
- -Dplusone.crossValidation.FOLD=10 \
- -Dplusone.crossValidation.run=false \
- -Dplusone.testWordPercents=0.3 \
- -Dplusone.trainPercents=0.9\
- -Dplusone.kValues=3 \
- -Dplusone.closestKValues=5,10,15 \
- -Dplusone.closestKSVDishValues=5,10,25,50,100,250,500 \
- -Dplusone.svdDimensions=5,10 \
- -Dplusone.plsi.dimensions=5,10,15 \
- -Dplusone.dtrw.walkLength=1 \
- -Dplusone.dtrw.stoch=true \
- -Dplusone.dtrw.nSampleWalks=100 \
- -Dplusone.dtrw.normalizeDocsInWord=true \
- -Dplusone.dtrw.normalizeWordsInDoc=true \
+"-Dplusone.dataFile=$data
+ -Dplusone.crossValidation.FOLD=10
+ -Dplusone.crossValidation.run=false
+ -Dplusone.testWordPercents=0.3
+ -Dplusone.trainPercents=0.5
+ -Dplusone.generator=$generator
+ -Dplusone.kValues=3
+ -Dplusone.closestKValues=5,15,25
+ -Dplusone.closestKSVDishValues=5,10,25,50,100,250,500
+ -Dplusone.svdDimensions=$numTopics
+ -Dplusone.plsi.dimensions=$numTopics
+ -Dplusone.dtrw.walkLength=1
+ -Dplusone.dtrw.stoch=true
+ -Dplusone.dtrw.nSampleWalks=100
+ -Dplusone.dtrw.normalizeDocsInWord=true
+ -Dplusone.dtrw.normalizeWordsInDoc=true
  -Dplusone.svdishknn.nLevels=3
  -Dplusone.svdishknn.docEnzs=20,60,120
  -Dplusone.svdishknn.termEnzs=40,120,240
@@ -60,20 +70,33 @@ args=\
  -Dplusone.localCO.termEnzs=15000
  -Dplusone.localCO.dtNs=500
  -Dplusone.localCO.tdNs=1200
- -Dplusone.lda.dimensions=15
- -Dplusone.enableTest.localCO=false \
- -Dplusone.enableTest.lda=true \
- -Dplusone.enableTest.knnc=false \
- -Dplusone.enableTest.knn=true \
- -Dplusone.enableTest.knnrw=false \
- -Dplusone.enableTest.dtrw=false \
- -Dplusone.enableTest.baseline=true \
- -Dplusone.enableTest.lsi=true \
- -Dplusone.enableTest.plsi=true\
- -Dplusone.enableTest.svdknn=false \
- -Dplusone.enableTest.svdishknn=false \
- -Dplusone.outPath=$out_dir \
- -Dplusone.dumpMeta=false \
+ -Dplusone.lda.dimensions=$numTopics
+ -Dplusone.mallet.gibbsIterations=2000
+ -Dplusone.poissonLda.numIterations=100,1000
+ -Dplusone.documentLengthRate=75
+ -Dplusone.topicAlpha=0.1
+ -Dplusone.enableTest.localCO=false
+ -Dplusone.enableTest.lda=true
+ -Dplusone.enableTest.ldaTrained=$ldaTrain
+ -Dplusone.enableTest.ldaCheat=$ldaTrain
+ -Dplusone.enableTest.malletLda=true
+ -Dplusone.enableTest.malletHlda=false
+ -Dplusone.enableTest.projector=true
+ -Dplusone.enableTest.hlda=false
+ -Dplusone.enableTest.ctm=false
+ -Dplusone.enableTest.gibbsLda=false
+ -Dplusone.enableTest.knnc=false
+ -Dplusone.enableTest.knn=true
+ -Dplusone.enableTest.knnrw=false
+ -Dplusone.enableTest.dtrw=false
+ -Dplusone.enableTest.baseline=true
+ -Dplusone.enableTest.lsi=true
+ -Dplusone.enableTest.plsi=true
+ -Dplusone.enableTest.svdknn=false
+ -Dplusone.enableTest.svdishknn=false
+ -Dplusone.enableTest.heldOutPoissonLda=false
+ -Dplusone.outPath=$out_dir
+ -Dplusone.dumpMeta=false
  -Dplusone.randomSeed=9"
 
 # options to sample cpu

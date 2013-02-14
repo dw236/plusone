@@ -1,0 +1,56 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Generator
+generator="lda"
+#Number of topics
+klist=(5 10 15 30 50)
+#Number of docs
+nlist=(500)
+#Number of words per document
+llist=(300)
+#Vocab size
+mlist=(500)
+#Alpha
+alist=(0.001 0.005 0.01 0.05 0.1 0.5 1.0) #1, 2, 3 
+#Beta
+blist=(0.0175 0.05 0.1 0.25) #10, 30, 50, 100
+
+for k in "${klist[@]}";
+do
+    for n in "${nlist[@]}";
+    do
+        for l in "${llist[@]}";
+        do
+            for m in "${mlist[@]}";
+            do
+                for a in "${alist[@]}";
+                do
+                    for b in "${blist[@]}";
+                    do
+                        cd src/datageneration/
+                        case "$generator" in
+                        hlda)
+                            #Generate a data file with given parameters
+                            python hlda_journal.py -w -n $n -l $l -m $m -b $b
+                            ;;
+                        lda)
+                   		    #Generate a data file with given parameters
+                            python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                            -b $b
+                            ;;
+                        ctm)
+                            #Generate a data file with given parameters
+                            python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                            -b $b -ctm
+                            ;;
+                        esac
+                        cd $basedir
+                    done
+                done
+            done
+        done
+    done
+done
+

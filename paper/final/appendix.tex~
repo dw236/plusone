@@ -1,0 +1,29 @@
+\begin{table}
+    \begin{tabular}{ | l | l | l | l | l |}
+    \hline
+    Civil Rights & Economics & Politics & Stock & Legal \\ \hline
+	years & percent & states & stock & court \\
+	west & rate & government & exchange & wednesday \\
+	black & year & united & points & federal \\
+	american & prices & union & closed & judge \\
+	war & reported & war & tuesday & trial \\
+	lived & increase & minister & average & convicted \\
+	jr & compared & countries & tokyo & state \\
+	chicago & rose & military & nikkei & death \\
+	story & report & meeting & close & attorney \\
+	social & higher & soviet & share & police \\
+	martin & highest & leader & financial & prison \\
+	progress & time & world & shares & district \\
+	series & index & president & index & charges \\
+	blacks & march & administration & volume & accused \\
+	side & mortgages & political & timesstock & man \\
+	neighborhood &  billion & forces & times & charged \\
+	dream & figures & nations & million & filed \\
+	king & inflation & foreign & percent & case \\
+	influence & retail & prime & prices & years \\
+	remains & august & capital & investors & rdered \\
+
+    \hline
+    \end{tabular} 
+\caption{The top $20$ words (ranked by probability) for $5$ sparse topics recovered by Projector on the AP dataset. Topic names derived from top words.}
+\end{table}

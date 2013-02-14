@@ -35,11 +35,14 @@ public class SVD {
 	public int numTerms;
 	private Random rand=new Random();
 
-	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int num) {
+    /* Set to true to bring back an old bug. */
+    protected boolean oldBehavior0 = false;
+
+	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms) {
 
 		this.DIMENSION = DIMENSION;
 		this.trainingSet = trainingSet;
-		numTerms = num;
+		this.numTerms = numTerms;
 
 		long t1 = System.currentTimeMillis();
 		System.out.println("[SVD] training with " + DIMENSION + 
@@ -66,9 +69,13 @@ public class SVD {
 
 		this.train();
 
-		System.out.format("[SVD]] took %.3f seconds.\n",
+		System.out.format("[SVD] took %.3f seconds.\n",
 				(System.currentTimeMillis() - t1)/1000.0);
 	}
+
+    public void setOldBehavior0(boolean b) {
+        oldBehavior0 = b;
+    }
 
 /*	private Map<Integer, Double> getReducedDocument(int index) {
 		Map<Integer, Double> result = new HashMap<Integer, Double>();
@@ -99,29 +106,11 @@ public class SVD {
 
 		boolean converge = false;
 		while (!converge){
-			ynorm = dotProduct(y, y);
-
-			if (ynorm <= 0.0001)
-				break;
-
 			double[] subtract = new double[k+1];
-			for (int i = 0; i < k; i ++){
-				subtract[i] = dotProduct(beta[i], y);
-			}
-			for (int i = 0; i < x.length; i ++){
-				double value = 0;
-				for (Entry t : DocTerm[i]) {
-					value += t.value * y[t.termID];
-				}
-				for (int j = 0; j < k; j ++)
-					value -= mu[j][i] * sigma[j] * subtract[j];
-				x[i] = value / ynorm;
-			}
-
 			xnorm = dotProduct(x, x);
 			if (xnorm <= 0.0001)
 				break;
-
+			
 			for (int i = 0; i < k; i ++)
 				subtract[i] = dotProduct(mu[i], x);
 
@@ -136,6 +125,24 @@ public class SVD {
 					value -= beta[j][i] * sigma[j] * subtract[j];
 
 				y[i] = value / xnorm;
+			}
+			ynorm = dotProduct(y, y);
+
+			if (ynorm <= 0.0001)
+				break;
+
+			
+			for (int i = 0; i < k; i ++){
+				subtract[i] = dotProduct(beta[i], y);
+			}
+			for (int i = 0; i < x.length; i ++){
+				double value = 0;
+				for (Entry t : DocTerm[i]) {
+					value += t.value * y[t.termID];
+				}
+				for (int j = 0; j < k; j ++)
+					value -= mu[j][i] * sigma[j] * subtract[j];
+				x[i] = value / ynorm;
 			}
 
 			double temp = dotProduct(x, x) * dotProduct(y, y);
@@ -192,6 +199,14 @@ public class SVD {
 		return result;
 	}
 	
+    /**
+     * Projects a vector of word frequencies to topic space, and returns a
+     * topic vector.
+     *
+     * In other words, given word frequencies w, returns t such that beta*t is
+     * as close as possible to w in l2 distance.  Note that the columns of beta
+     * are normalized.
+     */
 	public double[] projection(PaperAbstract paper){
 		double[] doct = new double[numTerms];
 		for (Integer word : paper.getTrainingWords()) {
@@ -200,7 +215,12 @@ public class SVD {
 
 		double[] dock = new double[DIMENSION];
 		for (int i = 0; i < dock.length; i ++) {
-			dock[i] = dotProduct(doct, beta[i]) / sigma[i];	    
+            if (oldBehavior0) {
+                /* This is what used to happen here. */
+                dock[i] = dotProduct(doct, beta[i]) / sigma[i];
+            } else {
+                dock[i] = dotProduct(doct, beta[i]);	    
+            }
 		}
 		return dock;
 	}
@@ -224,4 +244,16 @@ public class SVD {
 
 		return ret;
 	}
+	
+	public double[] getSingularValues() {
+		return sigma;
+	}
+
+    /**
+     * Returns an array, each element of which is the word-frequency vector of
+     * one topic, normalized to have l_2 norm equal to 1.
+     */
+    public double[][] getNormalizedTopics() {
+        return beta;
+    }
 }

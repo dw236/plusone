@@ -1,0 +1,107 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\DeclareMathOperator\Bernoulli{Bernoulli}
+\DeclareMathOperator\Dirichlet{Dirichlet}
+\DeclareMathOperator\Poisson{Poisson}
+
+\begin{document}
+
+\section{Inferring Topic Distributions with Held-Out Words}
+
+The LDA inference software we're using is not designed to deal with held out
+    words.
+Here we describe the generative model for the testing documents, and an
+    algorithm for inferring the topics in a testing document given the
+    topic-word matrix $A$.
+
+\subsection{Model for a Single Document: First Version}
+
+Hidden:
+\begin{itemize}
+\item $\ell \sim \Poisson(\lambda)$ -- length of the document.
+\item $\theta_1, \dotsc, \theta_k \sim \Dirichlet(\alpha)$ -- distribution of topics in the document.
+\item $(z_i \sim \theta)_{i \in [\ell]}$ -- the topic from which the word at each index $i$ of the document is chosen.
+\item $(w_i \sim A_{z_i})_{i \in [\ell]}$ -- the word at each index $i$ of the document.
+\item $(m_w \sim \Bernoulli(q))_{w \in V}$ -- for each word in the vocabulary $V$, $0$ if the word is held out and $1$ otherwise.
+\end{itemize}
+
+Observed:
+\begin{itemize}
+\item $(n'_w = m_w \cdot \# \{i : w_i = w\})_{w \in V}$.
+\end{itemize}
+
+\subsection{Model for a Single Document: Second Version}
+
+Here is an equivalent model that is easier to work with for the task of inference.
+
+Hidden:
+\begin{itemize}
+\item $\theta_1, \dotsc, \theta_k \sim \Dirichlet(\alpha)$ -- distribution of topics in the document.
+\item $n_{i, w} \sim \Poisson(\lambda \theta_i A_{i, w})$ -- the number of indices in the document where topic $i$ was chosen, and word $w$ was chosen from that topic.
+\item $(n'_w = m_w \sim \Bernoulli(q))_{w \in V}$ -- for each word in the vocabulary $V$, $0$ if the word is held out and $1$ otherwise.
+\end{itemize}
+
+Observed:
+\begin{itemize}
+\item $(m_w \cdot \sum_{i=1}^k n_{t, w})_{w \in V}$.
+\end{itemize}
+
+\subsection{The Log-Likelihood for the Second Version}
+
+\begin{align*}
+                             & \mathrm{constant} \\
+    \text{(Dirichlet)} \quad & + \sum_{i=1}^k (\alpha-1) \log \theta_i \\
+    \text{(Poisson)}   \quad & + \sum_{i=1}^k \sum_{w \in V: m_w = 1} n_{i, w} \log (\lambda \theta_i A_{i, w}) - \log (n_{i, w}!) - \lambda \theta_i A_{i, w} \\
+    \text{(Bernoulli)} \quad & + \sum_{m_w=0} \log(1-q) + \sum_{m_w=1} \log q \addtocounter{equation}{1} \tag{\theequation} \label{Eq:LL}
+\end{align*}
+
+\subsection{Inference Algorithm}
+
+Repeat three phases: estimate $n_{i,w}$, estimate $m_w$ and estimate $\theta_i$.
+
+\subsubsection{Estimating $\theta_i$}
+
+Here (\ref{Eq:LL}) after subtracting a value which does not depend on the
+    parameters $\theta_i$.
+Let $n'_i=\sum_{w \in V}m_w n_{i, w}$.
+\begin{equation}
+    \sum_{i=1}^k
+    \left(
+        (\alpha-1 + n'_i) \log \theta_i
+        - \lambda \theta_i \sum_{w \in V} m_w A_{i, w}
+    \right)
+\end{equation}
+The derivative with respect to $\theta_i$ is:
+\begin{equation}
+    \frac {\alpha-1 + n'_i} {\theta_i}
+    - \lambda \sum_{w \in V} m_w A_{i, w}
+\end{equation}
+Using the method of Lagrange multipliers to add the constraint
+    $\sum \theta_i = 1$, we end up with
+\begin{equation}
+    \theta_i = \frac {\alpha - 1 + n'_i} {\lambda \sum_{{w \in V} m_w A_{i, w}} - \mu}
+\end{equation}
+and choose $\mu$ so that $\sum \theta_i = 1$.  This should not be difficult, since $\sum \theta_i$ is monotone in $\mu$.
+
+\subsubsection{Estimating $n_{i,w}$}
+
+If $m_w=0$, then each $n_{i,w}$ is independently Poisson-distributed.
+Otherwise, we know $\sum_{i=1}^k n_{i,w}$, and conditioned on this, the
+    $n_{i,w}$ for a given word $w$ are Multinomial-distributed with
+    probabilities propotional to the Poisson rates $\lambda \theta_i A_{i,w}$.
+We expect their maximum-likelihood values to be almost proportional to these
+    probabilities.
+
+\subsubsection{Estimating $m_w$}
+
+If $n'_w>0$, then $m_w$ must be $1$.
+To estimate the other parameters $m_w$, look at (\ref{Eq:LL}) after subtracting
+    the parts that don't depend $m_w$, and the parts that only depend on $m_w$
+    where $n'_w>0$.
+$$\sum_{m_w=0} \log (1-q) + \sum_{m_w=1} \left( \log q - \sum_{i=1}^k \lambda p_t t_w \right)$$
+To maximize this likelihood, set each $m_w$ according to whether $\log (1-q)$
+    or $\log q - \sum_{i=1}^k \lambda p_t t_w$ is bigger.
+
+\end{document}

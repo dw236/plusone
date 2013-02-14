@@ -1,0 +1,23 @@
+#!/bin/sh
+
+export basedir=$PWD
+
+#Number of topics (taken from command line)
+if [ "$1" ];then
+    k=$1
+fi
+#Number of docs (taken from command line)
+if [ "$2" ];then
+    n=$2
+fi
+#Vocab size (taken from command line)
+if [ "$3" ];then
+    m=$3
+fi
+
+#run matlab program
+matlab -nodesktop -nosplash -nojvm <<-EOF
+cd projector;
+P = inference('data/final.beta', 'data/test_documents', $n, $m, $k);
+exit
+EOF

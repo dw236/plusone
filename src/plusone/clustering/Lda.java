@@ -22,44 +22,107 @@ import org.ejml.simple.SimpleMatrix;
 
 public class Lda extends ClusteringTest {
 
+	private String name;
 	private List<TrainingPaper> trainingSet;
 	private Indexer<String> wordIndexer;
 	private Terms terms;
 	private int numTopics;
 	private SimpleMatrix beta;
 	private SimpleMatrix gammas;
-	private Map<PaperAbstract, Integer> indices;
+	private Map<PaperAbstract, Integer> trainingIndices;
+	private Map<PaperAbstract, Integer> testIndices;
 	//flag to take true parameters (only for synthesized data)
-	private static boolean CHEAT;
+	private boolean trainCheat;
+	private boolean testCheat;
+	private boolean project;
 	private List<PredictionPaper> testDocs;
+	private String[] hoverText;
+	
+	/** 
+	 * Changes flags in Lda based on which algorithm is being run 
+	 * @param variant specific algorithm being tested (lda, LdaT, ldaC, proj)
+	 */
+	public Lda(String variant) {
+		super(variant);
+		if (variant.substring(0, 4).equals("ldaT")) {
+			this.trainCheat = true;
+			this.testCheat = false;
+		} else if (variant.substring(0,4).equals("ldaC")) {
+			this.trainCheat = true;
+			this.testCheat = true;
+		} else if (variant.substring(0, 4).equals("proj")) {
+			this.project = true;
+		} else {
+			this.trainCheat = false;
+			this.testCheat = false;
+		}
+	}
 
-	public Lda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
+	public Lda(String variant, List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
 			Terms terms, int numTopics) {
-		super("Lda");
+		this(variant + "-" + numTopics);
+		this.name = variant;
 		this.trainingSet = trainingSet;		
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
 		this.numTopics=numTopics;
+	}
+
+	public Lda(String variant, List<TrainingPaper> trainingSet, 
+			Indexer<String> wordIndexer,
+			Terms terms, 
+			int numTopics, 
+			Map<PaperAbstract, Integer> trainingIndices,
+			Map<PaperAbstract, Integer> testIndices) {
+		this(variant, trainingSet, wordIndexer, terms, numTopics);
+		this.trainingIndices = trainingIndices;
+		this.testIndices = testIndices;
 		train();
 	}
 
-	public Lda(List<TrainingPaper> trainingSet, Indexer<String> wordIndexer,
-			Terms terms, int numTopics, Map<PaperAbstract, Integer> indices) {
-		this(trainingSet, wordIndexer, terms, numTopics);
-		this.indices = indices;
-	}
+    /**
+     * Returns the estimated word-topic matrix, or null if e.g. the model has
+     * not been trained.
+     */
+    public SimpleMatrix getWordTopicMatrix() {
+        // beta is (# topics) x (# words); we want (# words) x (# topics).
+        return beta.transpose();
+    }
 
 	/**
+	 * Lda:
 	 * Runs lda-c-dist on the training set to learn the beta matrix and alpha
 	 * parameter (in this case, all alphas to the dirichlet are equal)
+	 * LdaT/LdaC:
+	 * Copies over the true gamma and beta matrix
+	 * projector:
+	 * Gets beta from projector
 	 */
 	private void train() {
-		CHEAT = true; 	//CHANGE TO false WHEN TRAINING ON REAL DATA
+		System.out.print("cleaning out lda folder for training...");
+		Utils.runCommand("./clear-folder lda", true);
 		double[][] betaMatrix = null;
-		if (CHEAT) {
+		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
 			betaMatrix = getRealBeta("src/datageneration/output/" + 
 					"documents_model-out");
+			cheat();
+		} else if (project) { 
+            if (!new File("projector/data").exists()) {
+                new File("projector/data").mkdir();
+            }
+			System.out.println("We are getting beta from the projector");
+			System.out.println("cleaning out projector folder for training...");
+			Utils.runCommand("rm projector/data/documents", true);
+			Utils.runCommand("rm projector/data/final.beta", true);
+			createProjectorInput("projector/data/documents", trainingSet);
+			while(!Utils.runCommand("./run-projector " + numTopics + " " 
+					+ trainingSet.size() + " " + terms.size(), true));
+			betaMatrix = readLdaResultFile("projector/data/final.beta", 0 , true);
+			System.out.print("replacing trained beta with projector beta...");
+			Utils.runCommand("cp projector/data/final.beta lda", false);
+			createProjectorInfo("lda/final.other");
+			System.out.println("done.");
 		} else {
 			try {
 				new File("lda").mkdir();
@@ -73,6 +136,11 @@ public class Lda extends ClusteringTest {
 			Utils.runCommand("lib/lda-c-dist/lda est 1 " + numTopics
 					+ " lib/lda-c-dist/settings.txt " + trainingData
 					+ " random lda", false);
+			new File ("lda/trained").mkdir();
+			System.out.print("copying trained beta to 'trained' folder...");
+			Utils.runCommand("cp lda/final.beta lda/trained", false);
+			System.out.print("copying trained gammas to 'trained' folder...");
+			Utils.runCommand("cp lda/final.gamma lda/trained", false);
 		
 			betaMatrix = readLdaResultFile("lda/final.beta", 0, true);
 		}
@@ -80,7 +148,66 @@ public class Lda extends ClusteringTest {
 		beta = new SimpleMatrix(betaMatrix);
 	}
 
+	//TODO move this
+	private void createProjectorInput(String filename, List<TrainingPaper> papers) {
+		System.out.print("creating projector input: " + filename + " ... ");
+
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+
+		for (TrainingPaper paper : papers) {
+			for (int word : paper.getTrainingWords()) {
+				for (int i=0; i<paper.getTrainingTf(word); i++) {
+					fileWriter.write(word + " ");
+				}
+			}
+			fileWriter.write("\n");
+		}
+
+		fileWriter.close();
+		
+		System.out.println("done.");
+	}
+	
+	//TODO move this
+	private void createProjectorInputTest(String filename,
+			List<PredictionPaper> papers) {
+		System.out.print("creating projector test input: " 
+				+ filename + " ... ");
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+
+		for (PredictionPaper paper : papers) {
+			for (int word : paper.getTrainingWords()) {
+				for (int i=0; i<paper.getTrainingTf(word); i++) {
+					fileWriter.write(word + " ");
+				}
+			}
+			fileWriter.write("\n");
+		}
+
+		fileWriter.close();
+		
+		System.out.println("done.");
+	}
+	
+	//TODO move this
 	/**
+	 * creates the final.other file required for lda inference
+	 */
+	private void createProjectorInfo(String filename) {
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+		fileWriter.write("num_topics " + numTopics + " \n");
+		fileWriter.write("num_terms " + terms.size() + " \n");
+		fileWriter.write("alpha " + 
+						 readAlpha("src/datageneration/output/final.other") 
+						 + " \n");
+		fileWriter.close();
+	}
+	
+	/**
+	 * LdaC:
+	 * Multiplies the true beta and gamma and then returns that doc-word
+	 * matrix as its result
+	 * Other algorithms:
 	 * Given a set of test documents, runs lda-c-dist inference to learn the
 	 * final gammas. Then, subtracts alpha from each gamma to find the expected
 	 * number of times each word appears per topic. Finally, multiplies each
@@ -93,24 +220,25 @@ public class Lda extends ClusteringTest {
 	@Override
 	public double[][] predict(List<PredictionPaper> testDocs){
 		this.testDocs = testDocs;
+		System.out.print("writing test indices to file in lda/trained...");
+		Utils.writeIndices("lda/trained/testIndices", testDocs, testIndices);
+		System.out.println("done.");
 		double[][] result = null;
-		if (CHEAT) {
+		if (testCheat) {
 			System.out.println("we are cheating and using true parameters " +
 					"for prediction");	
 			double[][] gammasMatrix = getRealGamma("src/datageneration/output/"
 					+ "documents_model-out");
 			gammas = new SimpleMatrix(gammasMatrix);
 			SimpleMatrix probabilities = gammas.mult(beta);
-			result = new double[testDocs.size()][wordIndexer.size()];
+			result = new double[testDocs.size()][probabilities.numCols()];
 			
 			int row = 0;
 			for (PredictionPaper doc : testDocs) {
-				int paperIndex = indices.get(doc);
+				int paperIndex = testIndices.get(doc);
 				int col = 0;
-				for (String word : wordIndexer) {
-					int wordIndex = new Integer(word);
-					result[row][col] = probabilities.get(paperIndex, wordIndex);
-					col++;
+				for (col = 0; col < probabilities.numCols(); col++) {
+					result[row][col] = probabilities.get(paperIndex, col);
 				}
 				row++;
 			}
@@ -142,9 +270,37 @@ public class Lda extends ClusteringTest {
 				}
 			}
 		}
+		System.out.println(name + " perplexity is " + getPerplexity());
+		
+		//write result to hoverText so it can be displayed
+		int howMany = 20;
+		hoverText = new String[howMany];
+		int papers = 0;
+		for (PredictionPaper doc : testDocs) {
+			if (papers > (howMany - 1)) {
+				break;
+			}
+			int paperIndex = testIndices.get(doc);
+			String prediction = paperIndex + " ";
+			for (int col=0; col<result[papers].length; col++) {
+				prediction += result[papers][col] + " ";
+			}
+			hoverText[papers] = prediction.trim();
+			papers++;
+		}
+		//end hover
+		
 		return result;
 	}
 
+	/**
+	 * Currently unused - hover is being used to display average scores of
+	 * multiple experiments
+	 */
+	public String[] getHover() {
+		return hoverText;
+	}
+	
 	private void createLdaInput(String filename, List<TrainingPaper> papers){
 		System.out.print("creating lda input in file: " + filename + " ... ");
 
@@ -174,7 +330,8 @@ public class Lda extends ClusteringTest {
 	 */
 	private void createLdaInputTest(String filename, List<PredictionPaper> papers) {
 
-		System.out.print("creating lda input in file: " + filename + " ... ");
+		System.out.print("creating lda test input in file: " 
+				+ filename + " ... ");
 
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
 
@@ -192,17 +349,43 @@ public class Lda extends ClusteringTest {
 		System.out.println("done.");
 	}
 	
-	private void implantRealBeta(double[][] betaMatrix, String filename) {
-		System.out.print("Replacing trained betas with true betas...");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-		for (int row = 0; row < betaMatrix.length; row++) {
-			for (int col = 0; col < betaMatrix[row].length; col++) {
-				fileWriter.write(Math.log(betaMatrix[row][col]) + " ");
+	/**
+	 * Replaces trained beta/gamma with real beta/gamma
+	 */
+	private void cheat() {
+		System.out.print("replacing trained beta with real beta...");
+		Utils.runCommand("cp src/datageneration/output/final.beta lda", false);
+		System.out.println("done.");
+		
+		System.out.print("replacing trained gammas with real gammas...");
+		try {
+			FileInputStream fstream = new FileInputStream("src/" +
+					"datageneration/output/final.gamma");
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			PlusoneFileWriter fileWriter = new PlusoneFileWriter("lda/" +
+					"final.gamma");
+			
+			int index = 0;
+			while ((strLine = br.readLine()) != null) {
+				if (trainingIndices.containsValue(index)) {
+					fileWriter.write(strLine);
+					fileWriter.write("\n");
+				}
+				index++;
 			}
-			fileWriter.write("\n");
+			
+			fileWriter.close();
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		fileWriter.close();
-		System.out.println("done");
+		System.out.println("done.");
+		
+		System.out.print("replacing trained alpha with real alpha...");
+		Utils.runCommand("cp src/datageneration/output/final.other " +
+				"lda", false);
+		System.out.println("done.");
 	}
 	
 	/**
@@ -342,11 +525,10 @@ public class Lda extends ClusteringTest {
 	/**
 	 * Returns the perplexity for the test set. Can only be run after the predict method.
 	 * 
-	 * @param testDocs the testing documents
 	 * @return the perplexity for testDocs
 	 */
 	public double getPerplexity() {
-		if (CHEAT) {
+		if (testCheat) {
 			double[][] betaMatrix = getRealBeta("src/datageneration/output/documents_model-out");
 			double[][] gammaMatrix = getRealGamma("src/datageneration/output/documents_model-out");
 			SimpleMatrix realBetas = new SimpleMatrix(betaMatrix);
@@ -356,7 +538,7 @@ public class Lda extends ClusteringTest {
 			double numerator = 0, denominator = 0;
 			for (int i=0; i<testDocs.size(); i++) {
 				double docProb = 0;
-				int row = indices.get(testDocs.get(i));
+				int row = testIndices.get(testDocs.get(i));
 				for (Integer j : ((PaperAbstract)testDocs.get(i)).getTrainingWords()) {
 					int tf = ((PaperAbstract)testDocs.get(i)).getTrainingTf(j);
 					docProb += tf*Math.log(probMatrix.get(row, j));
@@ -366,7 +548,6 @@ public class Lda extends ClusteringTest {
 					denominator += ((PaperAbstract)testDocs.get(i)).getTrainingTf(j);
 				}
 			}
-			System.out.println(Math.exp(-1*numerator/denominator));
 			return Math.exp(-1*numerator/denominator);
 		} else {
 			FileInputStream filecontents = null;

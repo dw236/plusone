@@ -1,0 +1,141 @@
+#!/bin/bash
+
+export basedir=$PWD
+
+#Generator
+generator="lda"
+#Number of topics
+klist=(15) #(3 5 10 15 20 30)
+#Number of docs
+nlist=(1000) #1500 2000 2500)
+#Number of words per document
+llist=(75) #(75 100 150 250 350)
+#Vocab size
+mlist=(1000) #(500 1000 1500 2000)
+#Alpha
+alist=(0.01 0.1 0.4 4.0) #1, 2, 5, 10
+#Beta
+blist=(0.0175 0.125 0.25 4.0) #10, 60, 100, 300
+#Number of tests to run for each corpus generated
+numTests=1
+#Flag for plotting output
+plot=false
+#Flag for making table
+table=false
+#Flag to use data already in datageneration/output
+old=false
+
+while getopts "hgpo" OPTION
+do
+    case $OPTION in
+        h)
+            echo "Usage: ./run-batch [-h] [-p] [-g] [-o]"
+            echo "Optional arguments:"
+            echo "-h Show this help screen"
+            echo "-p Plot all experiment*.json files in data"
+            echo "-g Make an HTML table with the data"
+            echo "-o Use previously generated data with the parameters in run-batch instead of making new data"
+            echo "To change the data generation parameters, edit run-batch"
+            exit 1
+            ;;
+        g)
+            table=true
+            ;;
+        p)
+            plot=true
+            ;;
+        o)
+            old=true
+            ;;
+    esac
+done
+
+# compile using ant
+ant -f build.xml || exit
+
+#Iterate through every combination of parameters
+for k in "${klist[@]}";
+do
+    for n in "${nlist[@]}";
+    do
+        for l in "${llist[@]}";
+        do
+            for m in "${mlist[@]}";
+            do
+                for a in "${alist[@]}";
+                do
+                    for b in "${blist[@]}";
+                    do
+                        for ((i=0; i < $numTests; i++))
+                        do
+                            cd src/datageneration/
+                            case "$generator" in
+                            hlda)
+                                if $old; then
+                                    #Use previously generated data
+                                    cp -r output/n$n.l$l.m$m.b$b.z0.25.p1.0.g1.0.hlda/* output
+                                else
+                                    #Generate a data file with given parameters
+                                    python hlda_journal.py -w -n $n -l $l -m $m -b $b || exit 1
+                                fi
+                                ;;
+                            lda)
+                                if $old; then
+                                    #Use previously generated data
+                                    cp -r output/k$k.n$n.l$l.m$m.a$a.b$b/* output
+                                else
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b || exit 1
+                                fi
+                                ;;
+                            ctm)
+                                if $old; then
+                                    #Use previously generated data
+                                    cp -r output/k$k.n$n.l$l.m$m.a$a.b$b.ctm/* output
+                                else
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b -ctm || exit 1
+                                fi
+                                ;;
+                            pareto)
+                                if $old; then
+                                    #Use previously generated data
+                                    cp -r output/k$k.n$n.l$l.m$m.a$a.b$b/* output
+                                else
+                                    #Generate a data file with given parameters
+                                    python documents.py -w -k $k -n $n -l $l -m $m -a $a \
+                                    -b $b -p || exit 1
+                                fi
+                                ;;
+
+                            esac
+                            cd $basedir
+
+                            #Make a JSON out of the generated data
+                            java -classpath bin:build:lib/jars/json.jar -Xmx256m\
+                            datageneration/MakeJSON documents-out false || exit 1
+
+                            #Run the test
+                            ./test data/documents-out.json $generator $k || exit 1
+                        done
+                    done
+                done
+            done
+        done
+    done
+done
+
+if $table; then
+    cd $basedir
+    python parse_batch.py data
+fi
+
+if $plot; then
+    cd $basedir
+    for f in data/experiment*.json;
+    do
+        python parse_output.py $f
+    done
+fi

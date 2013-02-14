@@ -1,19 +1,26 @@
 """
-hierarchical LDA document generator (from journal version of paper: infinite trees)
-based on
-"The Nested Chinese Restaurant Process and Bayesian Nonparametric Inference of Topic Hierarchies"
+hierarchical LDA document generator (from journal version of paper: infinite 
+trees)
+
+Based on
+"The Nested Chinese Restaurant Process and Bayesian Nonparametric Inference of 
+Topic Hierarchies"
 by Blei, Griffiths and Jordan
 JACM 2010
 """
+import os
 
 import argparse
 from numpy.random import beta
+from numpy.random.mtrand import poisson
 from numpy.random.mtrand import dirichlet
 import pickle
 from random import random as rand
 import util
 
 class Topic_node:
+    TOPIC_INDEX = 0
+    
     def __init__(self, params):
         # The word distribution of this node's topic.
         self.word_dist = dirichlet(params["topic_to_word_param"])
@@ -32,6 +39,10 @@ class Topic_node:
         # should always be equal to sum(c.num_documents for c in
         # self.children).
         self.num_documents_in_children = 0
+        
+        # Topic index (for inspection)
+        self.topic_number = Topic_node.TOPIC_INDEX
+        Topic_node.TOPIC_INDEX += 1
 
     def pick_child(self, params):
         """
@@ -39,19 +50,22 @@ class Topic_node:
         updates that child's num_documents, and returns the index of
         the child in self.children.
         """
-        r = rand() * self.num_documents_in_children + params["new_child_gamma"]
+        r = rand() * (self.num_documents_in_children 
+                      + params["new_child_gamma"])
 
         for i in range(len(self.children)):
             child = self.children[i]
             # Should we use child #i?
             if r < child.num_documents:
                 child.add_document()
+                self.num_documents_in_children += 1
                 return i
             r -= child.num_documents
 
         # Add a new child.
         node = Topic_node(params)
         node.add_document()
+        self.num_documents_in_children += 1
         self.children.append(node)
         return len(self.children) - 1
 
@@ -63,7 +77,8 @@ class Topic_node:
 
     def dump_indented(self, f, first_prefix, rest_prefix):
         f.write(first_prefix)
-        f.write(str(self.num_documents) + "; " + show_dist(self.word_dist) + "\n")
+        f.write(str(self.num_documents) + "; " + show_dist(self.word_dist) + 
+                "\n")
         child_first_prefix = rest_prefix + "+"
         child_rest_prefix = rest_prefix + "|"
         for child in self.children:
@@ -84,9 +99,9 @@ def sample_topic_index(stay_probs, params):
             new_stay_prob = params["parent_topic_bias_sample"]()
             stay_probs.append(new_stay_prob)
         stay_here_prob = stay_probs[level]
-        if r < stay_here_prob:
+        if r > 1 - stay_here_prob:
             return level
-        r = r * (1 - stay_here_prob)
+        r /= (1 - stay_here_prob)
         level += 1
 
 def follow_path(path, path_indices, level, params):
@@ -109,26 +124,33 @@ def generate_one_doc_with_hlda(topic_root, params):
     # conditioned on not using any of the parent nodes' topics.
     # Generated as needed.
     stay_probs = []
-    num_words = params["words_per_doc_distribution"].sample()
+    topic_levels = []
+    topic_indices = []
+    num_words = params["words_per_doc_distribution"]()
     words = []
     for i in range(num_words):
         topic_level = sample_topic_index(stay_probs, params)
+        topic_levels.append(topic_level)
         topic_node = follow_path(path, path_indices, topic_level, params)
+        topic_indices.append(topic_node.topic_number)
         word = util.sample(topic_node.word_cdf)
         words.append(word)
-    return words, stay_probs, path_indices
+    return words, stay_probs, path_indices, topic_indices, topic_levels
 
-def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size, topic_to_word_beta, topic_dist_m, topic_dist_pi, new_child_gamma):
+def generate_docs_with_hlda(num_docs, words_per_doc, vocab_size, 
+                            topic_to_word_beta, topic_dist_m, topic_dist_pi, 
+                            new_child_gamma):
     params = {}
     params["topic_to_word_param"] = [topic_to_word_beta] * vocab_size
-    params["words_per_doc_distribution"] = util.Poisson(words_per_doc)
+    params["words_per_doc_distribution"] = lambda: util.poisson(words_per_doc)
     pta = topic_dist_m * topic_dist_pi
     ptb = topic_dist_pi - pta
     params["parent_topic_bias_sample"] = lambda: beta(pta, ptb)
     params["new_child_gamma"] = new_child_gamma
     topic_root = Topic_node(params)
-    documents, topic_stay_probs, topic_paths = zip(*[generate_one_doc_with_hlda(topic_root, params) for i in range(num_docs)])
-    return documents, topic_root, topic_stay_probs, topic_paths
+    documents, topic_stay_probs, topic_paths, topics, levels = \
+    zip(*[generate_one_doc_with_hlda(topic_root, params) for i in range(num_docs)])
+    return documents, topic_root, topic_stay_probs, topic_paths, topics, levels
 
 def write(data, args):
     """writes the data generated by generate_docs to various files
@@ -152,20 +174,35 @@ def write(data, args):
     results.pickle:
         file containing the documents and the topic tree
     """
-    docs, tree, topic_stay_probs, topic_paths = data
-    with open('output/hldaj-documents-out', 'w') as f:
+    docs, tree, topic_stay_probs, topic_paths, topics, levels = data
+    dir = 'output/'
+    dir += "n" + str(args.n) + "."
+    dir += "l" + str(args.l) + "."
+    dir += "m" + str(args.m) + "."
+    dir += "b" + str(args.b) + "."
+    dir += "z" + str(args.z) + "."
+    dir += "p" + str(args.p) + "."
+    dir += "g" + str(args.g) + "."
+    dir += "hlda"
+    try:
+        os.mkdir(dir)
+    except:
+       print "overwriting existing data in directory:", dir, "...",
+
+    with open(dir + '/documents-out', 'w') as f:
         for doc in docs:
             for word in doc:
                 f.write(str(word) + " ")
             f.write('\n')
-    with open('output/hldaj-stay-probs-out', 'w') as f:
+    with open(dir + '/stay-probs-out', 'w') as f:
         for ps, indices in zip(topic_stay_probs, topic_paths):
-            for p, i in zip(ps, [None] + indices):
+            for p, i in zip(ps, ["root"] + indices):
                 f.write(str(i) + ":" + str(p) + " ")
             f.write('\n')
-    tree.dump(open('output/hldaj-tree-out', 'w'))
-    with open('output/hldaj-documents_options-out', 'w') as f:
-        f.write("python documents.py ")
+    with open(dir + '/tree-out', 'w') as f:
+        tree.dump(f)
+    with open(dir + '/documents_options-out', 'w') as f:
+        f.write("python hlda_journal.py ")
         f.write("-n " + str(args.n) + " ")
         f.write("-l " + str(args.l) + " ")
         f.write("-m " + str(args.m) + " ")
@@ -173,12 +210,13 @@ def write(data, args):
         f.write("-z " + str(args.z) + " ")
         f.write("-p " + str(args.p) + " ")
         f.write("-g " + str(args.g) + " ")
-    with open('output/hldaj-results.pickle', 'w') as f:
+    with open(dir + '/results.pickle', 'w') as f:
         pickle.dump(data, f)
+    os.system("cp " + dir + "/* output")
 
 def main():
-    parser = argparse.ArgumentParser(description="Document generator for hierarchical LDA. Default\
-    parameters are noted in parentheses.")
+    parser = argparse.ArgumentParser(description="Document generator for \
+    hierarchical LDA. Default parameters are noted in parentheses.")
     parser.add_argument('-w', action="store_true", default=False,
                         help="write flag (false)")
     parser.add_argument('-n', action="store", metavar='num_docs', type=int,
@@ -193,9 +231,11 @@ def main():
     parser.add_argument('-z', action="store", type=float, default=0.25,
                         help="mean probability of not descending to a child")
     parser.add_argument('-p', action="store", type=float, default=1.0,
-                        help="inflexibility in probability of not descending to a child")
+                        help="inflexibility in probability of not descending \
+                        to a child")
     parser.add_argument('-g', action="store", type=float, default=1.0,
-                        help="tendancy to create a new child (gamma in Chinese Restaurant Process)")
+                        help="tendancy to create a new child \
+                        (gamma in Chinese Restaurant Process)")
     
     args = parser.parse_args()
     
@@ -221,4 +261,4 @@ def main():
     return data
 
 if __name__ == '__main__':
-    docs = main()
+    docs, topic_root, topic_stay_probs, topic_paths, topics, levels = main()

@@ -1,12 +1,17 @@
 """Contains some useful classes and methods
 """
-import numpy as np
 import operator
 import pickle
+import time
+import os
+
+import numpy as np
+from numpy.random.mtrand import poisson as p
+from numpy.random.mtrand import dirichlet
+from scipy.special import gamma
 
 import math
 from math import e
-from math import gamma
 
 import random
 from random import random as rand
@@ -14,35 +19,28 @@ from random import random as rand
 import matplotlib
 from matplotlib.pyplot import *
 
-class Poisson(object):
-    """A class to represent a poisson distribution.
+def poisson(l, max_val=None, min_val=1):
+    """samples a poisson distribution, but has a bounded max and min value
     
-    Attributes:
-        lamb:
-            the parameter to the poisson distribution
-    Methods:
-        sample():
-            returns a sample from the distribution
+    Args:
+        l:
+            poisson parameter
+        max_val:
+            the maximum value that can be returned (if the sampled number is
+            higher than max_val, max_val is returned)
+            if no max_val is given, does not cap the max value
+        min_val:
+            the minimum value that can be returned (if the sampled number is
+            smaller than min_val, min_val is returned)
+    
+    Returns:
+        a sample p ~ Poisson(l), but is constrained to the range 
+        [min_val, max_val]
     """
-    def __init__(self, L=15):
-        self.lamb = L
-        
-    def sample(self):
-        """Samples the poisson distribution.
-        
-        Args:
-            none
-            
-        Returns:
-            a number sampled from the poisson distribution with parameter
-            self.lamb
-        """
-        L = e ** (-self.lamb)
-        k, p = 1, rand()
-        while p > L:
-            k += 1
-            p *= rand()
-        return k - 1
+    if max_val == None:
+        return max(1, p(l))
+    else:
+        return max(1, min(p(l), max_val))
 
 def get_cdf(dist):
     """Calculates the cdf of a distribution.
@@ -60,7 +58,7 @@ def get_cdf(dist):
     for i in range(len(dist)):
         total += dist[i]
         cdf.append(total)
-    return cdf
+    return np.array(cdf)
 
 def sample(cdf):
     """Takes a distribution and samples from it. 
@@ -190,7 +188,31 @@ def count(words):
     word_count["unique"] = unique_words
     return word_count
 
-def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
+def get_sig_words(word_dists, amount=0.8):
+    """calculates the number of significant elements in a distribution
+    
+    Given a distribution, calculates the number of elements (sorted by
+    decreasing probability, so the most likely element is first) that comprise
+    a specified percentage of the cdf.
+    
+    Args:
+        word_dists:
+            a list of distributions
+        amount:
+            percentage of cdf to calculate significant elements
+            
+    Returns:
+        a list, where each element corresponds to how many elements in that
+        distribution contribute "amount" percent of the cdf in that distribution
+    """
+    word_cdfs = [get_cdf(sorted(dist, reverse=1)) for dist in word_dists]
+    sig_words = []
+    for topic in word_cdfs:
+        index = binary_search(topic, amount)
+        sig_words.append(index + 1)
+    return sig_words
+
+def plot_dist(types, color='b', labels=None, bottom=0, clear=True):
     """Plots a distribution as a bar graph.
     
     Given a distribution, plots a bar graph. Each bar is an element in the
@@ -202,46 +224,64 @@ def plot_dist(types, color='b', labels=None, bottom=0, clear=None):
     Returns:
         none, but plots the distribution
     """
-    if clear == None:
+    if clear:
         clf()
     offset = 0
     width = 0.01
     if labels == None:
         labels = range(len(types))
-    for type in types:
-        bar(offset, type, width, bottom, color=color)
+    for dist in types:
+        bar(offset, dist, width, bottom, color=color)
         offset += width
     xticks(np.arange(width / 2, width * len(types), .01), labels)
 
-def plot_dists(types, color='b', labels=None, scale=0):
+def plot_dists(types, color='b', labels=None, scale=0, clear=True):
     """plots several distributions vertically stacked for easier visualization
     
     TODO: scale y-axis so labels make sense
     """
-    clf()
+    if clear:
+        clf()
     bottom = 0
-    for type in types:
-        if len(type) > 100:
-            plot(type + bottom)
+    y_indices = []
+    for dist in types:
+        y_indices.append(bottom)
+        if len(dist) > 50:
+            plot(dist + bottom, color=color)
         else:
-            plot_dist(type, color, labels, bottom, "don't clear")
-        if scale == 1.0:
+            plot_dist(dist, color, labels, bottom, clear=False)
+        if scale != 0:
             to_add = scale
         else:
-            to_add = max(type) * 1.1
+            to_add = max(dist) * 1.1
         bottom += to_add
+    if labels != None:
+        yticks(y_indices, labels)
 
-def plot_hist(words, vocab_size, color='b'):
+def show_dists(dists):
+    for dist in dists:
+        plot_dist(dist)
+        if raw_input('q to quit...') == 'q':
+            break
+
+def plot_cdfs(dists, offset=1):
     clf()
-    hist(words, range(vocab_size + 1), color=color)
-    
-def perplexity(docs, probabilities, indices=None):
+    dists = [get_cdf(sorted(dist, reverse=1)) for dist in dists]
+    bottom = 0
+    for dist in dists:
+        plot([bottom] * len(dist), 'black')
+        plot(np.insert((1 - dist), 0, 1) + bottom)
+        bottom += offset
+
+def perplexity(docs, probabilities, indices=None, holdout=0.7):
+    """deprecated: feel free to remove this function
+    """
     if indices == None:
         indices = range(len(docs))
     numerator, denominator = 0.0, 0.0
     for i in indices:
         p = 0
-        words = int(len(docs[i]) * 0.7)
+        words = int(len(docs[i]) * holdout)
         for word in docs[i][:words]:
             p += np.log(probabilities[i, word])
         numerator += p
@@ -253,6 +293,24 @@ def perplexity(docs, probabilities, indices=None):
     return perp
 
 def get_probabilities(pickle_file):
+    """Calculates the full NxM word distribution per document
+    
+    Given a file containing the model parameters used to generate a dataset,
+    calculates the probability for words in each document by multiplying the
+    topic distribution per document (a NxK matrix) by the word distribution
+    per topic (a KxM matrix).
+    
+    Args:
+        pickle_file:
+            Name of the file to load data from; if it is a .pickle file, unpacks
+            the relevant values and computes the resulting matrix. Otherwise,
+            assumes a text file reads the entries from it.
+    
+    Returns:
+        an NxM matrix, where each entry is the probability of a word given a
+        document (the document is specified by the row, and the word is
+        specified by the column) 
+    """
     if len(pickle_file) >= 6 and pickle_file[-6:] != "pickle":
         with open('src/datageneration/output/documents_model-out', 'r') as f:
             v = False
@@ -263,15 +321,337 @@ def get_probabilities(pickle_file):
                     v = True
                     continue
                 if v:
-                    rgamma.append([float(word) for word in line.strip(' \n').split(' ')])
+                    rgamma.append([float(word) \
+                                   for word in line.strip(' \n').split(' ')])
                 else:
-                    rbeta.append([float(word) for word in line.strip(' \n').split(' ')])
+                    rbeta.append([float(word) \
+                                  for word in line.strip(' \n').split(' ')])
         rbeta = np.matrix(rbeta)
         rgamma = np.matrix(rgamma)
         probabilities = rgamma * rbeta
     else:
         with open(pickle_file, 'r') as f:
-            docs, words, topics = pickle.load(f)
+            docs, doc_topics, words, topics, args = pickle.load(f)
         probabilities = np.matrix(topics) * np.matrix(words)
     
     return probabilities
+
+def write_cheats(data, args, dir):
+    """writes files that will help lda cheat (replaces the files in lda/)
+    
+    Writes the three files to replace the three that lda-c-dist creates 
+    after training and inference. Used to cheat by giving the prediction task
+    the true model parameters instead of the learned ones.
+    
+    Note: this code does not replace the files; it only creates the files so
+    that they can be used to replace lda's files later.
+    
+    Args:
+        data:
+            tuple containing all the information returned by 
+            documents.generate_documents
+        args:
+            namespace containing parameters given to generate the data
+        dir:
+            directory to write the files (to be copied later)
+    Returns:
+        none, but writes three files to be used later
+    """
+    docs, doc_topics, words, topics = data
+    alpha = args.a
+    
+    with open(dir + '/final.gamma', 'w') as f:
+        gammas = [count(topic) for topic in doc_topics]
+        for doc in range(len(docs)):
+            for topic in range(len(topics[0])):
+                if topic in gammas[doc]:
+                    f.write(str(gammas[doc][topic] + alpha) + " ")
+                else:
+                    f.write(str(alpha) + " ")
+            f.write('\n') 
+    with open(dir + '/final.other', 'w') as f:
+        num_topics = args.k
+        num_terms = args.m
+        to_write = "num_topics " + str(num_topics) + "\n" 
+        to_write += "num_terms " + str(num_terms) + "\n" 
+        to_write += "alpha " + str(alpha) + "\n"  
+        f.write(to_write)
+    with open(dir + '/final.beta', 'w') as f:
+        noise = 1e-323
+        for topic in words:
+            for word in topic:
+                f.write(str(np.log(word + noise)) + " ")
+            f.write('\n')
+
+def match_beta(input_beta='../../projector/data/final.beta',
+               real_beta='output/results.pickle', 
+               metric='cosine', plot=True, save=False,
+               save_name=None, save_dir='../../data'):
+    """matches learned topics with real topics by using stable marriage
+    
+    Takes the topic matrix generated from a learning algorithm and compares it
+    to the topic matrix used to generate the data. Rows are then matched to
+    greedily find a max-weight matching between them.
+    Each row represents a topic, and each column represents a word.
+    
+    Args:
+        input_beta: filename of the learned topic matrix
+        real_beta: filename of the true topic matrix
+        metric: distance metric to compare two topics (currently only supports
+                'cosine' and 'L1')
+        plot: flag to plot resulting match
+        save: flag to save learned topic matrix to file for future use--the
+              rows are sorted in the order that they are matched
+        save_name: filename of the saved matrix
+        save_dir: directory name of saved matrix
+         
+    Returns:
+        input_beta: learned topic matrix as a numpy array
+        real_beta: real topic matrix as a numpy array
+        pairings: dict--each key is a learned topic index, 
+                  each value is a one-element list, 
+                  containing the real topic index the key is matched to
+        labels: list--each element is a learned topic index, whose match is the
+                element's index
+        male_distances: distance matrix used to create matching (rows indices
+                        are real_beta indices, column indices are input_beta)
+    """
+    with open(real_beta, 'r') as f:
+        docs, doc_topics, real_beta, topics, args = pickle.load(f)
+    
+    with open(input_beta, 'r') as f:
+        input_beta = [line.strip(' \n').split(' ') for line in f.readlines()]
+    lines_to_nums = []
+    for line in input_beta:
+        lines_to_nums.append([np.exp(float(num)) for num in line])
+    input_beta = np.array(lines_to_nums)
+    
+    r_shape, i_shape = np.shape(real_beta), np.shape(input_beta)
+    assert(r_shape[0] == i_shape[0])
+    if r_shape[1] != i_shape[1]:
+        print "input beta is missing words--padding with 0's"
+        #pad input_beta
+        lines = []
+        for line in input_beta:
+            lines.append(list(line) + [0]*(r_shape[1] - i_shape[1]))
+        input_beta = np.array(lines)
+    
+    #generate preference list
+    male_distances = np.zeros((np.shape(real_beta)[0], 
+                               np.shape(input_beta)[0]))
+    female_distances = np.zeros((np.shape(input_beta)[0],
+                                 np.shape(real_beta)[0]))
+    for i in range(len(real_beta)):
+        for j in range(len(input_beta)):
+            if metric == 'cosine':
+                sim = real_beta[i].dot(input_beta[j]) / \
+                      (np.sqrt(real_beta[i].dot(real_beta[i])) * 
+                       np.sqrt(input_beta[j].dot(input_beta[j])))
+                invert = False
+            elif metric == 'L1':
+                sim = np.sum(np.abs(real_beta[i] - input_beta[j]))
+                #invert so it makes larger values less preferable
+                invert = True
+            else:
+                raise Exception("invalid metric: " + str(metric))
+            male_distances[i][j] = sim
+            female_distances[j][i] = sim
+    pairings = tma(male_distances, female_distances, invert=invert)
+    labels = [pairings[i][0] for i in sorted(pairings.keys())]
+    labels = [labels.index(female) for female in sorted(pairings.keys())]
+    reordered_input_beta = np.array([input_beta[i] for i in labels])
+    labels = zip(labels, [round(male_distances[i][labels[i]], 2)
+                          for i in range(len(labels))])
+    if plot:
+        plot_dists(real_beta, color='green', scale=0.25)
+        plot_dists(reordered_input_beta, color='red', scale=0.25, labels=labels,
+                   clear=False)
+    if save:
+        if save_name == None:
+            print "please supply name of beta matrix to be saved"
+            print "WARNING: pickle file not created"
+        else:
+            dir = save_dir + '/'
+            dir += "k" + str(args.k) + "."
+            dir += "n" + str(args.n) + "."
+            dir += "l" + str(args.l) + "."
+            dir += "m" + str(args.m)
+            
+            filename = save_name + "." 
+            filename += "a" + str(args.a) + "."
+            filename += "b" + str(args.b) + ".beta"
+            
+            try:
+                os.mkdir(dir)
+            except OSError as e:
+                if e.errno == 17:
+                    print "found directory:", dir,
+                    print "(existing contents, if any, will be overwritten)"
+                else:
+                    print "an error occurred trying to create directory:", dir
+                    print "(" + str(e) + ")"
+                    print "WARNING: file not written"
+            
+            print "writing to file...",
+            with open(dir + '/' + filename, 'w') as f:
+                for row in reordered_input_beta:
+                    for num in row:
+                        f.write(str(num) + ' ')
+                    f.write('\n')
+            print "done"
+
+    return real_beta, input_beta, pairings, labels, male_distances
+    
+            
+def tma(male_distances, female_distances, invert=False, verbose=False):
+    """ run stable marriage algorithm for n pairs of "men" and "women"
+    
+    Performs standard propose-reject algorithm on a pair of preference lists.
+    This method assumes that a higher value means it is more preferred, but
+    supports the option to invert the preferences.
+    
+    Args:
+        male_distances: nxn matrix, where each row is a preference list over
+                        "women"
+        female_distances: nxn matrix, where each row is a preference list over
+                          "men"
+        invert: flag to invert preference lists. Default behavior assumes that
+                a higher value in a preference list is more preferred (that is,
+                male_distances and female_distances are scores, not rankings).
+                Set this flag to true to treat them as rankings.
+        verbose: flag to see output from method (for debugging)
+    """
+    if invert:
+        male_distances = -male_distances
+        female_distances = -female_distances
+    #rank from highest to lowest
+    male_preferences = [sorted(range(len(male)), cmp=ind_cmp(male),
+                               reverse=True)
+                        for male in male_distances]
+    female_preferences = [sorted(range(len(female)), cmp=ind_cmp(female),
+                                 reverse=True)
+                          for female in female_distances]
+    if verbose:
+        print "Male preference list:", male_preferences
+        print "Female preference list:", female_preferences
+    #each male crosses off his top female and proposes to her
+    proposals = [male.pop(0) for male in male_preferences]
+    if verbose: 
+        print "Proposals:", proposals
+    pairings = {}
+    for i in range(len(proposals)):
+        female = proposals[i]
+        if pairings.has_key(female):
+            pairings[female].append(i)
+        else:
+            pairings[female] = [i]
+
+    while(len(pairings.keys()) != len(female_distances)):
+        if verbose:
+            print "Pairings:", pairings
+        #at least one woman has more than one proposal
+        rejected_men = []
+        #find these women, then reject the men
+        for female in pairings:
+            if len(pairings[female]) > 1:
+                if verbose:
+                    print "Female", female, "has suitors:", pairings[female]
+                ordered_men = sorted(pairings[female], 
+                                     cmp=ind_cmp(female_distances[female]),
+                                     reverse=True)
+                #put favorite man on string, reject the rest
+                pairings[female] = [ordered_men[0]]
+                if verbose:
+                    print "Female", female, 
+                    print "says 'maybe' to Male", ordered_men[0]
+                rejected_men += ordered_men[1:]
+        #rejected men must now propose to the next female on his list
+        if verbose:
+            print "Rejections:", rejected_men
+        for rejected_man in rejected_men:
+            next_female = male_preferences[rejected_man].pop(0)
+            if verbose:
+                print "Male", rejected_man, 
+                print "now proposes to Female", next_female
+            if pairings.has_key(next_female):
+                pairings[next_female].append(rejected_man)
+            else:
+                pairings[next_female] = [rejected_man]
+    if verbose:
+        print "Final pairings:", pairings
+            
+    return pairings
+
+def ind_cmp(values):
+    """returns a cmp function to sort a list of indices based on their values
+       
+        Args:
+           values: a list (or dict) of values
+        
+        Returns:
+            a function that compares two indices x,y by 
+            cmp(values[x], values[y])
+    """
+    return lambda x,y: cmp(values[x], values[y])
+
+def top_three_words(topic):
+    """deprecated--feel free to remove
+    """
+    top_three = sorted(range(len(topic)), cmp=ind_cmp(topic), reverse=True)[:3]
+    top_three = zip(top_three, [round(topic[i], 2) for i in top_three])
+    
+    return top_three
+
+"""for HLDA--still hacky"""
+def display_children(tree, parent="root"):
+    print "topic", tree.topic_number, "[parent:", str(parent) + "]"
+    for child in tree.children:
+        if len(child.children) == 0:
+            print "topic", child.topic_number, "(leaf)", "[parent:", \
+            str(tree.topic_number) + "]"
+        else:
+            display_children(child, tree.topic_number)
+            
+def stick_break(probs):
+    probabilities = [probs[0]]
+    for i in range(1, len(probs)):
+        probabilities.append(probs[i] * np.product([(1 - p) \
+                                                    for p in probs[:i]]))
+    #add probability for "other"
+    probabilities.append(1 - np.sum(probabilities))
+    return probabilities
+
+def show_path(tree, path_indices):
+    topic_indices = [tree.topic_number]
+    for index in path_indices:
+        topic_indices.append(tree.children[index].topic_number)
+        tree = tree.children[index]
+    return topic_indices
+
+def avg_sig_words(alpha, num, trials=1000):
+    return np.average(get_sig_words(dirichlet([alpha]*num, trials)))
+
+class Dirichlet_Test(object):
+    def __init__(self, alpha):
+        self.alpha = alpha
+        self.d = np.zeros(len(alpha))
+        self.total = 0
+    def test(self, times):
+        how_long = time.time()
+        for i in range(times):
+            self.d += dirichlet(self.alpha)
+            self.total += 1
+        print "time:", time.time() - how_long, "seconds"
+    def reset(self):
+        self.d = np.zeros(len(self.alpha))
+        self.total = 0
+    def __str__(self):
+        if self.total == 0:
+            return str(self.d)
+        else:
+            return str(self.d / self.total)
+    def get_d(self):
+        if self.total == 0:
+            return self.d
+        else:
+            return self.d / self.total
