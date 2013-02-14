@@ -188,70 +188,82 @@ public class Main {
 		outputResults(ks, testWordPercents);
 	}
 
+	private JSONObject genOneTestJSON(int k, double twpName, Results results) throws JSONException {
+		JSONObject testResults = new JSONObject();
+		testResults.put("numPredictions", k);
+		testResults.put("trainPercent", twpName);
+		double[] mean = results.getResultsMean();
+		double[] variance = results.getResultsVariance();
+		testResults.put("Predicted_Mean" , mean[0]);
+		testResults.put("idf score_Mean" , mean[1]);
+		testResults.put("tfidf score_Mean" , mean[2]);
+		testResults.put("Predicted_Var" , variance[0]);
+		testResults.put("idf score_Var" , variance[1]);
+		testResults.put("tfidf score_Var" , variance[2]);
+		return testResults;
+	}
+
+	/* Makes a fake experiment with cosine similarities.
+	 */
+	private void AddCosineSimilarityFakeExperiments(JSONObject allTests) throws JSONException {
+		if (!generator.equals("") && testIsEnabled("lda")
+				&& testIsEnabled("projector")) {
+			Scanner in = null;
+			Utils.runCommand("python parse_betas.py data/normfile -s", false);
+			try {
+				in = new Scanner( new File( "data/normfile" ) );
+			} catch (Exception e) {
+				System.out.println("Couldnt find cosine similarity file");
+			}
+			String[] cosineSimilarities = in.nextLine().split(" ");
+			double cosineSimilarityMean = 0;
+			for (String sim : cosineSimilarities) {
+				cosineSimilarityMean += Double.parseDouble(sim);
+			}
+			cosineSimilarityMean /= cosineSimilarities.length; 
+			JSONObject fakeExperiment = new JSONObject();
+			fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
+			allTests.put("~projector-cosine", fakeExperiment);
+			
+			String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
+			double cosineSimilarityMeanLDA = 0;
+			for (String sim : cosineSimilaritiesLDA) {
+				cosineSimilarityMeanLDA += Double.parseDouble(sim);
+			}
+			cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
+			JSONObject fakeExperimentLDA = new JSONObject();
+			fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
+			allTests.put("~lda-cosine", fakeExperimentLDA);
+			
+			String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
+			double cosineSimilarityMeanMallet = 0;
+			for (String sim : cosineSimilaritiesMallet) {
+				cosineSimilarityMeanMallet += Double.parseDouble(sim);
+			}
+			cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
+			JSONObject fakeExperimentMallet = new JSONObject();
+			fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
+			allTests.put("~mallet-cosine", fakeExperimentMallet);
+		}
+	}
+
+	private JSONObject genTestsJSONForTWPAndK(int ki, int k, double twpName) throws JSONException {
+		JSONObject allTests = new JSONObject();
+		Map<String,Results> resultK=allResults[ki];
+		for (Map.Entry<String,Results> entry : resultK.entrySet()){
+			allTests.put(entry.getKey(), genOneTestJSON(k, twpName, entry.getValue()));
+		}
+
+		AddCosineSimilarityFakeExperiments(allTests);
+
+		return allTests;
+	}
+
     private JSONArray genTestsJSON(int[] ks, double[] twpNames) throws JSONException {
 		JSONArray tests = new JSONArray();
 		for (int i = 0; i < twpNames.length; i++) {
 			for(int ki=0;ki<ks.length;ki++){
-				JSONObject allTests = new JSONObject();
-				int k=ks[ki];
-				Map<String,Results> resultK=allResults[ki];
-				for (Map.Entry<String,Results> entry : resultK.entrySet()){
-					JSONObject thisTest = new JSONObject();
-					thisTest.put("numPredictions", k);
-					thisTest.put("trainPercent", twpNames[i]);
-					double[] mean = entry.getValue().getResultsMean();
-					double[] variance = entry.getValue().getResultsVariance();
-					thisTest.put("Predicted_Mean" , mean[0]);
-					thisTest.put("idf score_Mean" , mean[1]);
-					thisTest.put("tfidf score_Mean" , mean[2]);
-					thisTest.put("Predicted_Var" , variance[0]);
-					thisTest.put("idf score_Var" , variance[1]);
-					thisTest.put("tfidf score_Var" , variance[2]);
-
-					allTests.put(entry.getKey(), thisTest);
-				}
-				//Makes a fake experiment  with cosine similarities
-				if (!generator.equals("") && testIsEnabled("lda")
-						&& testIsEnabled("projector")) {
-					Scanner in = null;
-					Utils.runCommand("python parse_betas.py data/normfile -s", false);
-					try {
-						in = new Scanner( new File( "data/normfile" ) );
-					} catch (Exception e) {
-						System.out.println("Couldnt find cosine similarity file");
-					}
-					String[] cosineSimilarities = in.nextLine().split(" ");
-					double cosineSimilarityMean = 0;
-					for (String sim : cosineSimilarities) {
-						cosineSimilarityMean += Double.parseDouble(sim);
-					}
-					cosineSimilarityMean /= cosineSimilarities.length; 
-					JSONObject fakeExperiment = new JSONObject();
-					fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
-					allTests.put("~projector-cosine", fakeExperiment);
-					
-					String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
-					double cosineSimilarityMeanLDA = 0;
-					for (String sim : cosineSimilaritiesLDA) {
-						cosineSimilarityMeanLDA += Double.parseDouble(sim);
-					}
-					cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
-					JSONObject fakeExperimentLDA = new JSONObject();
-					fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
-					allTests.put("~lda-cosine", fakeExperimentLDA);
-					
-					String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
-					double cosineSimilarityMeanMallet = 0;
-					for (String sim : cosineSimilaritiesMallet) {
-						cosineSimilarityMeanMallet += Double.parseDouble(sim);
-					}
-					cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
-					JSONObject fakeExperimentMallet = new JSONObject();
-					fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
-					allTests.put("~mallet-cosine", fakeExperimentMallet);
-
-				}
-				tests.put(allTests);
+				tests.put(genTestsJSONForTWPAndK(ki, ks[ki], twpNames[i]));
 			}
 		}
         return tests;
