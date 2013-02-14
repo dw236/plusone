@@ -41,7 +41,6 @@ import org.json.*;
 
 public class Main {
 
-	//   private final static int nTrialsPerPaper = 12;
 	private static int nTrials;
 	private static Indexer<String> wordIndexer;
 	private static Indexer<PaperAbstract> paperIndexer;
@@ -189,6 +188,95 @@ public class Main {
 		outputResults(ks, testWordPercents);
 	}
 
+    private JSONArray genTestsJSON(int[] ks, double[] twpNames) throws JSONException {
+		JSONArray tests = new JSONArray();
+		for (int i = 0; i < twpNames.length; i++) {
+			for(int ki=0;ki<ks.length;ki++){
+				JSONObject allTests = new JSONObject();
+				int k=ks[ki];
+				Map<String,Results> resultK=allResults[ki];
+				for (Map.Entry<String,Results> entry : resultK.entrySet()){
+					JSONObject thisTest = new JSONObject();
+					thisTest.put("numPredictions", k);
+					thisTest.put("trainPercent", twpNames[i]);
+					double[] mean = entry.getValue().getResultsMean();
+					double[] variance = entry.getValue().getResultsVariance();
+					thisTest.put("Predicted_Mean" , mean[0]);
+					thisTest.put("idf score_Mean" , mean[1]);
+					thisTest.put("tfidf score_Mean" , mean[2]);
+					thisTest.put("Predicted_Var" , variance[0]);
+					thisTest.put("idf score_Var" , variance[1]);
+					thisTest.put("tfidf score_Var" , variance[2]);
+
+					allTests.put(entry.getKey(), thisTest);
+				}
+				//Makes a fake experiment  with cosine similarities
+				if (!generator.equals("") && testIsEnabled("lda")
+						&& testIsEnabled("projector")) {
+					Scanner in = null;
+					Utils.runCommand("python parse_betas.py data/normfile -s", false);
+					try {
+						in = new Scanner( new File( "data/normfile" ) );
+					} catch (Exception e) {
+						System.out.println("Couldnt find cosine similarity file");
+					}
+					String[] cosineSimilarities = in.nextLine().split(" ");
+					double cosineSimilarityMean = 0;
+					for (String sim : cosineSimilarities) {
+						cosineSimilarityMean += Double.parseDouble(sim);
+					}
+					cosineSimilarityMean /= cosineSimilarities.length; 
+					JSONObject fakeExperiment = new JSONObject();
+					fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
+					allTests.put("~projector-cosine", fakeExperiment);
+					
+					String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
+					double cosineSimilarityMeanLDA = 0;
+					for (String sim : cosineSimilaritiesLDA) {
+						cosineSimilarityMeanLDA += Double.parseDouble(sim);
+					}
+					cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
+					JSONObject fakeExperimentLDA = new JSONObject();
+					fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
+					allTests.put("~lda-cosine", fakeExperimentLDA);
+					
+					String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
+					double cosineSimilarityMeanMallet = 0;
+					for (String sim : cosineSimilaritiesMallet) {
+						cosineSimilarityMeanMallet += Double.parseDouble(sim);
+					}
+					cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
+					JSONObject fakeExperimentMallet = new JSONObject();
+					fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
+					allTests.put("~mallet-cosine", fakeExperimentMallet);
+
+				}
+				tests.put(allTests);
+			}
+		}
+        return tests;
+    }
+
+    private JSONObject genResultsJSON(int[] ks, double[] twpNames) throws JSONException {
+		JSONObject json = new JSONObject();
+
+		JSONObject dataList = new JSONObject();
+		JSONObject parameters = new JSONObject();
+		if (generator.equals("")) {
+			//Real data
+			parameters.put("k", numTopics);
+		} else {
+			//Synthetic data
+			putInfo(parameters, dataList);
+		}
+		json.put("parameters", parameters);
+		json.put("data", dataList);
+		
+		json.put("tests", genTestsJSON(ks, twpNames));
+
+		return json;
+    }
+
 	/** 
 	 * Outputs the results of the tests into the data folder.
 	 * 
@@ -196,123 +284,46 @@ public class Main {
 	 * @param twpNames an array containing the percentage of held out words for each test
 	 */
 	private void outputResults(int[] ks, double[] twpNames) {
-		JSONObject json = new JSONObject();
-		try {
-			String fileName = ""; String dirName = "";
-			JSONObject dataList = new JSONObject();
-			JSONObject parameters = new JSONObject();
-			if (generator.equals("")) {
-				//Real data
-				String shortFile = dataFile.split("/")[1];
-				fileName = "k." + numTopics + "."
-						+ shortFile.substring(0,shortFile.length()-4);
-				parameters.put("k", numTopics);
-			} else {
-				//Synthetic data
-				putInfo(parameters, dataList);
-				
-				//Find where alpha is so we can correctly split dir/file name
-				int alphaLoc = 0;
-				String tmpOutName = getOutputFileName();
-				for (int i = 0; i < tmpOutName.length(); i++) {
-					if (tmpOutName.charAt(i) == 'a') {
-						alphaLoc = i;
-					}
-				}
-				dirName = tmpOutName.substring(0, alphaLoc - 1);
-				fileName = tmpOutName.substring(alphaLoc);
-
-			}
-			json.put("parameters", parameters);
-			json.put("data", dataList);
-			
-			JSONArray tests = new JSONArray();
-			for (int i = 0; i < twpNames.length; i++) {
-				for(int ki=0;ki<ks.length;ki++){
-					JSONObject allTests = new JSONObject();
-					int k=ks[ki];
-					Map<String,Results> resultK=allResults[ki];
-					for (Map.Entry<String,Results> entry : resultK.entrySet()){
-						JSONObject thisTest = new JSONObject();
-						thisTest.put("numPredictions", k);
-						thisTest.put("trainPercent", twpNames[i]);
-						double[] mean = entry.getValue().getResultsMean();
-						double[] variance = entry.getValue().getResultsVariance();
-						thisTest.put("Predicted_Mean" , mean[0]);
-						thisTest.put("idf score_Mean" , mean[1]);
-						thisTest.put("tfidf score_Mean" , mean[2]);
-						thisTest.put("Predicted_Var" , variance[0]);
-						thisTest.put("idf score_Var" , variance[1]);
-						thisTest.put("tfidf score_Var" , variance[2]);
-
-						allTests.put(entry.getKey(), thisTest);
-					}
-					//Makes a fake experiment  with cosine similarities
-					if (!generator.equals("") && testIsEnabled("lda")
-							&& testIsEnabled("projector")) {
-						Scanner in = null;
-						Utils.runCommand("python parse_betas.py data/normfile -s", false);
-						try {
-							in = new Scanner( new File( "data/normfile" ) );
-						} catch (Exception e) {
-							System.out.println("Couldnt find cosine similarity file");
-						}
-						String[] cosineSimilarities = in.nextLine().split(" ");
-						double cosineSimilarityMean = 0;
-						for (String sim : cosineSimilarities) {
-							cosineSimilarityMean += Double.parseDouble(sim);
-						}
-						cosineSimilarityMean /= cosineSimilarities.length; 
-						JSONObject fakeExperiment = new JSONObject();
-						fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
-						allTests.put("~projector-cosine", fakeExperiment);
-						
-						String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
-						double cosineSimilarityMeanLDA = 0;
-						for (String sim : cosineSimilaritiesLDA) {
-							cosineSimilarityMeanLDA += Double.parseDouble(sim);
-						}
-						cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
-						JSONObject fakeExperimentLDA = new JSONObject();
-						fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
-						allTests.put("~lda-cosine", fakeExperimentLDA);
-						
-						String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
-						double cosineSimilarityMeanMallet = 0;
-						for (String sim : cosineSimilaritiesMallet) {
-							cosineSimilarityMeanMallet += Double.parseDouble(sim);
-						}
-						cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
-						JSONObject fakeExperimentMallet = new JSONObject();
-						fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
-						allTests.put("~mallet-cosine", fakeExperimentMallet);
-
-					}
-					tests.put(allTests);
+		String fileName = ""; String dirName = "";
+		if (generator.equals("")) {
+			//Real data
+			String shortFile = dataFile.split("/")[1];
+			fileName = "k." + numTopics + "."
+					+ shortFile.substring(0,shortFile.length()-4);
+		} else {
+			//Find where alpha is so we can correctly split dir/file name
+			int alphaLoc = 0;
+			String tmpOutName = getOutputFileName();
+			for (int i = 0; i < tmpOutName.length(); i++) {
+				if (tmpOutName.charAt(i) == 'a') {
+					alphaLoc = i;
 				}
 			}
-			json.put("tests", tests);
-			new File("data/" + dirName).mkdir();
-			File out = new File("data/" + dirName, "experiment." + fileName + "json");
-			if (out.exists()) {
-				//Keep trying to append 0, 1, 2... until we find an unused file name
-				int newFileEnd = 0;
-				String oldFileName = fileName;
-				while (out.exists()) {
-					fileName = new String(oldFileName.concat(newFileEnd + "."));
-					newFileEnd++;
-					out = new File("data/" + dirName, "experiment." + fileName + "json");
-				}
-			}
-			System.out.println("Wrote to data/" + dirName + "/experiment."
-					+ fileName + "json");
-	
-			PlusoneFileWriter writer = new PlusoneFileWriter(out);
-			writer.write(json.toString());
-			writer.close();
-		} catch (JSONException e) {
-			System.out.println("Error writing to output");
+			dirName = tmpOutName.substring(0, alphaLoc - 1);
+			fileName = tmpOutName.substring(alphaLoc);
 		}
+		new File("data/" + dirName).mkdir();
+		File out = new File("data/" + dirName, "experiment." + fileName + "json");
+		if (out.exists()) {
+			//Keep trying to append 0, 1, 2... until we find an unused file name
+			int newFileEnd = 0;
+			String oldFileName = fileName;
+			while (out.exists()) {
+				fileName = new String(oldFileName.concat(newFileEnd + "."));
+				newFileEnd++;
+				out = new File("data/" + dirName, "experiment." + fileName + "json");
+			}
+		}
+		System.out.println("Wrote to data/" + dirName + "/experiment."
+				+ fileName + "json");
+
+		PlusoneFileWriter writer = new PlusoneFileWriter(out);
+		try {
+			writer.write(genResultsJSON(ks, twpNames).toString());
+		} catch (JSONException e) {
+			System.out.println("Error generating results JSON.");
+		}
+		writer.close();
 	}
 	
 	/**
@@ -859,18 +870,6 @@ public class Main {
 
 	static Boolean testIsEnabled(String testName) {
 		return Boolean.getBoolean("plusone.enableTest." + testName);
-	}
-
-	public static void printResults(Results results) {
-		double[] mean = results.getResultsMean();
-		double[] variance = results.getResultsVariance();
-		System.out.println("Predicted_Mean: " + mean[0]);
-		System.out.println("idf score_Mean: " + mean[1]);
-		System.out.println("tfidf score_Mean: " + mean[2]);
-		System.out.println("Predicted_Var: " + variance[0]);
-		System.out.println("idf score_Var: " + variance[1]);
-		System.out.println("tfidf score_Var: " + variance[2]);
-
 	}
 
 	public static void printResults(File output, Results results) {
