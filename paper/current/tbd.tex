@@ -31,41 +31,46 @@
 \maketitle
 
 \begin{abstract}
+
 The Latent Dirichlet Allocation topic model has received enormous
 attention as a method for extracting insight from documents and a wide
-variety of other data sources.  Two interesting aspects in its application
-are the effectiveness of learning algorithms, and the applicability to real
-data.  In this paper, we primarily study the former but also apply some
-of what we learn to the latter.
+variety of other data sources.  One plausible precondition for the
+utility of an LDA based approach, is an algorithm that performs well
+with ideal LDA data.  In this paper, we primarily define performance
+as the effectiveness at predicting a dropped out word from a
+document. 
 
-For a common view, we test with on the task of predicting a dropped
-out word in the document.  This task is both natural for the LDA model
-which successively generates words in a document and is of independent
-interest. 
+% Maybe in introduction...expanded.
+This task is both natural for the LDA model, and has
+practical importance. This notion of performance varies a bit
+from statistical based measures such as perplexity, in that,
+one can evaluate against non-parameter based algorithms and
+that it is easy to understand. 
 
-%% By dropping all occurences of test words, the task
-%% is both more difficult and more applicable.
+We generate data according to the LDA model. To provide context, we
+evaluate on a range of algorithms, LDA based and not. We also
+construct and evaluate an algorithm, Projector.
 
-We generate data according to the LDA model and then evaluate a range
-of algorithms, including one of our invention, on this generated data.
+Projector is based on a geometric view of topic models rather than an
+inference based view of finding the optimal model.  It is quite simple
+and runs extremely quickly compared to the best inference based
+methods available (e.g., the optimized Gibbs sampling based topic
+learning method in MALLET, Minmo et al.)  The performance on generated
+data is comparable to the best inference based methods in both
+predicting dropout words and learning the underlying topic models.
+
 We characterize features of the generated data to help predict the
-peformance of these algorithms; in particular, typical number of
-topics in a document, and the typical number words in a topic.  We
-give a simple analysis using these parameters which indicates 
-when performance should drop off and verify that it is predictive.
-We also examine the use of a slight modification of the Chi squared
-statistic to predict the benefit of topic models. 
+peformance of Projector and each other algorithm that we consider; in
+particular, the typical number of topics in a document, and the typical
+number words in a topic.  We give a simple analysis using these
+parameters which indicates when performance should drop off and verify
+that it is predictive.  We also examine the use of a statistic,
+related to Chi-squared, to predict benefit of topic models.
 
-The new algorithm is based on a geometric view of topic models rather
-than an inference based view of finding the optimal model.  This leads
-to a simple algorithm that runs extremely quickly compared to the best
-inference based methods available (e.g., the optimized Gibbs sampling
-based topic learning method in MALLET, Minmo et.al.)  The performance
-on generated data is comparable to the best inference based methods in
-both predicting dropout words and learning the underlying topic models.
-
-We note that our algorithms are more similiar to recent algorithms
-that were proved to learn topic models.  
+We also test on various document corpora on the dropped out 
+word task. In this context, our algorithm is competitive with the other
+LDA based algorithms while falling short of nearest neighbor
+based methods.
 
 %%NOTE: engineered easily, flexible?
 
