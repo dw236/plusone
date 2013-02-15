@@ -38,23 +38,48 @@ are the effectiveness of learning algorithms, and the applicability to real
 data.  In this paper, we primarily study the former but also apply some
 of what we learn to the latter.
 
-For a common view, we define a natural (for LDA) prediction task and
-generate data according to the LDA model. We then evaluate a range of
-algorithms, including one of our invention, on this generated data.
+For a common view, we test with on the task of predicting a dropped
+out word in the document.  This task is both natural for the LDA model
+which successively generates words in a document and is of independent
+interest. 
+
+%% By dropping all occurences of test words, the task
+%% is both more difficult and more applicable.
+
+We generate data according to the LDA model and then evaluate a range
+of algorithms, including one of our invention, on this generated data.
 We characterize features of the generated data to help predict the
-peformance of these algorithms.  We also run the algorithms on
-some real world datasets. 
+peformance of these algorithms; in particular, typical number of
+topics in a document, and the typical number words in a topic.  We
+give a simple analysis using these parameters which indicates 
+when performance should drop off and verify that it is predictive.
+We also examine the use of a slight modification of the Chi squared
+statistic to predict the benefit of topic models. 
 
-We find that the standard algorithms for LDA are quite poor compared
-with principal components methods (latent semantic indexing or LSI)
-and our new method with data generated from their model.  In contrast,
-the LDA methods do perform better than principal components methods on
-real world data, though, fall far short of nearest neighbor methods.
-While the goal of topic modelling is not nessarily prediction, we
-believe this study provides useful information about their use.
+The new algorithm is based on a geometric view of topic models rather
+than an inference based view of finding the optimal model.  This leads
+to a simple algorithm that runs extremely quickly compared to the best
+inference based methods available (e.g., the optimized Gibbs sampling
+based topic learning method in MALLET, Minmo et.al.)  The performance
+on generated data is comparable to the best inference based methods in
+both predicting dropout words and learning the underlying topic models.
 
-We note that it is ironic that the algorithms for LDA fail to beat LSI based
-methods on their "LDA" data  but do on real world data.
+We note that our algorithms are more similiar to recent algorithms
+that were proved to learn topic models.  
+
+%%NOTE: engineered easily, flexible?
+
+%% We find that the standard algorithms for LDA are quite poor compared
+%% with principal components methods (latent semantic indexing or LSI)
+%% and our new method with data generated from their model.  In contrast,
+%% the LDA methods do perform better than principal components methods on
+%% real world data, though, fall far short of nearest neighbor methods.
+%% While the goal of topic modelling is not nessarily prediction, we
+%% believe this study provides useful information about their use.
+
+%% We note that it is ironic that the algorithms for LDA fail to beat LSI based
+%% methods on their "LDA" data  but do on real world data.
+
 \end{abstract}
 
 \section{Introduction} \label{sec:intro}
