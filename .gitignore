@@ -27,7 +27,6 @@ Plusone.jar
 /Mallet/*
 
 /lib/*.jar
-/lib/jars/*.jar
 /lib/lda-c-dist/lda
 /lib/lda-c-dist/result
 /lib/lda-c-dist/data
