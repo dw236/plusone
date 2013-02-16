@@ -497,7 +497,7 @@ def match_beta(input_beta='../../projector/data/final.beta',
             with open(dir + '/' + filename, 'w') as f:
                 for row in reordered_input_beta:
                     for num in row:
-                        f.write(str(num) + ' ')
+                        f.write(str(np.log(num)) + ' ')
                     f.write('\n')
             print "done"
 
