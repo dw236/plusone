@@ -456,7 +456,8 @@ def match_beta(input_beta='../../projector/data/final.beta',
                 raise Exception("invalid metric: " + str(metric))
             male_distances[i][j] = sim
             female_distances[j][i] = sim
-    pairings = tma(male_distances, female_distances, invert=invert)
+    #pairings = tma(male_distances, female_distances, invert=invert)
+    pairings = matching(male_distances)
     labels = [pairings[i][0] for i in sorted(pairings.keys())]
     labels = [labels.index(female) for female in sorted(pairings.keys())]
     reordered_input_beta = np.array([input_beta[i] for i in labels])
@@ -502,7 +503,25 @@ def match_beta(input_beta='../../projector/data/final.beta',
 
     return real_beta, input_beta, pairings, labels, male_distances
     
-            
+    
+import munkres
+from munkres import Munkres, print_matrix, make_cost_matrix
+
+def matching(male_distances):
+    cost_matrix = munkres.make_cost_matrix(male_distances,
+                                           lambda cost: 1.0 - cost)
+    m = Munkres()
+    indices = m.compute(cost_matrix)
+    total = 0.0
+    pairings = {}
+    for row, column in indices:
+        value = male_distances[row][column]
+        total += value
+        pairings[column] = [row]
+    #print "Satish was here"
+    print 'total profit=%f' % total
+    return pairings
+    
 def tma(male_distances, female_distances, invert=False, verbose=False):
     """ run stable marriage algorithm for n pairs of "men" and "women"
     
@@ -576,7 +595,7 @@ def tma(male_distances, female_distances, invert=False, verbose=False):
             if pairings.has_key(next_female):
                 pairings[next_female].append(rejected_man)
             else:
-                pairings[next_female] = [rejected_man]
+                pairings[next_female] = [rejected_man]  
     if verbose:
         print "Final pairings:", pairings
             
