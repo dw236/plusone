@@ -152,8 +152,8 @@ class Kmeans():
             if self.type == 'normal':
                 labels.append(self.select(distances))
                 distance = self.farthest(distances)
-                if farthest_distance == None or self.better(distance, 
-                                                            farthest_distance):
+                if farthest_distance == None or not self.better(distance, 
+                                                             farthest_distance):
                     farthest_distance = distance
                     farthest_point_index = i
             elif self.type == 'fuzzy':
@@ -203,7 +203,7 @@ class Kmeans():
             distance = self.metric(point, center)
             
             total_distance += distance
-        return distance
+        return total_distance
     
     def plot(self, clear=True):
         """only works for 2D points
@@ -291,11 +291,13 @@ def main():
         type = "normal"
     
     best_cluster = Kmeans(0)
-    best_cluster.total_distance = np.inf
+    best_cluster.total_distance = None
     for iteration in range(args.i):
         cluster = Kmeans(args.k, init="points", metric=args.m, type=type)
         cluster.cluster(points, 100)
-        if cluster.total_distance < best_cluster.total_distance:
+        #print cluster.total_distance
+        if best_cluster.total_distance == None or \
+           cluster.better(cluster.total_distance, best_cluster.total_distance):
             best_cluster = cluster
     cluster = best_cluster
     

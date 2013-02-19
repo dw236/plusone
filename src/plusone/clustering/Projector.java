@@ -91,17 +91,17 @@ public class Projector extends ClusteringTest {
         Utils.runCommand("rm projector/data/V", true);
         createProjectorInput("projector/data/documents", trainingSet);
         //uncomment these next three lines to use kmeans.py
-//        Utils.runCommand("./run-projector-prepare " + numTopics + " "
-//        		+ trainingSet.size() + " " + terms.size(), true);
-//        Utils.runCommand("python src/plusone/clustering/kmeans.py " +
-//        		"projector/data/projected -k " + 
-//        		numTopics + " -m cosine -w projector/data/labels " +
-//        		"-i 50 -q", true);
-//        Utils.runCommand("./run-projector-train " + numTopics +  " " + 
-//        		trainingSet.size() + " " + terms.size(), true);
+        Utils.runCommand("./run-projector-prepare " + numTopics + " "
+        		+ trainingSet.size() + " " + terms.size(), true);
+        Utils.runCommand("python src/plusone/clustering/kmeans.py " +
+        		"projector/data/projected -k " + 
+        		numTopics + " -m cosine -w projector/data/labels " +
+        		"-i 50 -q", true);
+        Utils.runCommand("./run-projector-train " + numTopics +  " " + 
+        		trainingSet.size() + " " + terms.size(), true);
         //uncomment to use projector kmeans
-        while(!Utils.runCommand("./run-projector " + numTopics + " " 
-            + trainingSet.size() + " " + terms.size(), true));
+//        while(!Utils.runCommand("./run-projector " + numTopics + " " 
+//            + trainingSet.size() + " " + terms.size(), true));
         betaMatrix = readMatrix("projector/data/final.beta", true);
         System.out.print("replacing trained beta with projector beta...");
         Utils.runCommand("cp projector/data/final.beta lda", false);
