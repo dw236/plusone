@@ -1,54 +1,63 @@
 package plusone.utils;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
+/**
+ * This class stores the results of a sequence of experiments.
+ *
+ * Typically, all the results listed in a single Results instance will be for
+ * different runs of the same experiment.
+ */
 public class Results{
-    private List<Double> predictionRate;
-    private List<Double> tfScore;
-    private List<Double> tfidfScore;
+    final Set<String> allFieldNames;
+
+    List<Map<String, Double>> resultValues;
     private String expName;
-    public Results(String expName){
+
+    public Results(Collection<String> allFieldNames, String expName){
+	this.allFieldNames = new HashSet<String>(allFieldNames);
 	this.expName=expName;
-	predictionRate= new ArrayList<Double>();	
-	tfScore= new ArrayList<Double>();
-	tfidfScore= new ArrayList<Double>();
+	resultValues = new ArrayList<Map<String, Double>>();
     }
-    public void addResult(double pred, double tf, double tfidf){
-	predictionRate.add(pred);
-	tfScore.add(tf);
-	tfidfScore.add(tfidf);
+
+    /**
+     * Adds the results of another experiment run to this record of results.
+     */
+    public void addResult(Map<String, Double> values) {
+	assert allFieldNames.equals(values.keySet());
+	// We make a copy of values, in case the caller re-uses the object.
+	resultValues.add(new HashMap<String, Double>(values));
     }
-    private double mean(List<Double> list){
+
+    private double fieldMean(String fieldName) {
 	double ret=0;
-	for (double v:list)
-	    ret+=v;
-	ret=ret/list.size();
+	for (Map<String, Double> m : resultValues)
+	    ret += m.get(fieldName);
+	ret = ret / resultValues.size();
 	return ret;
     }
-    private double variance(List<Double> list){
-	double avg = mean(list);
+    private double fieldVariance(String fieldName) {
+	double avg = fieldMean(fieldName);
 	double ret=0;
-	for (double v:list)
+	for (Map<String, Double> m : resultValues) {
+	    double v = m.get(fieldName);
 	    ret +=(v-avg)*(v-avg);
-	ret=ret/list.size();
+	}
+	ret = ret / resultValues.size();
 	return ret;
     }
 
-    public double[] getResultsMean(){
-	double[] ret = new double[3];
-	ret[0]=mean(predictionRate);
-	ret[1]=mean(tfScore);
-	ret[2]=mean(tfidfScore);
+    public Map<String, Double> getResultsMean() {
+	Map<String, Double> ret = new HashMap<String, Double>();
+	for (String fieldName : allFieldNames)
+	    ret.put(fieldName, fieldMean(fieldName));
 	return ret;
     }
 
-    public double[] getResultsVariance(){
-	double[] ret = new double[3];
-	ret[0]=variance(predictionRate);
-	ret[1]=variance(tfScore);
-	ret[2]=variance(tfidfScore);
+    public Map<String, Double> getResultsVariance() {
+	Map<String, Double> ret = new HashMap<String, Double>();
+	for (String fieldName : allFieldNames)
+	    ret.put(fieldName, fieldVariance(fieldName));
 	return ret;
     }
-
 }

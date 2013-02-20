@@ -54,7 +54,6 @@ public class Main {
 
 	private HashMap<PaperAbstract, Integer> trainingIndices;
 	private Map<PaperAbstract, Integer> testIndices;
-	private Map<String,Results>[] allResults;
 	// Document sets
 	public List<TrainingPaper> trainingSet;
 	public List<PredictionPaper> testingSet;
@@ -68,6 +67,11 @@ public class Main {
 	
 	private static boolean tagged;
 	private static HashMap<Integer, ArrayList<Integer>> tagMap;
+
+	static final String[] allResultFieldNames = {
+	    "predictionRate", "tfScore", "tfidfScore",
+	};
+	private Map<String,Results>[] allResults;
 
 	public static void load_data(String filename) {
 		dataset = DatasetJSON.loadDatasetFromPath(filename);
@@ -188,18 +192,36 @@ public class Main {
 		outputResults(ks, testWordPercents);
 	}
 
+	private String getLegacyResultFieldName(String fieldName) {
+	    if (fieldName.equals("predictionRate"))
+		return "Predicted";
+	    else if (fieldName.equals("tfScore"))
+	        // Preserving the old field, even though it looks like the name is a mistake...
+		return "idf score";
+	    else if (fieldName.equals("tfidfScore"))
+		return "tfidf score";
+	    else
+		return null;
+	}
+
+	private void addJSONMeansOrVariances(
+		Map<String, Double> values, String suffix, JSONObject testResults)
+	    throws JSONException {
+	    for (Map.Entry<String, Double> fieldValue : values.entrySet()) {
+		String fieldName = fieldValue.getKey();
+		testResults.put(fieldName + suffix, fieldValue.getValue());
+		String legacyResultFieldName = getLegacyResultFieldName(fieldName);
+		if (null != legacyResultFieldName)
+		    testResults.put(legacyResultFieldName + suffix, fieldValue.getValue());
+	    }
+	}
+
 	private JSONObject genOneTestJSON(int k, double twpName, Results results) throws JSONException {
 		JSONObject testResults = new JSONObject();
 		testResults.put("numPredictions", k);
 		testResults.put("trainPercent", twpName);
-		double[] mean = results.getResultsMean();
-		double[] variance = results.getResultsVariance();
-		testResults.put("Predicted_Mean" , mean[0]);
-		testResults.put("idf score_Mean" , mean[1]);
-		testResults.put("tfidf score_Mean" , mean[2]);
-		testResults.put("Predicted_Var" , variance[0]);
-		testResults.put("idf score_Var" , variance[1]);
-		testResults.put("tfidf score_Var" , variance[2]);
+		addJSONMeansOrVariances(results.getResultsMean(), "_Mean", testResults);
+		addJSONMeansOrVariances(results.getResultsVariance(), "_Var", testResults);
 		return testResults;
 	}
 
@@ -775,10 +797,11 @@ public class Main {
 
 
 	}
-	private void logResult(int ki,String expName, double[] result){
+	private void logResult(int ki,String expName, Map<String, Double> result){
 		if (!allResults[ki].containsKey(expName))
-			allResults[ki].put(expName,new Results(expName));
-		allResults[ki].get(expName).addResult(result[0],result[1],result[2]);
+			allResults[ki].put(expName,
+				new Results(Arrays.asList(allResultFieldNames), expName));
+		allResults[ki].get(expName).addResult(result);
 	}
 
 	public void runClusteringMethod(ClusteringTest test, int[] ks, int size, boolean bulk) {
@@ -849,10 +872,11 @@ public class Main {
 		for (int ki=0;ki<ks.length;ki++){
 				//File out = new File(kDir, test.testName + ".out");
 				int k=ks[ki];
-				this.logResult(ki, test.getName(), new double[]{results[ki][0]/k/testingSet.size(), 
-					results[ki][1]/k/testingSet.size(), results[ki][2]/k/testingSet.size()});
-				//Main.printResults(out, new double[]{results[0]/results[3], 
-				//		results[1], results[2]});
+				Map<String, Double> result = new HashMap<String, Double>();
+				result.put("predictionRate", results[ki][0]/k/testingSet.size());
+				result.put("tfScore", results[ki][1]/k/testingSet.size());
+				result.put("tfidfScore", results[ki][2]/k/testingSet.size());
+				this.logResult(ki, test.getName(), result);
 		}
 		System.out.println("[" + test.testName + "] took " +
 				(System.currentTimeMillis() - t1) / 1000.0 
@@ -882,20 +906,6 @@ public class Main {
 
 	static Boolean testIsEnabled(String testName) {
 		return Boolean.getBoolean("plusone.enableTest." + testName);
-	}
-
-	public static void printResults(File output, Results results) {
-		PlusoneFileWriter writer = new PlusoneFileWriter(output);
-		double[] mean = results.getResultsMean();
-		double[] variance = results.getResultsVariance();
-
-		writer.write("Predicted_Mean: " + mean[0] + "\n");
-		writer.write("idf score_Mean: " + mean[1] + "\n");
-		writer.write("tfidf score_Mean: " + mean[2] + "\n");
-		writer.write("Predicted_Var: " + variance[0] + "\n");
-		writer.write("idf score_Var: " + variance[1] + "\n");
-		writer.write("tfidf score_Var: " + variance[2] + "\n");
-		writer.close();
 	}
 
 	/* FIXME: We probably should divide by k here, rather than the total
