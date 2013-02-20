@@ -1,6 +1,7 @@
 *.o
 *.aux
-*.pdf
+*.bbl
+*.blg
 *.log
 *.pyc
 *.csv
