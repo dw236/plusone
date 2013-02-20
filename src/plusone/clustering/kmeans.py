@@ -52,7 +52,7 @@ class Kmeans():
     RECOGNIZED_TYPES = ['normal', 'fuzzy']
     TOLERANCE = 1e-3
     
-    def __init__(self, k, init="points", metric="cosine", type="fuzzy"):
+    def __init__(self, k, init="points", metric="cosine", type="normal"):
         """
         init: how to initialize the cluster centers (defaults to picking random
         observations as clusters)
@@ -248,7 +248,22 @@ class Kmeans():
                 for dimension in center:
                     f.write(str(dimension) + ' ')
                 f.write('\n')
-            
+
+def repeated_kmeans(k, init, metric, type, iterations=1):
+    """
+    iterations: number of times to run clustering (returns best one)
+    rest are same as Kmeans.cluster
+    """
+    best_cluster = Kmeans(0)
+    best_cluster.total_distance = None
+    for iteration in range(args.i):
+        cluster = Kmeans(args.k, init="points", metric=args.m, type=type)
+        cluster.cluster(points, 100)
+        #print cluster.total_distance
+        if best_cluster.total_distance == None or \
+           cluster.better(cluster.total_distance, best_cluster.total_distance):
+            best_cluster = cluster
+    return best_cluster
 
 def main():
     parser = argparse.ArgumentParser(description="kmeans algorithm \
@@ -269,7 +284,7 @@ def main():
     parser.add_argument('-e', action="store", metavar='empty action',
                         default="singleton",
                         help="action to perform when empty cluster arises \
-                        (CURRENTLY UNSUPPORTED)")
+                        (singleton--OTHER OPTIONS CURRENTLY UNSUPPORTED)")
     parser.add_argument('-t', action="store_true", default=False, 
                         help='flag to use fuzzy clustering (Off)')
     parser.add_argument('-q', action="store_true", default=False,
@@ -290,16 +305,8 @@ def main():
     else:
         type = "normal"
     
-    best_cluster = Kmeans(0)
-    best_cluster.total_distance = None
-    for iteration in range(args.i):
-        cluster = Kmeans(args.k, init="points", metric=args.m, type=type)
-        cluster.cluster(points, 100)
-        #print cluster.total_distance
-        if best_cluster.total_distance == None or \
-           cluster.better(cluster.total_distance, best_cluster.total_distance):
-            best_cluster = cluster
-    cluster = best_cluster
+    cluster = repeated_kmeans(args.k, init="points", metric=args.m, type=type,
+                              iterations=args.i)
     
     if args.q:
         print "suppressing plot of output"
