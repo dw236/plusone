@@ -46,6 +46,7 @@ class Kmeans():
     centers: final cluster centers
     points: datapoints to be clustered
     labels: the cluster each datapoint belongs to
+    total_distance: distance to each point's cluster center (non-fuzzy only)
     """
     RECOGNIZED_INITS = ['points', 'random']
     RECOGNIZED_TYPES = ['normal', 'fuzzy']
@@ -70,17 +71,33 @@ class Kmeans():
         if metric == "cosine":
             self.metric = cos_sim
             self.select = np.argmax
+            self.farthest = np.min
+            self.better = lambda x, y: x > y
         elif metric == "euclidean":
             self.metric = euclidean_dist
             self.select = np.argmin
+            self.farthest = np.max
+            self.better = lambda x, y: x < y
         elif metric == "distcos":
             self.metric = dist_cos
-            self.select = None
+            self.select = np.argmax
+            self.farthest = np.min
+            self.better = lambda x, y: x > y
+        elif metric == "dot":
+            self.metric = lambda x, y: x.dot(y)
+            self.select = np.argmax
+            self.farthest = np.min
+            self.better = lambda x, y: x > y
         else:
             raise Exception("unrecognized metric: " + str(metric))
         
-    def cluster(self, points, max_iter=np.inf):
+    def cluster(self, points, max_iter=np.inf, verbose=False):
+        """
+        n: number of points
+        m: dimension of each point
+        """
         self.points = points
+        self.n, self.m = np.shape(self.points)
         iterations = 0
         
         if self.init == "points":
@@ -100,17 +117,20 @@ class Kmeans():
         self.centers = self.update()
         while iterations <= max_iter:
             if iterations % 10 == 0:
-                print iterations#, self.centers
+                if verbose:
+                    print iterations#, self.centers
             new_labels = self.assign()
             if all(new_labels == self.labels) or (np.all(abs(new_labels - 
                                                              self.labels) 
                                                   < self.TOLERANCE)):
-                print "converged in", iterations, "iterations"
+                if verbose:
+                    print "converged in", iterations, "iterations"
                 break
             else:
                 iterations += 1
                 self.labels = new_labels
                 self.centers = self.update()
+        self.total_distance = self.get_total_distance()
 
     def assign(self, points=None):
         """
@@ -119,41 +139,71 @@ class Kmeans():
         """
         if points == None:
             points = self.points
+            n, m = self.n, self.m
+        else:
+            n, m = np.shape(points)
         
         labels = []
-        for point in self.points:
+        farthest_distance = None
+        farthest_point_index = None
+        for i in range(n):
+            point = points[i]
             distances = [self.metric(point, center) for center in self.centers]
-            #print distances
             if self.type == 'normal':
                 labels.append(self.select(distances))
+                distance = self.farthest(distances)
+                if farthest_distance == None or not self.better(distance, 
+                                                             farthest_distance):
+                    farthest_distance = distance
+                    farthest_point_index = i
             elif self.type == 'fuzzy':
                 distances = np.array(distances)
                 #distances = get_top(distances, 5) #Hack -- remove ASAP
                 labels.append(distances / sum(distances))
-            
+        self.farthest_point = points[farthest_point_index]
+        self.farthest_point_index = farthest_point_index
+        
         return np.array(labels)
     
     def update(self):
         """
-        n: number of points
-        m: dimension of each point
         """
         centers = []
-        n, m = np.shape(self.points)
         for cluster in range(self.k):
             if self.type == 'normal':
                 cluster_points = self.points[np.where(self.labels == cluster)
                                              [0]]
-                centers.append(np.sum(cluster_points, axis=0) 
-                               / len(cluster_points))
+                points_in_cluster = len(cluster_points)
+                if points_in_cluster == 0:
+                    print "warning, empty cluster encountered"
+                    centers.append(self.farthest_point)
+                    self.labels[self.farthest_point_index] = cluster
+                else:
+                    centers.append(np.sum(cluster_points, axis=0) 
+                                   / len(cluster_points))
             elif self.type == 'fuzzy':
                 contribution = self.labels[:,cluster]
-                contributions = np.array([ones(m) * label 
+                contributions = np.array([ones(self.m) * label 
                                           for label in contribution])
                 centers.append(np.sum(self.points * contributions, axis=0)
                                / np.sum(contribution))
         
         return np.array(centers)
+    
+    def get_total_distance(self):
+        """
+        """
+        if self.type != "normal":
+            return None
+        
+        total_distance = 0
+        for i in range(self.n):
+            point = self.points[i]
+            center = self.centers[self.labels[i]]
+            distance = self.metric(point, center)
+            
+            total_distance += distance
+        return total_distance
     
     def plot(self, clear=True):
         """only works for 2D points
@@ -201,24 +251,29 @@ class Kmeans():
             
 
 def main():
-    parser = argparse.ArgumentParser(description="Fuzzy kmeans algorithm \
+    parser = argparse.ArgumentParser(description="kmeans algorithm \
                                      (default values are in parentheses)")
     parser.add_argument('f', metavar="filename", action="store",
                         help="filename of datapoints to be clustered")
-    parser.add_argument('-k', action="store", metavar='num_clusters', type=int,
-                        default=2, 
+    parser.add_argument('-k', action="store", metavar='num clusters', 
+                        type=int, default=2, 
                         help="number of clusters to split data into (2)")
     parser.add_argument('-m', action="store", metavar='metric', 
                         default='euclidean', 
                         help='distance metric used for clustering (euclidean)')
     parser.add_argument('-w', action="store", metavar='write filename',
                         help='filename for writing cluster labels (False)')
+    parser.add_argument('-i', action="store", metavar='iterations',
+                        default=1, type=int,
+                        help='number of times to run clustering (1)')
+    parser.add_argument('-e', action="store", metavar='empty action',
+                        default="singleton",
+                        help="action to perform when empty cluster arises \
+                        (CURRENTLY UNSUPPORTED)")
     parser.add_argument('-t', action="store_true", default=False, 
-                        help='flag to use fuzzy clustering (False)')
-    parser.add_argument('-i', action="store_true", default=False,
-                        help='flag to use random init (False)')
+                        help='flag to use fuzzy clustering (Off)')
     parser.add_argument('-q', action="store_true", default=False,
-                        help='flag to plot output (True)')
+                        help='flag to plot output (Off)')
     
     args = parser.parse_args()
     
@@ -234,13 +289,18 @@ def main():
         type = "fuzzy"
     else:
         type = "normal"
-    if args.i:
-        init = "random"
-    else:
-        init = "points"
-        
-    cluster = Kmeans(args.k, init=init, metric=args.m, type=type)
-    cluster.cluster(points, 100)
+    
+    best_cluster = Kmeans(0)
+    best_cluster.total_distance = None
+    for iteration in range(args.i):
+        cluster = Kmeans(args.k, init="points", metric=args.m, type=type)
+        cluster.cluster(points, 100)
+        #print cluster.total_distance
+        if best_cluster.total_distance == None or \
+           cluster.better(cluster.total_distance, best_cluster.total_distance):
+            best_cluster = cluster
+    cluster = best_cluster
+    
     if args.q:
         print "suppressing plot of output"
     else:

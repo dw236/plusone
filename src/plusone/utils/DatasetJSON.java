@@ -36,6 +36,8 @@ public class DatasetJSON {
     void loadInPlaceFromPath(String filename) {	
 		try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
+			JSONObject json = new JSONObject( in.readLine() ); //change
+			JSONArray users = json.getJSONArray( "users" ); //change
 						
 			if (isIndexed(filename)) {
 				initializeIndexer(filename);
@@ -45,8 +47,10 @@ public class DatasetJSON {
 			JSONObject user;
 			JSONArray items = null, scores = null, tags = null;
 			HashMap<Integer, Integer> tf = null;
-			user = new JSONObject( in.readLine() );
-			while (user != null) {
+			for( int i = 0; i < users.length(); i++ ) { //change
+				user = users.getJSONObject( i ); //change
+			//user = new JSONObject( in.readLine() );
+			//while (user != null) {
 				tf = new HashMap<Integer, Integer>();
 				items = user.getJSONArray( "items" );
 				try	{
@@ -127,8 +131,11 @@ public class DatasetJSON {
     	JSONObject user; JSONArray items;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			user = new JSONObject( in.readLine() );
-			while (user != null) {
+			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" ); //change
+			for (int i = 0; i < users.length(); i++) { //change
+				user = users.getJSONObject( i ); //change
+//			user = new JSONObject( in.readLine() );
+//			while (user != null) {
 				items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					try {
@@ -160,8 +167,11 @@ public class DatasetJSON {
     	JSONObject user; JSONArray items, tags;
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			user = new JSONObject( in.readLine() );
-			while (user != null) {
+			JSONArray users = new JSONObject( in.readLine() ).getJSONArray( "users" ); //change	  	
+			for (int i = 0; i < users.length(); i++) { //change
+				user = users.getJSONObject( i ); //change
+//			user = new JSONObject( in.readLine() );
+//			while (user != null) {
 				items = user.getJSONArray( "items" );
 				try {
 					tags = user.getJSONArray("tags");
@@ -188,11 +198,15 @@ public class DatasetJSON {
     private void initializeIndexer(String filename) {
     	int maxIndex = -1;
     	JSONObject user;
-    	JSONArray items;
+    	JSONArray users, items; //change
     	try {
 			BufferedReader in = new BufferedReader( new FileReader( filename ) );
-			user = new JSONObject( in.readLine() );
-			while (user != null) {
+			JSONObject json = new JSONObject( in.readLine() ); //change
+			users = json.getJSONArray( "users" ); //change
+			for (int i = 0; i < users.length(); i++) { //change
+				user = users.getJSONObject( i ); //change
+//			user = new JSONObject( in.readLine() );
+//			while (user != null) {
 				 items = user.getJSONArray( "items" );
 				for (int j = 0; j < items.length(); j++) {
 					if (Integer.parseInt(items.getString(j)) > maxIndex) {

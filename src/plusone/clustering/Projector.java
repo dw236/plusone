@@ -95,13 +95,13 @@ public class Projector extends ClusteringTest {
         		+ trainingSet.size() + " " + terms.size(), true);
         Utils.runCommand("python src/plusone/clustering/kmeans.py " +
         		"projector/data/projected -k " + 
-        		numTopics + " -m distcos -w projector/data/labels -t -q", true);
+        		numTopics + " -m cosine -w projector/data/labels " +
+        		"-i 50 -q", true);
         Utils.runCommand("./run-projector-train " + numTopics +  " " + 
         		trainingSet.size() + " " + terms.size(), true);
-        /* uncomment to use projector kmeans
-        while(!Utils.runCommand("./run-projector " + numTopics + " " 
-            + trainingSet.size() + " " + terms.size(), true));
-        */
+        //uncomment to use projector kmeans
+//        while(!Utils.runCommand("./run-projector " + numTopics + " " 
+//            + trainingSet.size() + " " + terms.size(), true));
         betaMatrix = readMatrix("projector/data/final.beta", true);
         System.out.print("replacing trained beta with projector beta...");
         Utils.runCommand("cp projector/data/final.beta lda", false);
