@@ -54,6 +54,32 @@ def flatten_result(new_result):
     return result
 
 def add_result(results, new_result):
+    """
+    add_result is used to build a Python dictionary object with information
+    about a collection of experimental results.  The keys of the dictionary are
+    tuples of option values in the same order as the options appear in the
+    UNIVERSALS variable.  The value corresponding to a particular key is itself
+    a dictionary, and contains information about all experiments that were run
+    on data generated with those options.
+
+    Given an option tuple o, results[o] has an entry for each setting of
+    parameters (alpha and beta, corresponding to sig_topics and sig_words).
+    It also has a special entry with key "algorithms", which is itself a
+    dictionary with four keys: names, types and totals.  names is a list of the
+    algorithms that were run (e.g. "knn-15"), and types includes just the basic
+    algorithm names (e.g. "knn").  totals is a dictionary mapping n algorithm
+    name to the sum of the prediction scores for that algorithm.
+
+    To use add_result, start with an empty dictionary called "results".  For each new
+    result new_result, call add_result(results, new_result).
+
+    Arguments:
+    results -- Information about a collection of results, as described above.
+               This parameter is modified by add_results.
+    new_result -- The new result to add.
+
+    Returns: results
+    """
     universals = tuple([new_result[3][option] for option in UNIVERSALS])
     if universals not in results:
         results[universals] = {}
