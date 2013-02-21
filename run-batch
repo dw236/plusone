@@ -15,7 +15,7 @@ mlist=(1000) #(500 1000 1500 2000)
 #Alpha
 alist=(0.01 0.1 0.4 4.0) #1, 2, 5, 10
 #Beta
-blist=(0.0175 0.125 0.25 4.0) #10, 60, 100, 300
+blist=(0.0175 0.125 0.25)
 #Number of tests to run for each corpus generated
 numTests=1
 #Flag for plotting output
