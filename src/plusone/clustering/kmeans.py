@@ -249,15 +249,16 @@ class Kmeans():
                     f.write(str(dimension) + ' ')
                 f.write('\n')
 
-def repeated_kmeans(k, init, metric, type, iterations=1):
+def repeated_kmeans(k, points, init, metric, type, iterations=1):
     """
     iterations: number of times to run clustering (returns best one)
+    points: points to cluster
     rest are same as Kmeans.cluster
     """
     best_cluster = Kmeans(0)
     best_cluster.total_distance = None
-    for iteration in range(args.i):
-        cluster = Kmeans(args.k, init="points", metric=args.m, type=type)
+    for iteration in range(iterations):
+        cluster = Kmeans(k, init=init, metric=metric, type=type)
         cluster.cluster(points, 100)
         #print cluster.total_distance
         if best_cluster.total_distance == None or \
@@ -276,8 +277,9 @@ def main():
     parser.add_argument('-m', action="store", metavar='metric', 
                         default='euclidean', 
                         help='distance metric used for clustering (euclidean)')
-    parser.add_argument('-w', action="store", metavar='write filename',
-                        help='filename for writing cluster labels (False)')
+    parser.add_argument('-w', action="store", metavar='write directory',
+                        help='filename for directory to write cluster labels \
+                        and centers (False)')
     parser.add_argument('-i', action="store", metavar='iterations',
                         default=1, type=int,
                         help='number of times to run clustering (1)')
@@ -305,8 +307,8 @@ def main():
     else:
         type = "normal"
     
-    cluster = repeated_kmeans(args.k, init="points", metric=args.m, type=type,
-                              iterations=args.i)
+    cluster = repeated_kmeans(args.k, points, init="points", metric=args.m, 
+                              type=type, iterations=args.i)
     
     if args.q:
         print "suppressing plot of output"
@@ -314,9 +316,10 @@ def main():
         cluster.plot()
     
     if args.w != None:
-        print "writing cluster labels to file:", args.w
-        cluster.write_labels(args.w)
-        centers_filename = args.w[:-6] + 'centers' #hack--remove ASAP
+        labels_filename = args.w + '/labels'
+        print "writing cluster labels to file:", labels_filename
+        cluster.write_labels(labels_filename)
+        centers_filename = args.w + '/centers'
         print "writing centers to file: ", centers_filename
         cluster.write_centers(centers_filename)
     

@@ -37,10 +37,11 @@ Plusone.jar
 /data/wordMap.txt
 /data/*.html
 /data/*/*.beta
+/data/normfile
 
 /src/datageneration/output/*
 /src/datageneration/script.py
 
 projector/data/*
 
-data/normfile
+/kmeans/*

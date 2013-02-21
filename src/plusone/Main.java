@@ -569,6 +569,19 @@ public class Main {
 				runClusteringMethod(knn, ks, size, false);
 			}
 		}
+		
+		//Kmeans, clusters the raw data
+		Kmeans kmeans = null;
+		if (testIsEnabled("kmeans")){
+			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
+			"15"));
+			for (int dk = 0; dk < dimensions.length; dk ++) {
+				kmeans = new Kmeans("kmeans", trainingSet, wordIndexer, 
+									terms, dimensions[dk], trainingIndices, 
+									testIndices);
+				runClusteringMethod(kmeans, ks, size, true);
+			}
+		}
 
 		// Local Co-Occurance
 		CO co;
