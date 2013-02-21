@@ -2,10 +2,15 @@ package plusone.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Utils {
 
@@ -80,5 +85,80 @@ public class Utils {
 		}
 		fileWriter.write("\n");
 		fileWriter.close();
+    }
+    
+    /**
+	 * Reads in a file and interprets it as a matrix (each line is a row,
+	 * each entry is a column)
+	 * 
+	 * @param filename
+	 * 		Name of the file to be read
+	 * @param exp
+	 * 		Flag to exponentiate entries
+	 * @return
+	 * 		double[][] array containing the read matrix
+	 */
+	public static double[][] readMatrix(String filename, boolean exp) {
+		List<String[]> gammas = new ArrayList<String[]>();
+		double[][] results = null;
+		
+		try {
+			FileInputStream fstream = new FileInputStream(filename);
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+
+			while ((strLine = br.readLine()) != null) {
+				gammas.add(strLine.trim().split(" "));
+			}
+			br.close();
+			
+			results = new double[gammas.size()][];
+			for (int i = 0; i < gammas.size(); i++) {
+				results[i] = new double[gammas.get(i).length];
+				for (int j = 0; j < gammas.get(i).length; j++) {
+					results[i][j] = new Double(gammas.get(i)[j]);
+					if (exp)
+						results[i][j] = Math.exp(results[i][j]);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return results;
+	}
+
+	public static void createLdaInfo(String filename, int numTopics, 
+			int numTerms) {
+		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
+	    fileWriter.write("num_topics " + numTopics + " \n");
+	    fileWriter.write("num_terms " + numTerms + " \n");
+	    fileWriter.write("alpha " + 
+	                        readAlpha("src/datageneration/output/final.other") 
+	                         + " \n");
+	    fileWriter.close();
+	}
+	
+	/**
+    * Reads in the value of alpha from a *.other file, contained in the LDA output
+    * 
+    * @param filename the path to a *.other file
+    * @return the numerical value of alpha
+    */
+    public static double readAlpha(String filename) {
+        FileInputStream filecontents = null;
+            try {
+                filecontents = new FileInputStream(filename);
+            } catch (FileNotFoundException e) {
+                System.out.println("Couldn't read LDA alpha");
+                e.printStackTrace();
+        }
+        Scanner lines = new Scanner(filecontents);
+        String alphaLine = lines.nextLine();
+        alphaLine = lines.nextLine();
+        alphaLine = lines.nextLine();
+        String[] splitLine = alphaLine.split(" ");
+        return Double.parseDouble(splitLine[1]);
     }
 }
