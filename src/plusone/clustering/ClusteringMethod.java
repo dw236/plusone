@@ -3,6 +3,7 @@ package plusone.clustering;
 import java.util.List;
 
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 
 public interface ClusteringMethod {
     /**
@@ -22,7 +23,11 @@ public interface ClusteringMethod {
      */
 
     public double[] predict(PredictionPaper paper);
-
     public double[][] predict(List<PredictionPaper> papers);
 
+	// These versions put some information about the run info testInfo.
+    public double[] predict(PredictionPaper paper, RunInfo testInfo);
+    public double[][] predict(List<PredictionPaper> papers, RunInfo testInfo);
+
+	public double getTrainTime();
 }

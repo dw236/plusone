@@ -14,6 +14,7 @@ import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.LocalSVDish;
 import plusone.utils.Results;
+import plusone.utils.RunInfo;
 import plusone.utils.LocalCOSample;
 import plusone.utils.Utils;
 
@@ -69,7 +70,41 @@ public class Main {
 	private static HashMap<Integer, ArrayList<Integer>> tagMap;
 
 	static final String[] allResultFieldNames = {
-	    "predictionRate", "tfScore", "tfidfScore",
+		/* predictionRate is the mean of (#correct / k), where k is the number
+		 * of words the clustering method was asked to predict, and #correct is
+		 * the number of predicted words that were correct.
+		 */
+	    "predictionRate",
+		/* idfScore is the mean idf of the predicted words. */
+		"idfScore",
+		/* tfidfScore is the mean tf*idf of the predicted words. */
+		"tfidfScore",
+		/* predictionLength is the mean number of predicted words.  It cannot be
+		 * more that k.  If it is less than k, then one of two things is true:
+		 * - (size of the vocabulary) - (#words in test document) < k; or
+		 * - the clustering method, for some reason, decided not to make as many
+		 *   predictions as it was allowed to.
+		 */
+		"predictionLength",
+		/* The amount of time spent reading training documents and building a
+		 * model, in seconds.  See trainAndTestTime. */
+	    "trainTime",
+		/* The amount of time spent making predictions, in seconds.  See
+		 * trainAndTestTime.
+		 */
+		"testTime",
+		/* The amount of time training and making predictions, in seconds.
+		 * There could be clustering methods where it's not clear how much of
+		 * the time should be counted as "training" and how much should be
+		 * counted as "testing", but in any case, trainAndTestTime should
+		 * include all of it.
+		 *
+		 * If possible, this should not include things like the time it takes to start
+		 * MatLab or for the Python interpreter to load various modules.  For
+		 * example, in MatLab, the timing should be reported by the MatLab
+		 * script.
+		 */
+		"trainAndTestTime"
 	};
 	private Map<String,Results>[] allResults;
 
@@ -195,8 +230,7 @@ public class Main {
 	private String getLegacyResultFieldName(String fieldName) {
 	    if (fieldName.equals("predictionRate"))
 		return "Predicted";
-	    else if (fieldName.equals("tfScore"))
-	        // Preserving the old field, even though it looks like the name is a mistake...
+	    else if (fieldName.equals("idfScore"))
 		return "idf score";
 	    else if (fieldName.equals("tfidfScore"))
 		return "tfidf score";
@@ -204,17 +238,21 @@ public class Main {
 		return null;
 	}
 
-	private void addJSONMeansOrVariances(
-		Map<String, Double> values, String suffix, JSONObject testResults)
-	    throws JSONException {
-	    for (Map.Entry<String, Double> fieldValue : values.entrySet()) {
-		String fieldName = fieldValue.getKey();
-		testResults.put(fieldName + suffix, fieldValue.getValue());
-		String legacyResultFieldName = getLegacyResultFieldName(fieldName);
-		if (null != legacyResultFieldName)
-		    testResults.put(legacyResultFieldName + suffix, fieldValue.getValue());
-	    }
-	}
+    private void addJSONMeansOrVariances(
+        Map<String, Double> values, String suffix, JSONObject testResults)
+        throws JSONException {
+        for (Map.Entry<String, Double> fieldAndValue : values.entrySet()) {
+            String name = fieldAndValue.getKey();
+            Double doubleValue = fieldAndValue.getValue();
+            // JSON does not allow infinite numerical values.
+            Object value = doubleValue.isInfinite() || doubleValue.isNaN()
+                ? doubleValue.toString() : doubleValue;
+            testResults.put(name + suffix, value);
+            String legacyName = getLegacyResultFieldName(name);
+            if (null != legacyName)
+                testResults.put(legacyName + suffix, value);
+        }
+    }
 
 	private JSONObject genOneTestJSON(int k, double twpName, Results results) throws JSONException {
 		JSONObject testResults = new JSONObject();
@@ -355,7 +393,8 @@ public class Main {
 		try {
 			writer.write(genResultsJSON(ks, twpNames).toString());
 		} catch (JSONException e) {
-			System.out.println("Error generating results JSON.");
+            e.printStackTrace();
+            throw new RuntimeException("Error generating results JSON (stack trace was printed).");
 		}
 		writer.close();
 	}
@@ -808,8 +847,12 @@ public class Main {
 		long t1 = System.currentTimeMillis();
 		System.out.println("[" + test.testName + "] starting test" );
 		double[][] allScores=new double[testingSet.size()][terms.size()];
+		double testTime = 0;
 		if (bulk){
-			allScores = test.predict(testingSet);
+			RunInfo testInfo = new RunInfo();
+			allScores = test.predict(testingSet, testInfo);
+			testTime +=
+				testInfo.getDoubleOrInfinity("testTime");
 		}
 
 		double[][] results = new double[ks.length][4];
@@ -817,10 +860,13 @@ public class Main {
 		for (int id=0;id<testingSet.size();id++){
 			PredictionPaper testingPaper=testingSet.get(id);
 			double[] itemScores;
-			if (!bulk)
-				itemScores= test.predict(testingPaper);
-			else
+			if (!bulk) {
+				RunInfo testInfo = new RunInfo();
+				itemScores = test.predict(testingPaper, testInfo);
+				testTime += testInfo.getDoubleOrInfinity("testTime");
+			} else {
 				itemScores=allScores[id];
+			}
 
 
 			int largestK=ks[ks.length-1];
@@ -854,10 +900,6 @@ public class Main {
 
 			for (int ki = 0; ki < ks.length; ki ++) {
 				int k = ks[ki];
-
-//				MetadataLogger.TestMetadata meta = getMetadataLogger().getTestMetadata("k=" + k + test.testName);
-//				test.addMetadata(meta);
-//				List<Double> predictionScores = new ArrayList<Double>();
 				
 				Integer[] predict = topPrdcts.subList(0, Math.min(topPrdcts.size(), k)).toArray(new Integer[k]);
 
@@ -874,8 +916,12 @@ public class Main {
 				int k=ks[ki];
 				Map<String, Double> result = new HashMap<String, Double>();
 				result.put("predictionRate", results[ki][0]/k/testingSet.size());
-				result.put("tfScore", results[ki][1]/k/testingSet.size());
+				result.put("idfScore", results[ki][1]/k/testingSet.size());
 				result.put("tfidfScore", results[ki][2]/k/testingSet.size());
+				result.put("predictionLength", results[ki][3]/testingSet.size());
+				result.put("trainTime", test.getTrainTime());
+				result.put("testTime", testTime);
+				result.put("trainAndTestTime", test.getTrainTime() + testTime);
 				this.logResult(ki, test.getName(), result);
 		}
 		System.out.println("[" + test.testName + "] took " +
@@ -908,9 +954,6 @@ public class Main {
 		return Boolean.getBoolean("plusone.enableTest." + testName);
 	}
 
-	/* FIXME: We probably should divide by k here, rather than the total
-	 * number of predictions made; otherwise we reward methods that make
-	 * less predictions.  -James */
 	public double[] evaluate(PredictionPaper testingPaper,
 			Integer[] prediction, int size, int k) {
 		int predicted = 0, total = 0;

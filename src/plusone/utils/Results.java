@@ -24,7 +24,13 @@ public class Results{
      * Adds the results of another experiment run to this record of results.
      */
     public void addResult(Map<String, Double> values) {
-	assert allFieldNames.equals(values.keySet());
+	if (!allFieldNames.equals(values.keySet())) {
+	    throw new IllegalArgumentException(
+		"Results.addResult: wrong set of keys " +
+		"(missing: " + setDifference(allFieldNames, values.keySet()) +
+		"; extra: " + setDifference(values.keySet(), allFieldNames) +
+		")");
+	}
 	// We make a copy of values, in case the caller re-uses the object.
 	resultValues.add(new HashMap<String, Double>(values));
     }
@@ -59,5 +65,11 @@ public class Results{
 	for (String fieldName : allFieldNames)
 	    ret.put(fieldName, fieldVariance(fieldName));
 	return ret;
+    }
+
+    public Set setDifference(Set a, Set b) {
+	Set diff = new HashSet(a);
+	diff.removeAll(b);
+	return diff;
     }
 }

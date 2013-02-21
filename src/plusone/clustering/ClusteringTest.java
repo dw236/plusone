@@ -3,6 +3,7 @@ package plusone.clustering;
 import java.io.File;
 import plusone.utils.PlusoneFileWriter;
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.MetadataLogger.TestMetadata;
 import java.util.List;
 
@@ -22,10 +23,19 @@ public abstract class ClusteringTest implements ClusteringMethod {
             "Did you mean to call the bulk version " +
             "predict(List<PredictionPaper>)?");
     }
+    public double[] predict(PredictionPaper testPaper, RunInfo testInfo) {
+	return predict(testPaper);
+    }
     public double[][] predict(List<PredictionPaper> testPaper){
         throw new UnsupportedOperationException(
             "Did you mean to call the non-bulk version " +
             "predict(PredictionPaper)?");
+    }
+    public double[][] predict(List<PredictionPaper> testPaper, RunInfo testInfo){
+	return predict(testPaper);
+    }
+    public double getTrainTime() {
+	return Double.POSITIVE_INFINITY;
     }
     
     public String[] getHover(){
