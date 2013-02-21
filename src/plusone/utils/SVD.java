@@ -34,9 +34,10 @@ public class SVD {
 	protected double[] sigma;
 	public int numTerms;
 	private Random rand=new Random();
+	final long svdTimeNano;
 
-    /* Set to true to bring back an old bug. */
-    protected boolean oldBehavior0 = false;
+	/* Set to true to bring back an old bug. */
+	protected boolean oldBehavior0 = false;
 
 	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms) {
 
@@ -44,7 +45,7 @@ public class SVD {
 		this.trainingSet = trainingSet;
 		this.numTerms = numTerms;
 
-		long t1 = System.currentTimeMillis();
+		long startNanoTime = System.nanoTime();
 		System.out.println("[SVD] training with " + DIMENSION + 
 				" dimension.");
 
@@ -69,8 +70,13 @@ public class SVD {
 
 		this.train();
 
+		svdTimeNano = System.nanoTime() - startNanoTime;
 		System.out.format("[SVD] took %.3f seconds.\n",
-				(System.currentTimeMillis() - t1)/1000.0);
+				  svdTimeNano/1.0e9);
+	}
+
+	public long getSVDTimeNano() {
+	    return svdTimeNano;
 	}
 
     public void setOldBehavior0(boolean b) {

@@ -3,6 +3,7 @@ package plusone.clustering;
 import plusone.Main;
 import plusone.utils.ItemAndScore;
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.SVD;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
@@ -49,11 +50,19 @@ public class LSI extends ClusteringTest {
 	svd = new SVD(DIMENSION, trainingSet, numTerms);
     }
     @Override
-    public double[] predict(PredictionPaper testPaper) {
-	return svd.predict(testPaper);
+    public double[] predict(PredictionPaper testPaper, RunInfo testInfo) {
+        long startNanoTime = System.nanoTime();
+        double[] ret = svd.predict(testPaper);
+        testInfo.put("testTime", (System.nanoTime() - startNanoTime) / 1.0e9);
+        return ret;
     }
-    
+ 
     public double[] getSingularValues() {
-    	return svd.getSingularValues();
+        return svd.getSingularValues();
+    }
+
+    @Override
+    public double getTrainTime() {
+        return svd.getSVDTimeNano() / 1.0e9;
     }
 }
