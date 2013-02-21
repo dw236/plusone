@@ -21,6 +21,7 @@ import org.ejml.simple.SimpleMatrix;
  * Runs Mallet with the specified algorithm
  */
 public class Mallet extends ClusteringTest {
+	static final String MALLET_CMD = "bash lib/mallet-2.0.7/bin/mallet ";
 
 	private Algorithm algorithm;
 	private enum Algorithm {lda, hlda};
@@ -78,13 +79,13 @@ public class Mallet extends ClusteringTest {
 
 		makeMalletInput(trainingData, trainingSet);
 		
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence "
+		Utils.runCommand(MALLET_CMD + " import-file --keep-sequence "
 				+ "--input " + trainingData + " --output Mallet/train.mallet", false);
 		
 		switch (algorithm) {
 			case lda:
 				System.out.println("Running Mallet LDA");
-				Utils.runCommand("lib/mallet-2.0.7/bin/mallet train-topics"
+				Utils.runCommand(MALLET_CMD + " train-topics"
 						+ " --input Mallet/train.mallet --num-topics " + numTopics
 						+ " --inferencer-filename Mallet/train.inferencer"
 						//+ " --evaluator-filename Mallet/train.evaluator"
@@ -95,7 +96,7 @@ public class Mallet extends ClusteringTest {
 				break;
 			case hlda:
 				System.out.println("Running Mallet HLDA");
-				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda"
+				Utils.runCommand(MALLET_CMD + " hlda"
 						+ " --input Mallet/train.mallet --output-state Mallet/hlda-output.gz"
 						+ " --show-progress false", false);
 				break;
@@ -139,18 +140,18 @@ public class Mallet extends ClusteringTest {
 		String testingData = "Mallet/test.txt";
 
 		makeMalletInputTest(testingData, testDocs);
-		Utils.runCommand("lib/mallet-2.0.7/bin/mallet import-file --keep-sequence"
+		Utils.runCommand(MALLET_CMD + " import-file --keep-sequence"
 				+ " --input " + testingData + " --output Mallet/test.mallet"
 				+ " --use-pipe-from Mallet/train.mallet", false);
 		
 		switch (algorithm) {
 			case lda:
-				Utils.runCommand("lib/mallet-2.0.7/bin/mallet infer-topics --input Mallet/test.mallet"
+				Utils.runCommand(MALLET_CMD + " infer-topics --input Mallet/test.mallet"
 						+ " --output-doc-topics Mallet/doc-topics"
 						+ " --inferencer Mallet/train.inferencer", false);
 				break;
 			case hlda:
-				Utils.runCommand("lib/mallet-2.0.7/bin/mallet hlda "
+				Utils.runCommand(MALLET_CMD + " hlda "
 						+ " --testing Mallet/test.mallet"
 						+ " --show-progress false", false);
 				break;
@@ -158,7 +159,7 @@ public class Mallet extends ClusteringTest {
 			
 		docTopic = new SimpleMatrix(readDocTopicMatrix("Mallet/doc-topics"));
 		
-		/*Utils.runCommand("lib/mallet-2.0.7/bin/mallet evaluate-topics --input Mallet/test.mallet"
+		/*Utils.runCommand(MALLET_CMD + " evaluate-topics --input Mallet/test.mallet"
 				+ " --evaluator Mallet/train.evaluator"
 				+ " --output-doc-probs Mallet/doc-probs", true);*/
 
