@@ -19,6 +19,15 @@ from random import random as rand
 import matplotlib
 from matplotlib.pyplot import *
 
+try:
+    import munkres
+    from munkres import Munkres, print_matrix, make_cost_matrix
+    munkres_imported = True
+except:
+    print "Warning: import munkres failed. Method to match betas will use \
+    stable marriage instead of Hungarian algorithm. Please install munkres."
+    munkres_imported = False
+
 def poisson(l, max_val=None, min_val=1):
     """samples a poisson distribution, but has a bounded max and min value
     
@@ -456,8 +465,10 @@ def match_beta(input_beta='../../projector/data/final.beta',
                 raise Exception("invalid metric: " + str(metric))
             male_distances[i][j] = sim
             female_distances[j][i] = sim
-    #pairings = tma(male_distances, female_distances, invert=invert)
-    pairings = matching(male_distances)
+    if munkres_imported:
+        pairings = matching(male_distances)
+    else:
+        pairings = tma(male_distances, female_distances, invert=invert)
     labels = [pairings[i][0] for i in sorted(pairings.keys())]
     labels = [labels.index(female) for female in sorted(pairings.keys())]
     reordered_input_beta = np.array([input_beta[i] for i in labels])
@@ -502,10 +513,6 @@ def match_beta(input_beta='../../projector/data/final.beta',
             print "done"
 
     return real_beta, input_beta, pairings, labels, male_distances
-    
-    
-import munkres
-from munkres import Munkres, print_matrix, make_cost_matrix
 
 def matching(male_distances):
     cost_matrix = munkres.make_cost_matrix(male_distances,
