@@ -15,6 +15,10 @@ class Algorithms(object):
     algorithms = UNIVERSALS
 
 def generate_html(dir, overwrite=False):
+    """Reads every experiment json file in dir (*experiment*.json), and
+    writes a summary in html to data/test.html.  Overwrites the file if
+    overwrite is true, and appends to it otherwise.
+    """
     filenames = os.listdir(dir)
     results = []
     files_found = 0
@@ -42,35 +46,37 @@ def add_result(results, new_result):
     Algorithms.algorithms = set(list(Algorithms.algorithms) 
                                 + new_result[2].keys())
     for result in results:
-        params_true = check_all(result, new_result)
-        algs_true = check_all(result, new_result, 2)
-        all_true = params_true and algs_true
-        if all_true:
+        same_algorithms = same_keys(result, new_result, 2)
+        if same_universal_options(result, new_result) and same_algorithms:
             result.append(new_result)
             return results
     results.append([new_result])
     return results
 
-def check_all(result, new_result, index=None):
-    if index == None:
-        index = 3
-        all_true = True
-        for option in UNIVERSALS:
-                result_has_option = result[0][index].has_key(option)
-                new_result_has_option = new_result[index].has_key(option)
-                if result_has_option and new_result_has_option:
-                    result_option = result[0][index][option]
-                    new_result_option = new_result[index][option]
-                    if  result_option != new_result_option:
-                        all_true = False
-                        break
-                elif result_has_option != new_result_has_option:
-                    all_true = False
-                    break
-    else:
-        all_true = (set(result[0][index].keys()) 
-                    == set(new_result[index].keys()))
-    return all_true
+def same_universal_options(result, new_result):
+    """
+    Returns True iff every option in the global UNIVERSALS is set the same in
+    result[0] and new_result.
+    """
+    # parse_output.parse(...)[3] is the parameters object from the experiment
+    # results json.
+    result_options = result[0][3]
+    new_result_options = new_result[3]
+    for option in UNIVERSALS:
+            result_has_option = result_options.has_key(option)
+            new_result_has_option = new_result_options.has_key(option)
+            if result_has_option and new_result_has_option:
+                result_option = result_options[option]
+                new_result_option = new_result_options[option]
+                if  result_option != new_result_option:
+                    return False
+            elif result_has_option != new_result_has_option:
+                return False
+    # If we got this far, then all the parameters in UNIVERSAL were the same.
+    return True
+
+def same_keys(result, new_result, index):
+    return (set(result[0][index].keys()) == set(new_result[index].keys()))
 
 def write_table(f, results):
     """

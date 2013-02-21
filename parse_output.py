@@ -26,6 +26,14 @@ def parse(filename, show=False, external=True):
             the command line (ie it is being called by main() below); 
             set this to False if you want to call it from anywhere else
     
+    Returns:
+        A tuple (names, scores, tests, parameters, data), where:
+        - names is a list of all experiment names in the file, excluding those in
+          HIDDEN; 
+        - scores is a list, in the same order of names, of the prediction rates
+          achieved by the experiments;
+        - tests, parameters and data are the corresponding fields taken directly
+          from the json file.
     """
     with open(filename, 'r') as f:
         data = json.load(f)
