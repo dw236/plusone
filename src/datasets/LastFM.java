@@ -26,9 +26,6 @@ public class LastFM {
 		File inputDir = new File(dirName);
     	PrintWriter out = new PrintWriter( new BufferedWriter(new FileWriter( "data/lastfmsubset.json" ) ) );
     	
-		JSONObject outJson = new JSONObject();
-		JSONArray users = new JSONArray();
-
     	//ArrayList<String> stopWords = makeStopWords();
     	int id = 0;
     	
@@ -64,7 +61,7 @@ public class LastFM {
 			    					}
 			    					user.put("id", id++);
 			    					user.put("items", text);
-			    					users.put(user);
+			    					out.println(user);
 			    				}
 		    				}
 		    			}
@@ -73,8 +70,6 @@ public class LastFM {
     		}
     	}
 		
-    	outJson.put( "users", users );
-    	out.println( outJson.toString() );
     	out.close();
     	System.out.println("Done!");
 	}
