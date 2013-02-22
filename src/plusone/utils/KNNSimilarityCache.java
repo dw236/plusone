@@ -18,6 +18,7 @@ public class KNNSimilarityCache {
 	new HashMap<Integer, Integer[]>();
     private List<TrainingPaper> trainingPapers;
     private List<PredictionPaper> testingPapers;
+    long runtimeNano;
 
     public KNNSimilarityCache(List<TrainingPaper> trainingPapers,
 			      List<PredictionPaper> testingPapers) {
@@ -25,10 +26,15 @@ public class KNNSimilarityCache {
 	this.testingPapers = testingPapers;
 
 	System.out.println("[SimilarityCache] filling cache.");
-	long t1 = System.currentTimeMillis();
+	long startNanoTime = System.nanoTime();
 	calculateDistances();
+	runtimeNano = System.nanoTime() - startNanoTime;
 	System.out.format("[SimilarityCache] took %.3f seconds.\n",
-			  (System.currentTimeMillis() - t1) / 1000.0);
+			  runtimeNano / 1.0e9);
+    }
+
+    public double getRuntime() {
+	return runtimeNano / 1.0e9;
     }
 
     /**

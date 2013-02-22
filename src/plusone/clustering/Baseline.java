@@ -1,6 +1,7 @@
 package plusone.clustering;
 
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 
@@ -10,12 +11,14 @@ public class Baseline extends ClusteringTest {
     
     private List<TrainingPaper> trainingSet;
     private Terms terms;
-	double[] ret;
+    double[] ret;
+    long trainTimeNano;
 
     public Baseline(List<TrainingPaper> trainingSet, Terms terms) {
 	super("Baseline");
 	this.trainingSet = trainingSet;
 	this.terms = terms;
+	long startNanoTime = System.nanoTime();
 	ret = new double[terms.size()];
 	for (int i=0;i<terms.size();i++) {
 		int id=terms.get(i).id;
@@ -28,11 +31,17 @@ public class Baseline extends ClusteringTest {
 	    	freq=0.0;*/
 	    ret[id]=freq;
 		}
+	trainTimeNano = System.nanoTime() - startNanoTime;
     }
 
     @Override
-    public double[] predict(PredictionPaper testPaper) {
-	
+    public double getTrainTime() {
+	return trainTimeNano / 1.0e9;
+    }
+
+    @Override
+    public double[] predict(PredictionPaper testPaper, RunInfo testInfo) {
+	testInfo.put("testTime", 0.0);
 	return ret;
     }
 }

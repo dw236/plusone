@@ -5,6 +5,7 @@ import plusone.utils.PaperAbstract;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 import plusone.utils.PlusoneFileWriter;
+import plusone.utils.RunInfo;
 import plusone.utils.Terms;
 import plusone.utils.Utils;
 import java.io.BufferedReader;
@@ -37,6 +38,7 @@ public class Lda extends ClusteringTest {
 	private boolean project;
 	private List<PredictionPaper> testDocs;
 	private String[] hoverText;
+	private long trainTimeNano = Long.MAX_VALUE;
 	
 	/** 
 	 * Changes flags in Lda based on which algorithm is being run 
@@ -80,6 +82,11 @@ public class Lda extends ClusteringTest {
 		train();
 	}
 
+	@Override
+	public double getTrainTime() {
+	    return trainTimeNano / 1.0e9;
+	}
+
     /**
      * Returns the estimated word-topic matrix, or null if e.g. the model has
      * not been trained.
@@ -101,6 +108,7 @@ public class Lda extends ClusteringTest {
 	private void train() {
 		System.out.print("cleaning out lda folder for training...");
 		Utils.runCommand("./clear-folder lda", true);
+		long startNanoTime = System.nanoTime();
 		double[][] betaMatrix = null;
 		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
@@ -146,6 +154,7 @@ public class Lda extends ClusteringTest {
 		}
 		
 		beta = new SimpleMatrix(betaMatrix);
+		trainTimeNano = System.nanoTime() - startNanoTime;
 	}
 
 	//TODO move this
@@ -218,12 +227,13 @@ public class Lda extends ClusteringTest {
 	 * @return	the expected number of times each word appears per document
 	 */
 	@Override
-	public double[][] predict(List<PredictionPaper> testDocs){
+	public double[][] predict(List<PredictionPaper> testDocs, RunInfo testInfo){
 		this.testDocs = testDocs;
 		System.out.print("writing test indices to file in lda/trained...");
 		Utils.writeIndices("lda/trained/testIndices", testDocs, testIndices);
 		System.out.println("done.");
 		double[][] result = null;
+		long startNanoTime = System.nanoTime();
 		if (testCheat) {
 			System.out.println("we are cheating and using true parameters " +
 					"for prediction");	
@@ -271,6 +281,9 @@ public class Lda extends ClusteringTest {
 			}
 		}
 		System.out.println(name + " perplexity is " + getPerplexity());
+		testInfo.put("testTime",
+			     (System.nanoTime() - startNanoTime) / 1.0e9);
+		long finishTime = System.nanoTime();
 		
 		//write result to hoverText so it can be displayed
 		int howMany = 20;

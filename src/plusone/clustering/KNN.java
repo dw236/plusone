@@ -4,6 +4,7 @@ import plusone.utils.Indexer;
 import plusone.utils.KNNSimilarityCache;
 import plusone.utils.PaperAbstract;
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 
@@ -27,9 +28,16 @@ public class KNN extends ClusteringTest {
 	this.similarityCache = similarityCache;
 	this.paperIndexer = paperIndexer;
     }
+
+    @Override
+    public double getTrainTime() {
+	return similarityCache.getRuntime();
+    }
     
     @Override
-    public double[] predict(PredictionPaper testPaper) {
+    public double[] predict(PredictionPaper testPaper, RunInfo testInfo) {
+	long startNanoTime = System.nanoTime();
+
 	Integer[] kList = kNbr(testPaper, K_CLOSEST);
 	
 	double[] ret = new double[terms.size()];
@@ -42,6 +50,9 @@ public class KNN extends ClusteringTest {
 		ret[word] += a.getTrainingTf(word);
 	    }
 	}
+
+	testInfo.put("testTime", (System.nanoTime() - startNanoTime) / 1.0e9);
+
 	return ret;
     }
    /* 
