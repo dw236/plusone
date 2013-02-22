@@ -99,7 +99,8 @@ args=\
  -Dplusone.enableTest.heldOutPoissonLda=false
  -Dplusone.outPath=$out_dir
  -Dplusone.dumpMeta=false
- -Dplusone.randomSeed=9"
+ -Dplusone.randomSeed=9
+ -Dplusone.useNewJsonFormat=false"
 
 # options to sample cpu
 # -agentlib:hprof=cpu=samples

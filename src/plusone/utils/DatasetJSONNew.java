@@ -10,26 +10,9 @@ import org.json.*;
 
 
 /**
- * Replace DatasetJSON with this class to use real data in new format (one doc on each line)
+ * Same as DatasetJSON, but reads the new JSON format.
  */
-public class DatasetJSONNew {
-
-    /* Member fields. */
-	public HashMap<Integer,Integer>[] users;
-	
-    List<PaperAbstract> documents = new ArrayList<PaperAbstract>();
-    public List<PaperAbstract> getDocuments() { return documents; }
-
-    Indexer<String> wordIndexer = new Indexer<String>();
-    public Indexer<String> getWordIndexer() { return wordIndexer; }
-
-    private Indexer<PaperAbstract> paperIndexer = new Indexer<PaperAbstract>();
-    public Indexer<PaperAbstract> getPaperIndexer() { return paperIndexer; }
-    
-    //Map from the paper's index to the wordIndexer's indices for its tags 
-    private HashMap<Integer, ArrayList<Integer>> tagMap =
-    		new HashMap<Integer, ArrayList<Integer>>();
-    public HashMap<Integer, ArrayList<Integer>> getTagMap() { return tagMap; }
+public class DatasetJSONNew extends DatasetJSON {
 
     /** Reads in the JSON file and fills in documents, wordIndexer, and
      * paperIndexer appropriately. Will automatically change its behavior when
@@ -110,18 +93,6 @@ public class DatasetJSONNew {
 		} catch(Exception e) {
 		    e.printStackTrace();
 		}
-    }
-
-    /**
-     * This method is to be called in order to construct a datasetJSON
-     * 
-     * @param filename The path to the JSON file being loaded
-     * @return a DatasetJSON with its document, wordIndexer, and paperIndexer fields instantiated with the information contained in the JSON
-     */
-    public static DatasetJSONNew loadDatasetFromPath(String filename) {
-        DatasetJSONNew dataset = new DatasetJSONNew();
-        dataset.loadInPlaceFromPath(filename);
-        return dataset;
     }
     
     

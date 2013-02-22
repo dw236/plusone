@@ -19,11 +19,11 @@ public class DatasetJSON {
     Indexer<String> wordIndexer = new Indexer<String>();
     public Indexer<String> getWordIndexer() { return wordIndexer; }
 
-    private Indexer<PaperAbstract> paperIndexer = new Indexer<PaperAbstract>();
+    Indexer<PaperAbstract> paperIndexer = new Indexer<PaperAbstract>();
     public Indexer<PaperAbstract> getPaperIndexer() { return paperIndexer; }
     
     //Map from the paper's index to the wordIndexer's indices for its tags 
-    private HashMap<Integer, ArrayList<Integer>> tagMap =
+    HashMap<Integer, ArrayList<Integer>> tagMap =
     		new HashMap<Integer, ArrayList<Integer>>();
     public HashMap<Integer, ArrayList<Integer>> getTagMap() { return tagMap; }
 
@@ -112,12 +112,24 @@ public class DatasetJSON {
      * This method is to be called in order to construct a datasetJSON
      * 
      * @param filename The path to the JSON file being loaded
+     * @param newFormat If true, we use the DatasetJSONNew class to load the dataset.
      * @return a DatasetJSON with its document, wordIndexer, and paperIndexer fields instantiated with the information contained in the JSON
      */
-    public static DatasetJSON loadDatasetFromPath(String filename) {
-        DatasetJSON dataset = new DatasetJSON();
+    public static DatasetJSON loadDatasetFromPath(String filename,
+												  boolean useNewFormat) {
+        DatasetJSON dataset =
+            useNewFormat ? new DatasetJSONNew() : new DatasetJSON();
         dataset.loadInPlaceFromPath(filename);
         return dataset;
+    }
+
+    /**
+     * Same as the other method of the same name, but the value of the newFormat
+     * parameter is taken from the plusone.useNewJsonFormat parameter.
+     */
+    public static DatasetJSON loadDatasetFromPath(String filename) {
+        return loadDatasetFromPath(
+                filename, Boolean.getBoolean("plusone.useNewJsonFormat"));
     }
     
     
