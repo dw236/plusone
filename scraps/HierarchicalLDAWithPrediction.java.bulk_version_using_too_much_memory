@@ -1,0 +1,94 @@
+package cc.mallet.topics;
+
+import cc.mallet.types.*;
+import java.util.Arrays;
+
+public class HierarchicalLDAWithPrediction extends HierarchicalLDA {
+	// Based on HierarchicalLDA.empiricalLikelihood().
+	public double[][] predictNextWord(int numSamples, InstanceList testing) {
+		NCRPNode[] path = new NCRPNode[numLevels];
+		NCRPNode node;
+		double weight;
+		path[0] = rootNode;
+
+		FeatureSequence fs;
+		int sample, level, type, token, doc, seqLen;
+
+		Dirichlet dirichlet = new Dirichlet(numLevels, alpha);
+		double[] levelWeights;
+		double[] multinomial = new double[numTypes];
+
+		double[][][] likelihoods =
+			new double[ testing.size() ][ numSamples ][ numTypes ];
+
+		for (sample = 0; sample < numSamples; sample++) {
+			Arrays.fill(multinomial, 0.0);
+
+			for (level = 1; level < numLevels; level++) {
+				path[level] = path[level-1].selectExisting();
+			}
+	    
+			levelWeights = dirichlet.nextDistribution();
+	    
+			for (type = 0; type < numTypes; type++) {
+				for (level = 0; level < numLevels; level++) {
+					node = path[level];
+					multinomial[type] +=
+						levelWeights[level] * 
+						(eta + node.typeCounts[type]) /
+						(etaSum + node.totalTokens);
+				}
+
+			}
+
+			for (type = 0; type < numTypes; type++) {
+				multinomial[type] = Math.log(multinomial[type]);
+			}
+
+			for (doc=0; doc<testing.size(); doc++) {
+                fs = (FeatureSequence) testing.get(doc).getData();
+				seqLen = fs.getLength();
+			
+				double sample_likelihood = 0.0;
+				for (token = 0; token < seqLen; token++) {
+					type = fs.getIndexAtPosition(token);
+					sample_likelihood += multinomial[type];
+				}
+				for (type = 0; type < numTypes; type++) {
+					double typeLikelihood = sample_likelihood + multinomial[type];
+					likelihoods[doc][sample][type] = typeLikelihood;
+				}
+			}
+		}
+	
+		double[][] predictions = new double[ testing.size() ][ numTypes ];
+		for (doc=0; doc<testing.size(); doc++) {
+            double max = Double.NEGATIVE_INFINITY;
+            for (sample = 0; sample < numSamples; sample++) {
+				for (type = 0; type < numTypes; type++) {
+					if (likelihoods[doc][sample][type] > max) {
+						max = likelihoods[doc][sample][type];
+					}
+				}
+            }
+
+			double[] nextWordWeights = new double[ numTypes ];
+			for (sample = 0; sample < numSamples; sample++) {
+				for (type = 0; type < numTypes; type++) {
+					nextWordWeights[type] +=
+						Math.exp(likelihoods[doc][sample][type] - max);
+				}
+			}
+
+			double totalWeight = 0.0;
+			for (type = 0; type < numTypes; type++) {
+				totalWeight += nextWordWeights[type];
+			}
+			for (type = 0; type < numTypes; type++) {
+				predictions[doc][type] = nextWordWeights[type] / totalWeight;
+			}
+		}
+
+		return predictions;
+	}
+}
