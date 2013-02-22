@@ -85,11 +85,11 @@ public class Mallet extends ClusteringTest {
 		Utils.runCommand(MALLET_CMD + " import-file --keep-sequence "
 				+ "--input " + trainingData + " --output Mallet/train.mallet", false);
 		
-		long startNanoTime = System.nanoTime();
 		
 		switch (algorithm) {
-			case lda:
+			case lda: {
 				System.out.println("Running Mallet LDA");
+				long startNanoTime = System.nanoTime();
 				Utils.runCommand(MALLET_CMD + " train-topics"
 						+ " --input Mallet/train.mallet --num-topics " + numTopics
 						+ " --inferencer-filename Mallet/train.inferencer"
@@ -98,19 +98,23 @@ public class Mallet extends ClusteringTest {
 						+ " --num-iterations " + gibbsIterations
 						+ " --use-symmetric-alpha " + (synthetic ? "true" : "false")
 						+ " --word-topic-counts-file Mallet/word-topics", false);
+				trainTimeNano = System.nanoTime() - startNanoTime;
+				topicWord = new SimpleMatrix(readTopicWordMatrix("Mallet/word-topics"));
+				writeBeta();
 				break;
-			case hlda:
+			}
+
+			case hlda: {
 				System.out.println("Running Mallet HLDA");
+				long startNanoTime = System.nanoTime();
 				Utils.runCommand(MALLET_CMD + " hlda"
 						+ " --input Mallet/train.mallet --output-state Mallet/hlda-output.gz"
 						+ " --show-progress false", false);
+				trainTimeNano = System.nanoTime() - startNanoTime;
 				break;
+			}
 		}
 
-		trainTimeNano = System.nanoTime() - startNanoTime;
-
-		topicWord = new SimpleMatrix(readTopicWordMatrix("Mallet/word-topics"));
-		writeBeta();
 	}
 
 	@Override

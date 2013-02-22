@@ -108,4 +108,4 @@ args=\
 # -Xmx4096m
 
 #java -agentlib:hprof=cpu=samples -Xmx4096m -cp Plusone.jar:lib/jars/ejml-0.17.jar $args plusone.Main
-java -Xmx4096m -cp Plusone.jar:lib/jars/json.jar:lib/jars/ejml-0.17.jar:lib/jars/gson-1.7.1.jar:lib/colt-1.2.0.jar:lib/commons-lang-2.6.jar $args plusone.Main
+java -Xmx4096m -cp Plusone.jar:lib/jars/json.jar:lib/jars/ejml-0.17.jar:lib/jars/gson-1.7.1.jar:lib/colt-1.2.0.jar:lib/commons-lang-2.6.jar:lib/jars/mallet.jar:lib/jars/mallet-deps.jar $args plusone.Main
