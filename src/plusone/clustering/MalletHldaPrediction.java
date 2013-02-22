@@ -77,6 +77,7 @@ public class MalletHldaPrediction extends ClusteringTest {
 	public void train(List<TrainingPaper> trainingSet) {
 		InstanceList instances = makeInstanceList(trainingSet);
 		hlda = new HierarchicalLDAWithPrediction();
+		hlda.setProgressDisplay(false);
 		
 		// Set hyperparameters
 
