@@ -96,9 +96,9 @@ public class MalletHldaPrediction extends ClusteringTest {
 		trainTimeNano = System.nanoTime() - startNanoTime;
 	}
 
-	InstanceList makeInstanceList(List<TrainingPaper> trainingSet) {
+	InstanceList makeInstanceList(List<?extends PaperIF> papers) {
 		InstanceList il = new InstanceList(null);
-		for (TrainingPaper paper : trainingSet) {
+		for (PaperIF paper : papers) {
 			il.add(new Instance(makeFeatureSequence(paper), null, null, null));
 		}
 		return il;

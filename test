@@ -81,6 +81,7 @@ args=\
  -Dplusone.enableTest.ldaCheat=$ldaTrain
  -Dplusone.enableTest.malletLda=true
  -Dplusone.enableTest.malletHlda=false
+ -Dplusone.enableTest.malletHldaPred=true
  -Dplusone.enableTest.projector=true
  -Dplusone.enableTest.kmeans=false
  -Dplusone.enableTest.hlda=false

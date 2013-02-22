@@ -670,7 +670,7 @@ public class Main {
 		//hlda (MalletHldaPrediction)
 		if (testIsEnabled("malletHldaPred")) {
 			runClusteringMethod(
-			   	new MalletHldaPrediction(trainingSet, terms,
+				new MalletHldaPrediction(trainingSet, terms,
 										 3, 10.0, 1.0, 0.1, 1000),
 				ks, size, false);
 		}
