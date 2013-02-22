@@ -8,7 +8,7 @@ import os
 import numpy as np
 from numpy.random.mtrand import poisson as p
 from numpy.random.mtrand import dirichlet
-from scipy.special import gamma
+#from scipy.special import gamma
 
 import math
 from math import e
@@ -149,27 +149,27 @@ def normalize(dist):
     """
     return np.array(dist, 'double') / np.sum(dist)
 
-def dirichlet_pdf(x, alpha):
-    """Calculates the probability of the given sample from a dirichlet 
-    distribution.
-    
-    Given a sample x and parameter alpha, calculates the probability that
-    x was sampled from Dirichlet(alpha).
-    
-    Args:
-        x:
-            a list of numbers in the interval [0,1] that sum to 1
-        alpha:
-            the parameter to a dirichlet distribution; represented as a list
-    
-    Returns:
-        the probability that x was sampled from Dirichlet(alpha)
-    """
-    density = reduce(operator.mul, 
-                   [x[i]**(alpha[i]-1.0) for i in range(len(alpha))])
-    norm_top = gamma(np.sum(alpha))
-    norm_bot = reduce(operator.mul, [gamma(a) for a in alpha])
-    return (norm_top / norm_bot) * density
+## def dirichlet_pdf(x, alpha):
+##     """Calculates the probability of the given sample from a dirichlet 
+##     distribution.
+##     
+##     Given a sample x and parameter alpha, calculates the probability that
+##     x was sampled from Dirichlet(alpha).
+##     
+##     Args:
+##         x:
+##             a list of numbers in the interval [0,1] that sum to 1
+##         alpha:
+##             the parameter to a dirichlet distribution; represented as a list
+##     
+##     Returns:
+##         the probability that x was sampled from Dirichlet(alpha)
+##     """
+##     density = reduce(operator.mul, 
+##                    [x[i]**(alpha[i]-1.0) for i in range(len(alpha))])
+##     norm_top = gamma(np.sum(alpha))
+##     norm_bot = reduce(operator.mul, [gamma(a) for a in alpha])
+##     return (norm_top / norm_bot) * density
 
 def count(words):
     """Creates a histogram of occurrences in an array.
