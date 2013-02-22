@@ -31,9 +31,6 @@ public class AP {
 		HashMap<String, Integer> idf = makeIdf(input);
 		ArrayList<HashMap<String, Double>> tfs = makeTfs(input);
     	
-		JSONObject json = new JSONObject();
-		
-		JSONArray docs = new JSONArray();
 		int id = 0;
 				
 		HashSet<String> keptWords = new HashSet<String>();
@@ -55,12 +52,10 @@ public class AP {
 			}
 			user.put("id", id++);
 			user.put("items", savedWordsInDoc);
-			docs.put(user);
+			out.println(user);
 		}
 		System.out.println("Kept " + keptWords.size() + " words out of "
 							+ idf.keySet().size());
-    	json.put( "users", docs );
-    	out.println( json.toString() );
     	out.close();
     	System.out.println("Done!");
 	}

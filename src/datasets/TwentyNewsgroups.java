@@ -25,7 +25,7 @@ public class TwentyNewsgroups {
 		File inputDir = new File(dirName);
     	PrintWriter out = new PrintWriter( new BufferedWriter(new FileWriter( "data/20Newsgroups.json" ) ) );
     	
-    	//ArrayList<String> stopWords = makeStopWords();
+    	ArrayList<String> stopWords = makeStopWords();
     	int id = 0;
     	for (File firstSubDir : inputDir.listFiles()) {
     		if (firstSubDir.isDirectory()) {
@@ -38,7 +38,7 @@ public class TwentyNewsgroups {
 	    			while(input.hasNextLine()) {
 	    				String[] parsedLine = input.nextLine().split("\"*\\s+\"*");
 	    				for (String s : parsedLine) {
-	    					if (!s.equals("")) {
+	    					if (!stopWords.contains(s) && !s.equals("")) {
 	    						text.add(s);
 	    					}
 	    				}
@@ -51,9 +51,18 @@ public class TwentyNewsgroups {
 			}
     	}
 		
-    	//outJson.put( "users", users );
-    	//out.println( outJson.toString() );
     	out.close();
     	System.out.println("Done!");
+	}
+	
+	private static ArrayList<String> makeStopWords() throws Throwable {
+		ArrayList<String> result = new ArrayList<String>();
+		File input = new File("data/english.stop.txt");
+		Scanner in = new Scanner(input);
+		while (in.hasNext()) {
+			result.add(in.next());
+		}
+		result.add(".");
+		return result;
 	}
 }

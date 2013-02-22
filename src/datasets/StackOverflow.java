@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
-
+import java.io.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +25,6 @@ public class StackOverflow {
 		String filename = "data/stackoverflow.1000.data";
 		boolean onlyQuestions = Boolean.parseBoolean(args[1]);
 		System.out.println("Processing " + filename + "...");
-		File input = new File(filename);
     	PrintWriter out;
     	if (onlyQuestions) {
     		out = new PrintWriter( new BufferedWriter(new FileWriter( filename + ".questions.json" ) ) );
@@ -34,9 +33,8 @@ public class StackOverflow {
     	}
    
     	//ArrayList<String> stopWords = makeStopWords();
-    	System.out.println(new Scanner(input).nextLine());
-		JSONObject inJson = new JSONObject(new Scanner(input).nextLine());
-		System.out.println(inJson);
+    	BufferedReader in = new BufferedReader(new FileReader(filename));
+		JSONObject inJson = new JSONObject(in.readLine());
 		JSONArray questions = inJson.getJSONArray("questions");
 		int id = 0; boolean skip = false;
 		

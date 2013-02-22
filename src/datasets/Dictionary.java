@@ -14,7 +14,7 @@ import org.json.JSONObject;
 public class Dictionary {
 
 	/**
-	 * Makes a json from the Stack Overflow dataset
+	 * Makes a json from the Dictionary dataset
 	 * 
 	 * @param args if args[0] is true, tags are put in a separate component of the json
 	 * (as opposed to not being put in at all)
@@ -30,10 +30,8 @@ public class Dictionary {
    
     	ArrayList<String> stopWords = makeStopWords();
     	
-		JSONObject Json = new JSONObject();
 		int id = 0; 
 		final int cutoff = 400;
-		JSONArray docs = new JSONArray();
 		
 		HashMap<String, Integer> charCounts = getCharCounts(input);
 		
@@ -87,14 +85,11 @@ public class Dictionary {
 				user.put("id", id++);
 				user.put("items", definition);
 				user.put("tags", word);
-				docs.put(user);
+				out.println(user);
 			}
 			
 		}
 		
-		
-    	Json.put( "users", docs );
-    	out.println( Json.toString() );
     	out.close();
     	System.out.println("Done!");
 	}

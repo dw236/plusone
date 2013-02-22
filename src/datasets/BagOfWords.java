@@ -28,7 +28,7 @@ public class BagOfWords {
 		File input = new File(filename);
     	PrintWriter out = new PrintWriter( new BufferedWriter(
     			new FileWriter( filename + ".json" ) ) );
-    	//ArrayList<String> stopWords = makeStopWords();
+    	ArrayList<String> stopWords = makeStopWords();
     	
 		Scanner lines = new Scanner(input);
 		int numDocs = Integer.parseInt(lines.nextLine());
@@ -57,7 +57,9 @@ public class BagOfWords {
 				}
 			}
 			for (int i = 0; i < count; i++) {
-				document.add(wordMap.get(wordId) + "");
+				if (!stopWords.contains(wordMap.get(wordId))) {
+					document.add(wordMap.get(wordId) + "");
+				}
 			}
 		}
 		doc.put("id", currentDocId);
