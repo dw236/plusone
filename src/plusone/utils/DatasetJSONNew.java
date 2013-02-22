@@ -118,8 +118,8 @@ public class DatasetJSONNew {
      * @param filename The path to the JSON file being loaded
      * @return a DatasetJSON with its document, wordIndexer, and paperIndexer fields instantiated with the information contained in the JSON
      */
-    public static DatasetJSON loadDatasetFromPath(String filename) {
-        DatasetJSON dataset = new DatasetJSON();
+    public static DatasetJSONNew loadDatasetFromPath(String filename) {
+        DatasetJSONNew dataset = new DatasetJSONNew();
         dataset.loadInPlaceFromPath(filename);
         return dataset;
     }
