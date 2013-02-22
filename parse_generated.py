@@ -246,7 +246,13 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                                    or mouseover_text == [""])
                         if alt:
                             mouseover_text = ''#hack_2(mouseover_text) #HACK
-                    mouseover_text = results[result][algorithm]['score']
+                    mouseover_text = \
+                        [ str(st[0]) + " " + str(st[1]) + "s"
+                          for st
+                          in zip(results[result][algorithm]['score'],
+                                 results[result][algorithm]['time'])]
+                    # For just the scores, use this:
+                    # mouseover_text = results[result][algorithm]['score']
                     alt = True
                     in_hover_html = ''
                     if "s" in disp:
@@ -480,7 +486,7 @@ def main():
     parser.add_argument('-s', action="store_true", default=False,
                         help="flag to display best of each algorithm \
                         by column (False)")
-    parser.add_argument('-d', action="store", default="s",
+    parser.add_argument('-d', action="store", default="st",
                         help="s to show scores; t to show times")
     
     args = parser.parse_args()
