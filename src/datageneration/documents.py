@@ -14,65 +14,6 @@ from numpy.random.mtrand import multivariate_normal as N
 import util
 from util import *
 
-def create_model(num_topics, num_docs, words_per_doc, vocab_size, alpha, beta,
-                 plsi, ctm, pareto):
-    """creates a model given the parameters
-    """
-    mu = np.zeros(num_topics)
-    sigma = np.ones((num_topics, num_topics))
-    
-    if plsi and ctm:
-        print "plsi and ctm flags cannot both be active (returning None)"
-        return None
-    
-    if not plsi and not ctm:
-        if pareto:
-            alpha = [alpha / i for i in range(1, num_topics + 1)]
-            beta = [np.sqrt(beta / i) for i in range(1, vocab_size + 1)]
-            #beta = [beta / i for i in range(1, vocab_size + 1)]
-        else:
-            alpha = [alpha] * num_topics
-            beta = [beta] * vocab_size
-
-    if plsi or ctm:
-        sig_words = [rsample(range(vocab_size), util.poisson(beta, vocab_size))
-                     for t in range(num_topics)]
-        word_dist = [np.zeros(vocab_size) for t in range(num_topics)]
-        for i in range(num_topics):
-            word_dist[i][sig_words[i]] = 1.0 / len(sig_words[i])
-    else:
-        word_dist = dirichlet(beta, num_topics)
-    word_cdfs = []
-    for topic in word_dist:
-        word_cdfs.append(get_cdf(topic))
-    
-    topics = dirichlet(alpha, num_docs)
-    
-    topic_cdfs = []
-    topic_dists = []
-    for i in range(num_doc):
-        if plsi:
-            sig_topics = rsample(range(num_topics), 
-                                 util.poisson(alpha, num_topics))
-            topic_dist = np.zeros(num_topics)
-            topic_dist[sig_topics] = 1.0 / len(sig_topics)
-        elif ctm:
-            eta = N(mu, sigma)
-            topic_dist = np.exp(eta) / np.sum(np.exp(eta))
-        else:
-            topic_dist = dirichlet(alpha)
-        topic_dists.append(topic_dist)
-        topic_cdf = get_cdf(topic_dist)
-        topic_cdfs.append(topic_cdf)
-        
-    return word_dist, word_cdfs
-        
-def parse_model(topic_dists, word_dists):
-    """
-    topic_dists: topic distribution per document
-    word_dists: word distribution per topic
-    """
-
 def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
                   alpha=None, beta=None, noise=-1, plsi=False, ctm=False, 
                   pareto=False):
@@ -105,14 +46,10 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
                 parameter to poisson distribution to determine the number of
                 topics per document (each topic will have uniform
                 probability; all other topics will have probability 0)
-                -----OR-----
-                filename for topic distribution per document
             beta:
                 as alpha, but poisson distribution instead controls the number
                 of words per topic (each word will have uniform
                 probability; all other words will have probability 0)
-                -----OR-----
-                filename for word distribution per topic
         ---------------------
         noise: 
             given as a probability; each word will be replaced with a random
@@ -159,7 +96,7 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
             beta = [beta] * vocab_size
 
     if plsi or ctm:
-        sig_words = [rsample(range(vocab_size), util.poisson(beta, vocab_size))
+        sig_words = [rsample(range(vocab_size), util.poisson(beta, vocab_size))\
                      for t in range(num_topics)]
         word_dist = [np.zeros(vocab_size) for t in range(num_topics)]
         for i in range(num_topics):
@@ -178,6 +115,8 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     for i in range(num_docs):
         if doc_index % 100 == 0:
             print "reached document", doc_index
+        num_words = util.poisson(words_per_doc)
+        doc = []
         if plsi:
             sig_topics = rsample(range(num_topics), 
                                  util.poisson(alpha, num_topics))
@@ -191,8 +130,6 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
         topic_dists.append(topic_dist)
         topic_cdf = get_cdf(topic_dist)
         topic_cdfs.append(topic_cdf)
-        num_words = util.poisson(words_per_doc)
-        doc = []
         doc_topics = []
         for word in range(num_words):
             if rand() < noise:
@@ -380,14 +317,14 @@ def main():
                         help="average number of words per document (75)")
     parser.add_argument('-m', action="store", type=int, default=1000,
                         help="size of the vocabulary (1000)")
-    parser.add_argument('-a', action="store", metavar='alpha',   
-                        help="parameter for topics--can be a filename \
-                        containing topic distributions for documents \
-                        (0.1 for lda, 3 for plsi)")
-    parser.add_argument('-b', action="store", metavar='beta',  
-                        help="parameter for words--can be a filename \
-                        containing word distributinos for topics \
-                        (0.01 for lda, 5 for plsi)")
+    parser.add_argument('-a', action="store", metavar='alpha', 
+                        type=float,  
+                        help="parameter for topics (0.1 for lda, \
+                        3 for plsi)")
+    parser.add_argument('-b', action="store", metavar='beta', 
+                        type=float, 
+                        help="parameter for words (0.01 for lda, \
+                        5 for plsi)")
     parser.add_argument('-s', action="store", metavar='noise', type=float, 
                         default=0, help="probability each word is generated\
                         randomly (0)")
@@ -405,40 +342,21 @@ def main():
         print "both -plsi and -ctm flags cannot be active (returning None)"
         return None
     
-    try:
-        if args.a != None:
-            a = float(args.a)
-        alpha_filename = False
-        alpha_text = "parameter"
-    except:
-        a = args.a
-        alpha_filename = True
-        alpha_text = "filename"
-    try:
-        if args.b != None:
-            b = float(args.b)
-        beta_filename = False
-        beta_text = "parameter"
-    except:
-        b = args.b
-        beta_filename = True
-        beta_text = "filename"
-    
     if args.plsi:
-        what_is_alpha = "(significant topics poisson " + alpha_text + ")"
-        what_is_beta = "(significant words poisson " + beta_text + ")"
+        what_is_alpha = "(significant topics poisson parameter)"
+        what_is_beta = "(significant words poisson parameter)"
         if args.a == None:
-            a = 3
+            args.a = 3
         if args.b == None:
-            b = 5
+            args.b = 5
     
     if not args.plsi and not args.ctm:
-        what_is_alpha = "(topics dirichlet " + alpha_text + ")"
-        what_is_beta = "(words dirichlet " + beta_text + ")"
+        what_is_alpha = "(topics dirichlet parameter)"
+        what_is_beta = "(words dirichlet parameter)"
         if args.a == None:
-            a = 0.1
+            args.a = 0.1
         if args.b == None:
-            b = 0.01
+            args.b = 0.01
     
     print ""
     print "generating documents with parameters:"
@@ -447,8 +365,8 @@ def main():
     print "l    =  ", args.l, "(average number of words)"
     print "m    =  ", args.m, "(size of vocabulary)"
     if not args.plsi and not args.ctm:
-        print "a    =  ", a, what_is_alpha
-        print "b    =  ", b, what_is_beta
+        print "a    =  ", args.a, what_is_alpha
+        print "b    =  ", args.b, what_is_beta
     print "s    =  ", args.s, "(noise probability)"
     print "plsi =  ", args.plsi, "(whether to draw from plsi)"
     print "ctm  =  ", args.ctm, "(whether to draw from ctm)"
@@ -460,7 +378,7 @@ def main():
     else:
         noise = args.s
     
-    data = generate_docs(args.k, args.n, args.l, args.m, alpha=a, beta=b,
+    data = generate_docs(args.k, args.n, args.l, args.m, args.a, args.b,
                          noise=noise, plsi=args.plsi, ctm=args.ctm, 
                          pareto=args.p)
     if args.w:
