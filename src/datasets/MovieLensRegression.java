@@ -7,8 +7,8 @@ import org.json.*;
 
 public class MovieLensRegression {
 	public static void main( String[] args ) throws Throwable {
-	    Scanner in = new Scanner( new File( "ratings.dat" ) );
-    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter( "movielens-reg5.json" ) ) );
+	    Scanner in = new Scanner( new File( "data/ratings.dat" ) );
+    	PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter( "data/movielens-reg5.json" ) ) );
 	    String s;
 	    HashMap<Integer,HashMap<Integer,Double>> hm = new HashMap<Integer,HashMap<Integer,Double>>();
 	    HashSet<Integer> movies = new HashSet<Integer>();
@@ -32,7 +32,7 @@ public class MovieLensRegression {
 
 	    JSONObject json = new JSONObject();
     	
-    	JSONArray docs = new JSONArray();
+    	//JSONArray docs = new JSONArray();
 
 	    for( Integer user : hm.keySet() ) {
 	    	JSONObject doc = new JSONObject();
@@ -49,11 +49,11 @@ public class MovieLensRegression {
 
 	    	doc.put( "items", terms );
 	    	//doc.put( "scores", scores );
-	    	docs.put( doc );
+	    	out.println( doc );
 	    }
 
-    	json.put( "users", docs );
-    	out.println( json.toString() );
+    	//json.put( "users", docs );
+    	//out.println( json.toString() );
     	out.close();
     	//System.out.println( json.toString( 4 ) );
     }
