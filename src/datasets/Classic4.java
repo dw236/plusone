@@ -85,8 +85,12 @@ public class Classic4 {
 							word = in.next();
 						}
 					}
-					if (!stopWords.contains(word.toLowerCase()))
-						thisDoc.add(word);
+					if (!stopWords.contains(word.toLowerCase())) {
+				    	Stemmer stemmer = new Stemmer();
+				    	stemmer.add(word.toCharArray(), word.length());
+				    	stemmer.stem();
+				    	thisDoc.add(stemmer.toString().toLowerCase());
+					}
 				}
 				hm.put(i, thisDoc);
 			} catch (FileNotFoundException e) {
