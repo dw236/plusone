@@ -13,7 +13,7 @@ CHEATS = ['ldaC', 'ldaT']
 PARAMS = ['a', 'b']
 STATISTICS = ['sig_topics', 'sig_words']
 
-def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
+def generate_html(dir, overwrite=False, star=False, short=False, quiet=False, disp="s"):
     filenames = os.listdir(dir)
     # See the docstring for add_result for the structure of the results dict.
     results = {}
@@ -37,7 +37,7 @@ def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
             f.write('<head><style type="text/css"> ' + css() + 
                     '</style></head>\n')
             for result in results:
-                write_table(f, results[result], result, star, short)
+                write_table(f, results[result], result, star, short, disp)
                 f.write('<br></br>\n')
         assert(f.closed)
     return results, flat_results
@@ -110,6 +110,7 @@ def add_result(results, new_result):
     for algorithm in sorted(new_result[2]):
         #extract score and hover text
         score = new_result[2][algorithm]['Predicted_Mean']
+        totalTime = float(new_result[2][algorithm]['trainAndTestTime_Mean'])
         if new_result[2][algorithm].has_key('Hover'):    
             hoverList = new_result[2][algorithm]['Hover']
         else:
@@ -117,6 +118,7 @@ def add_result(results, new_result):
         
         check(entry, algorithm, score) #initialize dictionary if necessary
         entry[algorithm]['score'].append(score)
+        entry[algorithm]['time'].append(totalTime)
         entry[algorithm]['hover'] = hoverList
         
         algorithm_type = algorithm.strip('1234567890-')
@@ -126,6 +128,7 @@ def add_result(results, new_result):
             algorithms['names'].add(algorithm_type)
             check(entry, algorithm_type, score)
             entry[algorithm_type]['score'].append(score)
+            entry[algorithm]['time'].append(totalTime)
             entry[algorithm_type]['hover'] = hoverList
         algorithms['types'].add(algorithm_type)
         
@@ -154,7 +157,7 @@ def add_result(results, new_result):
 
     return results
 
-def write_table(f, results, params, star=False, short=False):
+def write_table(f, results, params, star=False, short=False, disp="s"):
     """
     note: DOES NOT CLOSE f
     """
@@ -203,6 +206,7 @@ def write_table(f, results, params, star=False, short=False):
                         to_bold = True
                     score = round(np.mean(results[result][algorithm]['score']),
                                   2)
+                    runtime = round(np.mean(results[result][algorithm]['time']), 2)
                     if '~' in algorithm:
                         pass
                     elif is_cheat(algorithm):
@@ -244,9 +248,13 @@ def write_table(f, results, params, star=False, short=False):
                             mouseover_text = ''#hack_2(mouseover_text) #HACK
                     mouseover_text = results[result][algorithm]['score']
                     alt = True
+                    in_hover_html = ''
+                    if "s" in disp:
+                        in_hover_html += bold(str(score), to_bold)
+                    if "t" in disp:
+                        in_hover_html += ' ' + str(runtime) + 's'
                     f.write('\t\t<td ' + str(color) + '>' 
-                            + hover(bold(str(score), to_bold), 
-                                    mouseover_text, alt) 
+                            + hover(in_hover_html, mouseover_text, alt) 
                             + '</td>\n')
                 else:
                     f.write('\t\t<td></td>\n')
@@ -301,7 +309,7 @@ def check(entry, algorithm, current_score):
     NOTE: modifies entry in-place
     """
     if not entry.has_key(algorithm):
-        entry[algorithm] = {'score':[]}
+        entry[algorithm] = {'score':[], 'time':[]}
     #else:
         #if entry[algorithm]['score'] != current_score:
             #print "adding new score for:", algorithm
@@ -472,6 +480,8 @@ def main():
     parser.add_argument('-s', action="store_true", default=False,
                         help="flag to display best of each algorithm \
                         by column (False)")
+    parser.add_argument('-d', action="store", default="s",
+                        help="s to show scores; t to show times")
     
     args = parser.parse_args()
     star = args.__getattribute__('*')
@@ -487,7 +497,7 @@ def main():
         print "displaying best of each algorithm by column"
         print "    (each column is the algorithm that did the best overall)"
     
-    return generate_html(args.f, args.o, star, args.s, args.q)
+    return generate_html(args.f, args.o, star, args.s, args.q, args.d)
 
 if __name__ == '__main__':
     results, flat_results = main()
