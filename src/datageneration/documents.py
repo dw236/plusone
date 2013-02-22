@@ -115,8 +115,6 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
     for i in range(num_docs):
         if doc_index % 100 == 0:
             print "reached document", doc_index
-        num_words = util.poisson(words_per_doc)
-        doc = []
         if plsi:
             sig_topics = rsample(range(num_topics), 
                                  util.poisson(alpha, num_topics))
@@ -127,6 +125,8 @@ def generate_docs(num_topics, num_docs, words_per_doc=50, vocab_size=30,
             topic_dist = np.exp(eta) / np.sum(np.exp(eta))
         else:
             topic_dist = dirichlet(alpha)
+        num_words = util.poisson(words_per_doc)
+        doc = []
         topic_dists.append(topic_dist)
         topic_cdf = get_cdf(topic_dist)
         topic_cdfs.append(topic_cdf)
