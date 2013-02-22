@@ -15,6 +15,7 @@ STATISTICS = ['sig_topics', 'sig_words']
 
 def generate_html(dir, overwrite=False, star=False, short=False, quiet=False):
     filenames = os.listdir(dir)
+    # See the docstring for add_result for the structure of the results dict.
     results = {}
     flat_results = []
     files_found = 0
@@ -64,7 +65,11 @@ def add_result(results, new_result):
 
     Given an option tuple o, results[o] has an entry for each setting of
     parameters (alpha and beta, corresponding to sig_topics and sig_words).
-    It also has a special entry with key "algorithms", which is itself a
+    Each entry is a dictionary with two keys: "score" maps to a list of
+    prediction score means, and "hover" is related to hovertext that should
+    appear in an html table (but might be ignored right now).
+
+    results[o] also has a special entry with key "algorithms", which is itself a
     dictionary with four keys: names, types and totals.  names is a list of the
     algorithms that were run (e.g. "knn-15"), and types includes just the basic
     algorithm names (e.g. "knn").  totals is a dictionary mapping n algorithm
