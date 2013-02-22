@@ -65,9 +65,11 @@ def add_result(results, new_result):
 
     Given an option tuple o, results[o] has an entry for each setting of
     parameters (alpha and beta, corresponding to sig_topics and sig_words).
-    Each entry is a dictionary with two keys: "score" maps to a list of
-    prediction score means, and "hover" is related to hovertext that should
-    appear in an html table (but might be ignored right now).
+    Each entry is a dictionary with an entry for each algorithm ("knn-15") and
+    algorithm type ("knn"), and some special entries like "knn*".  The value
+    corresponding to each of these is a dictionary with two keys: "score" maps
+    to a list of prediction score means, and "hover" is related to hovertext
+    that should appear in an html table (but might be ignored right now).
 
     results[o] also has a special entry with key "algorithms", which is itself a
     dictionary with four keys: names, types and totals.  names is a list of the
