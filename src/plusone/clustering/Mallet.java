@@ -10,6 +10,7 @@ import java.util.Scanner;
 import plusone.utils.Indexer;
 import plusone.utils.PlusoneFileWriter;
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.Utils;
@@ -36,6 +37,8 @@ public class Mallet extends ClusteringTest {
 	
 	private SimpleMatrix topicWord;
 	private SimpleMatrix docTopic;
+
+	long trainTimeNano = Long.MAX_VALUE;
 	
 	/* We replace all of the numbers in synthetic documents with strings, so we have to
 	 * remember what their indices were (outputs of Mallet reference
@@ -78,9 +81,11 @@ public class Mallet extends ClusteringTest {
 		String trainingData = "Mallet/train.txt";
 
 		makeMalletInput(trainingData, trainingSet);
-		
+
 		Utils.runCommand(MALLET_CMD + " import-file --keep-sequence "
 				+ "--input " + trainingData + " --output Mallet/train.mallet", false);
+		
+		long startNanoTime = System.nanoTime();
 		
 		switch (algorithm) {
 			case lda:
@@ -101,9 +106,16 @@ public class Mallet extends ClusteringTest {
 						+ " --show-progress false", false);
 				break;
 		}
-		
+
+		trainTimeNano = System.nanoTime() - startNanoTime;
+
 		topicWord = new SimpleMatrix(readTopicWordMatrix("Mallet/word-topics"));
 		writeBeta();
+	}
+
+	@Override
+	public double getTrainTime() {
+		return trainTimeNano / 1.0e9;
 	}
 
 	/**
@@ -134,7 +146,7 @@ public class Mallet extends ClusteringTest {
 	}
 	
 	@Override
-	public double[][] predict(List<PredictionPaper> testDocs) {
+	public double[][] predict(List<PredictionPaper> testDocs, RunInfo testInfo) {
 		this.testSet = testDocs;
 		
 		String testingData = "Mallet/test.txt";
@@ -144,6 +156,8 @@ public class Mallet extends ClusteringTest {
 				+ " --input " + testingData + " --output Mallet/test.mallet"
 				+ " --use-pipe-from Mallet/train.mallet", false);
 		
+		long startNanoTime = System.nanoTime();
+
 		switch (algorithm) {
 			case lda:
 				Utils.runCommand(MALLET_CMD + " infer-topics --input Mallet/test.mallet"
@@ -164,6 +178,8 @@ public class Mallet extends ClusteringTest {
 				+ " --output-doc-probs Mallet/doc-probs", true);*/
 
 		SimpleMatrix probabilities = docTopic.mult(topicWord);
+		testInfo.put("testTime", (System.nanoTime() - startNanoTime) / 1.0e9);
+
 		double[][] result = new double[probabilities.numRows()]
                 [probabilities.numCols()];
 		for (int row=0; row<probabilities.numRows(); row++) {

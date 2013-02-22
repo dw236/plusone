@@ -108,13 +108,13 @@ public class Lda extends ClusteringTest {
 	private void train() {
 		System.out.print("cleaning out lda folder for training...");
 		Utils.runCommand("./clear-folder lda", true);
-		long startNanoTime = System.nanoTime();
 		double[][] betaMatrix = null;
 		if (trainCheat) {
 			System.out.println("We are cheating and using the true beta");
 			betaMatrix = getRealBeta("src/datageneration/output/" + 
 					"documents_model-out");
 			cheat();
+			trainTimeNano = Long.MAX_VALUE;
 		} else if (project) { 
             if (!new File("projector/data").exists()) {
                 new File("projector/data").mkdir();
@@ -124,8 +124,10 @@ public class Lda extends ClusteringTest {
 			Utils.runCommand("rm projector/data/documents", true);
 			Utils.runCommand("rm projector/data/final.beta", true);
 			createProjectorInput("projector/data/documents", trainingSet);
+			long startNanoTime = System.nanoTime();
 			while(!Utils.runCommand("./run-projector " + numTopics + " " 
 					+ trainingSet.size() + " " + terms.size(), true));
+			trainTimeNano = System.nanoTime() - startNanoTime;
 			betaMatrix = readLdaResultFile("projector/data/final.beta", 0 , true);
 			System.out.print("replacing trained beta with projector beta...");
 			Utils.runCommand("cp projector/data/final.beta lda", false);
@@ -141,9 +143,11 @@ public class Lda extends ClusteringTest {
 			String trainingData = "lda/train.dat";
 	
 			createLdaInput(trainingData, trainingSet);
+			long startNanoTime = System.nanoTime();
 			Utils.runCommand("lib/lda-c-dist/lda est 1 " + numTopics
 					+ " lib/lda-c-dist/settings.txt " + trainingData
 					+ " random lda", false);
+			trainTimeNano = System.nanoTime() - startNanoTime;
 			new File ("lda/trained").mkdir();
 			System.out.print("copying trained beta to 'trained' folder...");
 			Utils.runCommand("cp lda/final.beta lda/trained", false);
@@ -153,8 +157,8 @@ public class Lda extends ClusteringTest {
 			betaMatrix = readLdaResultFile("lda/final.beta", 0, true);
 		}
 		
+
 		beta = new SimpleMatrix(betaMatrix);
-		trainTimeNano = System.nanoTime() - startNanoTime;
 	}
 
 	//TODO move this
