@@ -1,10 +1,10 @@
 An early version of topic modeling is seen in Latent Semantic
-Indexing (LSI) which views a document as a combination larger
-set of topics.  Topics are in turn are about certain words
+Indexing (LSI) which views a document as a combination of a larger
+set of topics.  Topics are in turn about certain words
 (represented by positive numbers) or not about certain words
 (represented by negative numbers) \cite{Papadimitriou1997}.  They
-provide an linear algebra algorithm that learned the structure
-of their model.  They also argued that this model provided
+provided a linear algebra algorithm that learned the structure
+of their model.  They also argued that this model provides
 insight into the wide applicability of principal
 components analysis in data analysis. The mathematical tool at the core
 of their work (and PCA) was the singular value
@@ -13,8 +13,8 @@ decomposition.
 Shortly thereafter, Puzicha and Hofmann \cite{Hofmann04} provided a
 probabalistic framework, termed probabilisitc latent
 semantic indexing (PLSI). Topics are modelled as probability
-distributions over words (no negative numbers). Documents were
-then presumed to be generated as a mixture of these
+distributions over words (no negative numbers). Documents are
+then assumed to be generated as a mixture of these
 topics. 
 
 The large number of parameters in the PLSI model motivated
@@ -22,10 +22,10 @@ Blei, Ng and Jordan to develop a generative model for these parameters,
 which resulted in the enormously influential Latent Dirichlet
 Allocation (LDA) topic model \cite{Blei2003a}.
 
-The most closely related work in theory are the aforementioned
+The most closely related works in theory are the aforementioned
 algorithms provided by Arora et.al. \cite{Arora2012} which learn PLSI
 under certain assumptions, and a breakthrough by
-Anandkumar\cite{AnandLDA} which gives a provably convergent algorithm
+Anandkumar~\cite{AnandLDA} which gives a provably convergent algorithm
 for learning LDA with polynomial data requirements.  There is a long
 literature in learning mixture models in statistics and
 more recently in theoretical computer science. See
@@ -33,7 +33,7 @@ more recently in theoretical computer science. See
 Gaussians and a discussion of this field.
 
 There is ample work describing methods for optimizing
-LDA \cite{BleiCACM}.  Again, recent a recent examples are described
+LDA \cite{BleiCACM}.  Recent examples are described
 in \cite{McCallumMALLET}, \cite{BleiCBA}. 
 
 There is also significant work on extending LDA and topic models to
@@ -46,17 +46,16 @@ process can be used to create a hierarchical structure of documents
 and topics. The authors argue that this is a better model for real
 data and we tend to agree though our preliminary experiments do not
 bear this out.  Still, we began by understanding the simpler model
-which continues to have wide application.  
+which continues to have wide applications.
 
 Other examples of variations of the LDA model include adding the
-notion of a manifold to the model \cite{DTM}, adding partially labeled
-data in \cite{Partial}, and sparse LDA models
-\cite{MimnoSparse}. 
+notion of a manifold to the model~\cite{DTM}, adding partially labeled
+data~\cite{Partial}, and sparse LDA models~\cite{MimnoSparse}. 
 
 This paper, in addition to providing some insight into the
 effectiveness of LDA algorithms, seeks to provide an infrastructure to
-evaluate effective topic modelling methods. We should point out that
-the machine learning community is made efforts in this regard.  See
-for example, MLComp \cite{MLComp}. We also mention the Java-based
+evaluate effective topic modeling methods. We should point out that
+the machine learning community has made efforts in this regard.  See
+for example MLComp \cite{MLComp}. We also mention the Java-based
 infrastructure that we used for topic modelling \cite{McCallumMALLET}
 which is part of the larger MALLET machine learning package.
