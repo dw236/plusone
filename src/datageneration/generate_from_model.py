@@ -6,19 +6,27 @@ import numpy as np
 
 import util
 
-def read_matrix(filename):
+def read_matrix(filename, log_form=False):
     """
     filename: name of file containing matrix to be read
+    log_form: whether or not the data is in log form
     """
     try:
-        return np.loadtxt(filename)
+        matrix = np.loadtxt(filename)
+        if log_form:
+            return np.exp(matrix)
+        else:
+            return matrix
     except:
         print "loadtxt failed; reading points manually"
         with open(filename, 'r') as f:
             lines = [line.strip(' \n').split(' ') for line in f.readlines()]
         rows = []
         for line in lines:
-            rows.append([float(num) for num in line])
+            if log_form:
+                rows.append([np.exp(float(num)) for num in line])
+            else:
+                rows.append([float(num) for num in line])
         
         return np.array(rows)
     
@@ -44,7 +52,7 @@ def convert_mallet(filename):
     return np.array(doc_topics)
     
 def generate(topics, words, words_per_doc):
-    num_docs = len(topics)
+    num_docs = 1#len(topics)
     word_cdfs = [util.get_cdf(topic) for topic in words]
     
     docs = []
@@ -128,7 +136,7 @@ def main():
     
     alpha_matrix = get_matrix(args.a)
     print "read shape: [", np.shape(alpha_matrix), " ]"
-    beta_matrix = read_matrix(args.b)
+    beta_matrix = read_matrix(args.b, log_form=True)
     print "read shape: [", np.shape(beta_matrix), " ]"
     
     docs, doc_topics = generate(alpha_matrix, beta_matrix, args.l)

@@ -198,6 +198,7 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                     top_three = [result[0]]
                 if statistic == 'sig_words':
                     top_three = [result[1]]
+                #top_three = []
                 f.write('\t\t<td>'
                          + hover(str(results[result][statistic]), 
                                  top_three) + '</td>\n')
@@ -261,6 +262,7 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                                                     ['score'],
                                                     results[result][algorithm]
                                                     ['time'])]
+                    #mouseover_text = []
                     # For just the scores, use this:
                     # mouseover_text = results[result][algorithm]['score']
                     alt = True
