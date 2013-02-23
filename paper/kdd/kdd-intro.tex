@@ -1,56 +1,51 @@
 
 The Latent Dirichlet Allocation topic model has been tremendously
-influential in the development of methods for analyzing documents, and
-other types of data.  Numerous algorithms for learning such models as
-well as variations of this model have been proposed;
-see \cite{BleiCACM} for a recent survey.  The bulk of these methods
-are based on inference techniques; these methods proceed by using
-learning the parameters using methods which include Gibbs sampling,
-EM, variational methods, and modifying the model for easier
-computation.  The evaluation of the methods have proceeded typically
-along two lines.  One is to train on a set of documents and evaluate
-how well the resulting model predicts a test set, typically using
-perplexity as a measure.  Another is to use the model as a set of
-features for some classification task, say for example document
-classification, and apply some learning method, say for example, using
-a support vector machine.
+influential in the development of methods for analyzing documents and
+other types of data.  Numerous algorithms for learning LDA, as
+well as variations LDA, have been proposed; see \cite{BleiCACM} for
+a recent survey.  The bulk of these methods
+are based on inference techniques; they proceed by
+learning the parameters using methods such as Gibbs sampling,
+expectation-maximization, variational methods, and model modifications for faster
+computation.  Evaluating these methods have typically proceeded
+along one of two lines. One trains on a set of documents and evaluates
+how well the resulting model predicts a test set, typically measured by
+perplexity [?].  Another uses the model as a set of features for some
+classification task (e.g. document classification) followed by the application of
+some learning method (e.g. a support vector machine).
 
-In this paper, we suggest modifying both the inference approach to
-learning topic models and suggest a different evaluation method.  The
-first yields an improved algorithm for learning LDA, and the second
-allows for better understanding of topic learning efficacy. 
+In this paper, we suggest an alternative to the inference approach in
+learning topic models as well as introduce a different evaluation method. The
+first yields an improved algorithm for learning LDA and the second
+allows for better understanding of topic learning efficacy.
 
-In terms of inference algorithms, we take the view that the model
-parameters are geometric objects.  That is, topic centers are simply
-points in the word space when the data consist of documents.  This
-view is quite a traditional view of data, e.g., that it is generated
-from points in space under some noise model.  This view of data has
-long been associated with algorithms such as nearest neigbors or
-$k$-means for classification or summarization.  Unfortunately, as we
-show, $k$-means and nearest neighbors algorithms are inferior to
-existing LDA inference algorithms for LDA generated data.  We can,
-however, combine $k$-means, along with dimension reduction, and a
-scaling step to produce an effective algorithm for this type of data.
-For real world data, our methods remain as effective as LDA algorithms
-and more effective than $k$-means, but fall short of nearest neighbor
-techniques (as do all topic modelling approaches.) We call refer to
+In terms of inference algorithms, we view model parameters as geometric objects.
+For textual data, topic centers are simply points in the word space. This view
+is very traditional in that data is seen as generated from points in space under
+some noise model. This interpretation has long been associated with algorithms
+such as nearest neigbors for classification and $k$-means for clustering. As we show
+though, nearest neighbors and $k$-means are inferior to
+present LDA inference algorithms for LDA generated data.  However, we show that
+a combination of $k$-means with dimension reduction and a
+scaling step produces an effective algorithm for this type of data.
+For real world data, our methods remain just as effective as LDA inference algorithms
+and more effective than $k$-means, but falls short of nearest neighbor
+techniques (as do all topic modelling approaches.) We refer to
 our algorithm as the Projector algorithm.  We note here that recent
 work in \cite{AnandLDA} use linear algebraic methods, which can be
 viewed to some extent as geometric algorithms, to give an algorithm
 that provably learns the LDA parameters given a polynomial
 number of examples and polynomial time.
 
-The context in which we do our evaluation varies from the standard.
-We measure performance on the task of predicting a set of dropped out
-words in a document.  Topic models in general and the Latent Direchlet
-Allocation topic model, in particular, generates documents word by
-word.  Thus, a model's effectiveness for predicting a word from the
-document is both fair and is easy to understand as a raw score and
-allows for the comparison to any prediction method whether it is
-specifies a distribution or not.  We also note that this task is
-interesting in itself; if a document represents a set of products
-bought by a user, predicting a new product is essentially the
-recommendation problem.
+We measure our performance on the task of predicting a set of dropped out
+words in a document.  Topic models, in particular the LDA topic model,
+generate documents on a word by word basis.  Thus, a model's effectiveness
+for predicting a word in a document is both natural and easily interpreted. It also
+allows for the comparison of any prediction method, whether it explicitly learns
+the topic model or not.  We also note that this task has been well studied
+in the field of recommender systems, where documents are people and words are products.
+
+
 
 %% Finally, we note that some datasets are more difficult than others for
 %% all the methods.  Rather than characterize this difficulty using the
