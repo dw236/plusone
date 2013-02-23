@@ -80,11 +80,9 @@ args=\
  -Dplusone.enableTest.ldaTrained=$ldaTrain
  -Dplusone.enableTest.ldaCheat=$ldaTrain
  -Dplusone.enableTest.malletLda=true
- -Dplusone.enableTest.malletHlda=false
  -Dplusone.enableTest.malletHldaPred=false
  -Dplusone.enableTest.projector=true
- -Dplusone.enableTest.kmeans=false
- -Dplusone.enableTest.hlda=false
+ -Dplusone.enableTest.kmeans=true
  -Dplusone.enableTest.ctm=false
  -Dplusone.enableTest.gibbsLda=false
  -Dplusone.enableTest.knnc=false
@@ -100,7 +98,8 @@ args=\
  -Dplusone.outPath=$out_dir
  -Dplusone.dumpMeta=false
  -Dplusone.randomSeed=9
- -Dplusone.useNewJsonFormat=false"
+ -Dplusone.useNewJsonFormat=false
+ "
 
 # options to sample cpu
 # -agentlib:hprof=cpu=samples
