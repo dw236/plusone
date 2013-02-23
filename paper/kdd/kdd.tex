@@ -58,27 +58,20 @@ We begin with $ n $ documents, $ m $ words, and $ k $ latent topics. Each
 document is a mixture of the latent topics $ \theta $, where the mixture is
 drawn from a Dirichlet distribution with parameter $\vec{\alpha}$. 
 
+\[
+p(\vec{\theta}|\vec{\alpha})=\frac{\Gamma(\sum_{i=1}^k\alpha_i)}{\Pi_{i=1}^k\Gamma(\alpha_i)}\theta_i^{\alpha_1-1}\cdots\theta_k^{\alpha_k-1}
+\] 
 
-
-
-
-This results in
-an $m\times k$ document-topic matrix $ W $, where row $ i $ gives the parameters of the multinomial
-distribution over topics for document $ i $. Similarly, we have a word-topic matrix $A$,
+This results in an $m\times k$ document-topic matrix $ W $, where row $ i $ gives the parameters of the multinomial
+distribution over topics for document $ i $. Similarly, we have a $$ word-topic matrix $A$,
 where the $j$-th column gives the parameters of the multinomial distribution
-over words $m$ words for topic $j$. The columns are also drawn from a Dirichlet distribution with parameter
+over words $m$ words for topic $j$. The columns are drawn from a Dirichlet distribution with parameter
 $ \vec{\beta} $.
 
-For a document $w$, we first choose $\vec{\theta}$, its distribution over
-topics, which can take values in the $(k-1)$-simplex, and has the
-following Dirichlet distribution
-\[
-p(\theta|\vec{\alpha})=\frac{\Gamma(\sum_{i=1}^k\alpha_i)}{\Pi_{i=1}^k\Gamma(\alpha_i)}\theta_i^{\alpha_1-1}\cdots\theta_k^{\alpha_k-1}
-\] 
-where $\vec{\alpha}$ is parameter of the model. The number of words in
-document $w$ is sampled from $Poisson(l)$. For each word $w_i$, a
-topic $z_i\sim Multinomial(\vec{\theta})$ is chosen, then the actual
-word $w_i\sim Multinomial(A_{z_i})$ is generated. Equivalently, in
+For a document $w$, we first choose $\vec{\theta}$, which can take values in the $(k-1)$-simplex.
+The number of words in document $w$ is sampled from $\operatorname{Poisson}(l)$. For each word $w_i$, a
+topic $z_i\sim \operatorname{Multinomial}(\vec{\theta})$ is chosen, followed by the actual
+word $w_i\sim \operatorname{Multinomial}(A_{z_i})$. Equivalently, in
 matrix form, there are the $m\times k$ word-topic matrix $A$, and
 $k\times n$ topic-document matrix $W$ whose columns are drawn i.i.d
 from $Dirichlet(\vec{\alpha})$. The product $M=AW$ is the $m\times n$
