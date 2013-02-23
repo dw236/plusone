@@ -7,10 +7,10 @@
 \setlength{\parskip}{5mm}
 %\setlength{\topsep}{-1cm}
 %\setlength{\itemsep}{-1cm}
-\setlength{\oddsidemargin}{-.3in}
-\setlength{\evensidemargin}{-.3in}
-\setlength{\textwidth}{6.5in}
-\setlength{\textheight}{8in}
+%\setlength{\oddsidemargin}{-.3in}
+%\setlength{\evensidemargin}{-.3in}
+%\setlength{\textwidth}{6.5in}
+%\setlength{\textheight}{8in}
 
 \setlength{\parskip}{0pt}
 \setlength{\parsep}{0pt}
@@ -49,20 +49,27 @@
 
 %\input{result}
 \section{LDA model} \label{sec:ldamodel}
-LDA was introduced in~\cite{Blei2003a} as a generative process. As a
-model it is widely applied in various domains such as information
-retrieval, collaborative filtering, vision, and bioinformatics. In
+LDA was introduced in~\cite{Blei2003a} as a generative process. In
 this work we will adopt the language of text collections, and denote
 entities as 'word', 'document', and 'corpus', since they give
 intuition in discussing topic models.
 
-The basic idea is that there exist $k$ underlying latent topics. Each
-document is a mixture of the latent topics, where the topic mixture is
-drawn from a dirichlet distribution. More precisely, there are $n$
-documents, $m$ words, and $k$ topics. The model has a $m\times k$
-word-topic matrix $A$, where the $i$-th column $A_i$ specifies a
-multinomial distribution on the $m$ words for topic $i$. For a
-document $w$, we first choose $\vec{\theta}$, its distribution over
+We begin with $ n $ documents, $ m $ words, and $ k $ latent topics. Each
+document is a mixture of the latent topics $ \theta $, where the mixture is
+drawn from a Dirichlet distribution with parameter $\vec{\alpha}$. 
+
+
+
+
+
+This results in
+an $m\times k$ document-topic matrix $ W $, where row $ i $ gives the parameters of the multinomial
+distribution over topics for document $ i $. Similarly, we have a word-topic matrix $A$,
+where the $j$-th column gives the parameters of the multinomial distribution
+over words $m$ words for topic $j$. The columns are also drawn from a Dirichlet distribution with parameter
+$ \vec{\beta} $.
+
+For a document $w$, we first choose $\vec{\theta}$, its distribution over
 topics, which can take values in the $(k-1)$-simplex, and has the
 following Dirichlet distribution
 \[
