@@ -70,9 +70,11 @@ def plot_deep_stats(stats, k=20, index=0, clear=True):
     """
     if clear:
         clf()
-    algs = ['lda', 'ldaT', 'ldaC', 'projector', 'Baseline', 'LSI']
-    markers = ['.', 'x', 'd', 'o', '-', '*']
-    colors = 'bgrymk'
+    #algs = ['lda', 'ldaT', 'ldaC', 'projector', 'Baseline', 'LSI']
+    algs = ['lda', 'ldaC', 'projector', 'Baseline', 'LSI', 'kmeans', 
+            'malletlda']
+    markers = ['.', 'x', 'd', 'o', '-', '*', '^']
+    colors = 'bgrymkc'
     for alg in algs:
         if alg != 'Baseline':
            alg_name = alg + '-' + str(k)
