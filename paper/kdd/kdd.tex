@@ -23,7 +23,7 @@
 \usepackage{graphicx}
 
 \usepackage{subfigure}
-\title{Alternatives for engineering and evaluating algorithms for LDA}
+\title{A Geometric Algorithm for LDA that's Predictive, Not Perplexing}
 \author{Di Wang,  Victor Huang, James Cook, Andrew Gambardella,  Chenyu Zhao, Satish Rao
 \thanks{UC Berkeley}
 }
@@ -38,7 +38,7 @@
 
 \begin{abstract}
 
-\input{kdd-abstract.tex}
+\input{abstract.tex}
 
 \end{abstract}
 
@@ -126,7 +126,8 @@ to characterize our datasets.
 
 We also evaluate on a topic distribution which obeys a power 
 law.  Instead of using the same $\alpha$ parameter for all
-the topics, we vary it so that the expected usage.
+the topics, we vary it so that there are topics of varying
+popularity.
 
 We also evaluate the methods on some standard real world datasets.  We
 used the Classic-3 datasets (Cran,Med,Cisi) \cite{Classic3}, a corpus
@@ -135,7 +136,7 @@ infrequent words, and a bag of words dataset (NIPS) from UC
 Irvine\cite{KosNIPS}, MovieLens \cite{MovieLens}.
 
 \section{Experiments}
-\subsection{Prediction task}
+\subsection{Prediction task: the plusone framework.}
 
 For a corpus of documents, we randomly divide the documents into the
 training set and the testing set, where each document is put into the
@@ -147,7 +148,7 @@ testing documents, and for each document predicts $s$ terms not in the
 observed part of the testing document. We use the precison of the $s$
 predicted terms as the score of an algorithm on a specific testing
 document. The score of an algorithm on the corpus is its average score
-over all testing documents. In our experiments, we use $p_t=0.9,
+over all testing documents. In our experiments, we use $p_t=0.5,
 H=30\%,s=3$ as our parameters.
 
 This prediction task is widely applicable in practice, especially in
@@ -173,7 +174,7 @@ distributions, and get same qualitative results between algorithms.
 \section{Algorithms}
 \label{sec:algs}
 \input{Alg}
-\section{Experiment Results}
+\section{Experimental Results}
 \label{sec:results}
 \input{result}
 

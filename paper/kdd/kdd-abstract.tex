@@ -2,20 +2,20 @@ In this paper, we empirically study standard algorithms for topic
 modelling using Latent Dirichlet Allocation. We also develop geometry
 based algorithms for learning the Latent Dirichlet Allocation (LDA)
 which are as effective as inference based methods while being more
-efficient. In particular, the most effective algorithms use a novel
+efficient. In particular, our most effective algorithm uses a novel
 combination of dimension reduction, projection, $k$-means, and a
 scaling procedure.
 
 We argue that the evaluation of topic modelling should include a
 prediction task that is closely aligned with the model. LDA, in
-particular, generates the words in a document.  Thus, predicting
+particular, generates the words in a document; thus, predicting
 missing words is appropriate for the evaluation of the LDA model, both
 when applied to a corpus and for genarated data.  Moreover, this task
 is useful for recommendation systems, keyword suggestion, tag
-prediction, etc.  Finally, for practitioners this evaluation task may
-be more indicative of the usefulness of various methods than internal
-measures such as perplexity or than indirect methods where other
-prediction algorithms are applied to learned topic models.
+prediction, etc.  For practitioners, performance on this task may be
+more useful than internal measures such as perplexity or indirect
+methods where classification methods are applied on  learned topic
+models.
 
 Finally, to empirically study algorithms, one needs to understand
 properties of datasets.  We thus provide an analysis that predicts

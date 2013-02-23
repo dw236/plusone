@@ -1,0 +1,39 @@
+The Latent Dirichlet Allocation (LDA) topic model has received
+enormous attention for extracting insight from documents and a wide
+variety of other data sources.  A reasonable precondition for the
+utility of an LDA-based algorithm is that it perform well with data
+generated according to the LDA model.
+
+We evaluate the model on a range of algorithms, both LDA-based and
+not. In addition, we also construct and evaluate a new algorithm,
+Projector, based on a geometric view, rather than an inference-based
+view of finding the optimal model. The algorithm is simple and much
+faster compared to the best inference-based methods available (e.g.,
+the optimized Gibbs sampling based topic learning method in MALLET,
+Minmo et al.).
+
+Our primary performance benchmark is  the accuracy of
+predicting a new word in a document. This task is both natural for the
+LDA model and has widespread, practical applications. This notion of
+performance differs from statistical-based measures such as perplexity
+in that one can evaluate against non-parametric algorithms and it
+has a simple, intuitive interpretation.
+
+The performance of Projector on generated data is better than the
+best inference-based methods in both predicting dropout words and
+learning the underlying topic models. Furthermore, the runtime
+of Projector is better than inference based algorithms.
+
+Additionally, we identify features of the generated data to help
+characterize the performance of Projector and each other algorithm
+that we consider; in particular, the typical number of significant
+topics in a document, and the typical number of significant words in a
+topic. We give a simple analysis using these parameters to determine
+when performance should drop off and verify our characterization of
+predictability.
+
+Finally, we test on various real-world document corpora on our word
+prediction task. In this context, our algorithm is competitive with
+the other LDA based algorithms while falling short of nearest-neighbor
+based methods.
+

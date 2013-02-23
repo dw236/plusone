@@ -1,11 +1,9 @@
 We generated datasets from the LDA model for a range of parameters,
 and tested the algorithms discussed in previous section on the
 prediction task. For the LDA algorithm and our Projector algorithm, we
-also have results for the recovery task. We experimented with $k$ from
-$3$ to $30$, and in each case, a set of $\alpha$ and $\beta$ to cover
-a wide range of $sig\_word$ and $sig\_topic$. See
-figure~\ref{fig:predictResult} for the prediction results of the
-algorithms on a representative set of datasets.
+also have results for the recovery task.  
+
+
 \begin{figure}
      \begin{center}
 
@@ -32,13 +30,14 @@ algorithms on a representative set of datasets.
 \end{figure}
 
 In table~\ref{tab:overall}, we give results for the various algorithms
-on the uniform $\alpha$ and $\beta$ datasets.  Here, we see that projector
-is competitive with all other algorithms.  In table~\ref{tab:cosine}, we 
-give cosine similarity measures for these datasets for mallet lda, k-means,
-and projector. 
+on the uniform $\alpha$ and $\beta$ datasets.  Here, we see that
+Projector is the best of all non-cheating algorithms.  In
+table~\ref{tab:cosine}, we give cosine similarity measures for these
+datasets for mallet lda, k-means, and projector.  Typically, we saw
+that topic cosine similarity correlates with prediction performance.
 
 \begin{table*}
-{\tiny
+{\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline 
 sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &lda-15 &ldaC &ldaT &malletlda-15 &projector-15 \\
@@ -127,7 +126,7 @@ sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &lda-15 &ldaC &ldaT
 
 \begin{table*}
 
-{\tiny
+{\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
 sig\_topics &sig\_words &lda-15 &malletlda-15 &projector-15 &~kmeans-cosine &~lda-cosine &~mallet-cosine &~projector-cosine \\
@@ -203,6 +202,13 @@ to model topics uses maximum weight matching.}
 \label{tab:cosine}
 \end{table*}
 
+
+In figure~\ref{fig:predictResult}, we examine results for datasets
+that are more difficult for the various algorithms (see
+section~\ref{sec:analysis}).  In particular, the product of {\em
+sig\_words} and {\em sig\_topics} ranges from $\frac{1}{2}$ to 2
+times the vocabulary size.
+
 For $\alpha$ chosen so that the topic distribution obeys a power
 law, we present results in table~\ref{tab:pareto}. Here, we see that
 projector again performs robustly well.  We note that 
@@ -210,7 +216,7 @@ the Mallet implementation optimizes over varying values of
 $\alpha$. 
 
 \begin{table*}
-{\tiny
+{\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline 
 sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-15 &~lda-cosine &~mallet-cosine &~projector-cosine \\
@@ -324,8 +330,8 @@ Finally, table~\ref{tab:real} contains results for the word prediction
 task on the standard real world datasets we discussed earlier.
 
 \begin{table*}[ht]
-{\tiny
-
+{\small
+\begin{center}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
  &Baseline &LSI-15 &knn-15 &lda-15 &malletlda-15 &projector-15 \\
@@ -344,20 +350,22 @@ Nips &0.66 &0.69 &0.77 &0.75 &0.75 &0.68 \\
  \hline 
 
 \end{tabular}
-
+\end{center}
 }
 \caption{Experiment results on real datasets. We pick the result of the best among a few parameters for each algorithm. We note that increasing the number of topics to 30 does not change the results. }
 \label{tab:real}
 \end{table*}
 
 
-Also see table~\ref{tab:real} for prediction results on real datasets.  There we see that
-LDA is no longer dominated by LSI and Projector.  Still,  nearest neighbor's performance
-dominates.  In the appendix, in table~\ref{tab:aptopics} we show the most popular
-words in a sampling of topic vectors recovered by Projector in the AP dataset.
+There we see that LDA is no longer dominated by LSI and Projector.
+Still, nearest neighbor's performance dominates. We note that nearest
+neighbor prediction requires access to all the original data where topic
+model based algorithms substantially compress the original data. 
 
-Typically, we saw topic matching to correlate with prediction performance.
-See table~\ref{tab:cosine} to see this result. 
+In table~\ref{tab:aptopics} we show the most popular words in a
+sampling of topic vectors recovered by Projector in the AP dataset.
+
+
 
 
 \subsection{Runtime}
@@ -383,6 +391,6 @@ Figure~\ref{fig:time-proj-mallet}, compares the runtimes of Projector with Malle
 LDA and suggests that Mallet's runtime increases linearly with respect
 to average document length and the number of documents.  Projector appears sublinear
 in each, which suggests that the our timings are influenced by fixed
-startup costs.  Not showen, is Mallet's better scaling with respect
+startup costs.  Not shown, is Mallet's better scaling with respect
 to vocabulary size as Projector uses dense matrices.  Projector's dependence
 remains linear in this case. 

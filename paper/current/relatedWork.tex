@@ -1,14 +1,37 @@
+An early version of topic models could be seen in latent semantic
+indexing which views a document as being about a subset of a larger
+set of topics.  Topics are in turn are about (positive numbers) or not
+about (negative numbers) certain words \cite{Papadimitriou1997}.  They
+used this view to provide an algorithm based on linear algebra that
+learned the structure of their model.  They also argued that this
+model provided some insight into the wide applicability of principal
+components analysis in data analysis. The algorithmic tool at the core
+of their work (and principal components) was the singular value
+decomposition.
+
+Shortly thereafter, a probabilistic framework was provided by Puzicha
+and Hofmann \cite{Hofmann04}.  They termed their method probabilisitc latent
+semantic indexing (pLSI), and modelled topics as probability
+distributions over words (no negative numbers in this description).
+Documents were then presumed to be generated as a mixture of these
+topics.  The large number of parameters in the PLSI model motivated
+Blei, Ng and Jordan to provide a generative model for these parameters
+as well; they provided the enormously influential Latent Dirichlet
+Allocation(LDA) topic model \cite{Blei2003a}.
+
 The most closely related work in theory are the aforementioned
-algorithms provided by Arora et.al. \cite{Arora2012} which learn pLSI under
-certain assumptions, and the breakthrough by Anandkumar\cite{AnandLDA} for LDA.
-There is a long literature in learning mixtures of distributions in
-statistics and more recently in theoretical computer science. See
+algorithms provided by Arora et.al. \cite{Arora2012} which learn pLSI
+under certain assumptions, and a breakthrough by
+Anandkumar\cite{AnandLDA} which gives a provably converging algorithm
+for learning LDA with polynomial data requirements.  There is a long
+literature in learning mixtures of distributions in statistics and
+more recently in theoretical computer science. See
 \cite{MoitraValiant} for a recent breakthrough on learning mixtures of
 Gaussians and a discussion of this field.
 
 There is ample work describing methods for optimizing
-LDA \cite{BleiCACM}.  Again, recent examples is described
-in \cite{BleiCBA}.
+LDA \cite{BleiCACM}.  Again, recent a recent examples are described
+in \cite{MalletGibbs}, \cite{BleiCBA}. 
 
 There is also significant work on extending LDA and topic models to
 better model data as well as to augment them with other types of
@@ -18,15 +41,19 @@ This model is based on the chinese restuarant process where new
 customers arrive and chose to join a table or create a new one.  This
 process can be used to create a hierarchical structure of documents
 and topics. The authors argue that this is a better model for real
-data and we tend to agree.  Still, we began by understanding the
-simpler model which continues to have wide application.  While we have
-included the hLDA generator is included in our framework, the
-implementations distributed by the authors are not yet stable within
-our system.
+data and we tend to agree though our preliminary experiments do not
+bear this out.  Still, we began by understanding the simpler model
+which continues to have wide application.  
 
-To some extent, we seek to provide an infrastructure to evaluate topic
-modelling. We should point out that the machine learning community has
-been active at producing infrastructure for evaluation.  See for
-example, MLComp \cite{MLComp}. A particularly related java based
-infrastructure for topic modelling is \cite{McCallumMALLET}.  We plan to test their
-implementations in the final version of this paper.
+Other examples of variations of the LDA model include adding the
+notion of a manifold to the model \cite{DTM}, adding partially labeled
+data in \cite{}, and sparse LDA models
+\cite{MimnoSparse}. 
+
+This paper, in addition to providing some insight into the
+effectiveness of LDA algorithms, seeks to provide an infrastructure to
+evaluate effective topic modelling methods. We should point out that
+the machine learning community is made efforts in this regard.  See
+for example, MLComp \cite{MLComp}. We also highlight the java based
+infrastructure that we used for topic modelling \cite{McCallumMALLET}
+which is part of a larger MALLET java package for machine learning.
