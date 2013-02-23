@@ -304,6 +304,16 @@ public class Main {
 			JSONObject fakeExperimentMallet = new JSONObject();
 			fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
 			allTests.put("~mallet-cosine", fakeExperimentMallet);
+			
+			String[] cosineSimilaritiesKmeans = in.nextLine().split(" ");
+			double cosineSimilarityMeanKmeans = 0;
+			for (String sim : cosineSimilaritiesKmeans) {
+				cosineSimilarityMeanKmeans += Double.parseDouble(sim);
+			}
+			cosineSimilarityMeanKmeans /= cosineSimilaritiesKmeans.length;
+			JSONObject fakeExperimentKmeans = new JSONObject();
+			fakeExperimentKmeans.put("Predicted_Mean", cosineSimilarityMeanKmeans);
+			allTests.put("~kmeans-cosine", fakeExperimentKmeans);
 		}
 	}
 
@@ -626,12 +636,14 @@ public class Main {
 			}
 		}
 		//lda
+		double learnedAlpha = Double.NaN;
 		if (testIsEnabled("lda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				Lda lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
+				learnedAlpha = lda.getLearnedAlpha();
 				runClusteringMethod(lda, ks, size, true);
 				handleHeldOutInferenceTests(
 					lda.getName(), lda.getWordTopicMatrix(), ks, size,
@@ -683,7 +695,7 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				projector = new Projector("projector", trainingSet, wordIndexer, 
 								terms, dimensions[dk], trainingIndices, 
-								testIndices);
+								testIndices, learnedAlpha, !generator.equals(""));
 				runClusteringMethod(projector, ks, size, true);
 			}
 		}

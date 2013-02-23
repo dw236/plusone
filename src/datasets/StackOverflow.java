@@ -32,7 +32,7 @@ public class StackOverflow {
     		out = new PrintWriter( new BufferedWriter(new FileWriter( filename + ".json" ) ) );
     	}
    
-    	//ArrayList<String> stopWords = makeStopWords();
+    	ArrayList<String> stopWords = makeStopWords();
     	BufferedReader in = new BufferedReader(new FileReader(filename));
 		JSONObject inJson = new JSONObject(in.readLine());
 		JSONArray questions = inJson.getJSONArray("questions");
@@ -44,6 +44,18 @@ public class StackOverflow {
 			String inDoc = inUser.getString("body");
 			ArrayList<String> questionText = new ArrayList<String>(
 					Arrays.asList(inDoc.split(" ")));
+			
+			ArrayList<String> stemmedQuestionText = new ArrayList<String>();
+			for (String s : questionText) {
+				if (stopWords.contains(s)) {
+					continue;
+				}
+				Stemmer stemmer = new Stemmer();
+		    	stemmer.add(s.toCharArray(), s.length());
+		    	stemmer.stem();
+		    	stemmedQuestionText.add(stemmer.toString().toLowerCase());
+			}
+			
 			if (questionText.size() == 1 && questionText.get(0).equals("")) {
 				skip = true;
 			}
@@ -58,13 +70,17 @@ public class StackOverflow {
 				}
 				if (tags != null) {
 					for (int j = 0; j < tags.length(); j++) {
-						tagText.add(tags.getString(j));
+						String s = tags.getString(j);
+						Stemmer stemmer = new Stemmer();
+				    	stemmer.add(s.toCharArray(), s.length());
+				    	stemmer.stem();
+						tagText.add(stemmer.toString().toLowerCase());
 					}
 				}
 			}
 			if (!skip) {
 				outUser.put("id", id++);
-				outUser.put("items", questionText);
+				outUser.put("items", stemmedQuestionText);
 				outUser.put("tags", tagText);
 				out.println(outUser);
 			} else {
@@ -86,8 +102,20 @@ public class StackOverflow {
 					if (answerText.size() == 1 && answerText.get(0).equals("")) {
 						continue;
 					}
+					
+					ArrayList<String> stemmedAnswerText = new ArrayList<String>();
+					for (String s : answerText) {
+						if (stopWords.contains(s)) {
+							continue;
+						}
+						Stemmer stemmer = new Stemmer();
+				    	stemmer.add(s.toCharArray(), s.length());
+				    	stemmer.stem();
+				    	stemmedAnswerText.add(stemmer.toString().toLowerCase());
+					}
+					
 					outUser.put("id", id++);
-					outUser.put("items", answerText);
+					outUser.put("items", stemmedAnswerText);
 					out.println(outUser);
 				}
 			}

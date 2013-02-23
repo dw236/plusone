@@ -203,7 +203,7 @@ def get_all_scores(k_s, metric='diff'):
     x_s, tc_scores, pc_scores, tp_scores = [], [], [], []
     points = []
     for k in k_s:
-        filename = "data/old_k" + str(k) + ".n1000.l75.m1000"
+        filename = "data/k" + str(k) + ".n1000.l75.m1000"
         results = generate_html(filename, quiet=True)[0]
         x, tc, pc, tp, p = get_scores(results, metric)
         x_s += x

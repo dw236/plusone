@@ -22,6 +22,11 @@ b=1
 #run matlab program
 matlab -nodesktop -nosplash -nojvm <<-EOF
 cd projector;
+ticID = tic;
 G = predictTopics('data/documents', $n, $m, $k, 0.9, 1);
+elapsedSeconds = toc(ticID);
+elapsedTimeFile = fopen('data/projector_elapsed_seconds', 'w');
+fprintf(elapsedTimeFile, '%f\n', elapsedSeconds);
+fclose(elapsedTimeFile);
 exit
 EOF

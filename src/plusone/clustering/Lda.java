@@ -39,6 +39,7 @@ public class Lda extends ClusteringTest {
 	private List<PredictionPaper> testDocs;
 	private String[] hoverText;
 	private long trainTimeNano = Long.MAX_VALUE;
+	private double learnedAlpha;
 	
 	/** 
 	 * Changes flags in Lda based on which algorithm is being run 
@@ -536,7 +537,17 @@ public class Lda extends ClusteringTest {
 		alphaLine = lines.nextLine();
 		alphaLine = lines.nextLine();
 		String[] splitLine = alphaLine.split(" ");
-		return Double.parseDouble(splitLine[1]);
+		learnedAlpha = Double.parseDouble(splitLine[1]);
+		return learnedAlpha;
+	}
+	
+	/**
+	 * Returns the learned alpha parameter
+	 * 
+	 * @return The value of alpha as learned by LDA
+	 */
+	public double getLearnedAlpha() {
+		return learnedAlpha;
 	}
 	
 	/**

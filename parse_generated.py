@@ -110,7 +110,10 @@ def add_result(results, new_result):
     for algorithm in sorted(new_result[2]):
         #extract score and hover text
         score = new_result[2][algorithm]['Predicted_Mean']
-        totalTime = float(new_result[2][algorithm]['trainAndTestTime_Mean'])
+        if new_result[2][algorithm].has_key('trainAndTestTime_Mean'):
+            totalTime = float(new_result[2][algorithm]['trainAndTestTime_Mean'])
+        else:
+            totalTime = "N/A"
         if new_result[2][algorithm].has_key('Hover'):    
             hoverList = new_result[2][algorithm]['Hover']
         else:
@@ -206,7 +209,14 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                         to_bold = True
                     score = round(np.mean(results[result][algorithm]['score']),
                                   2)
-                    runtime = round(np.mean(results[result][algorithm]['time']), 2)
+                    times = results[result][algorithm]['time']
+                    if len(times) == 0:
+                        runtime = "N/A"
+                    else:
+                        try:
+                            runtime = round(np.mean(times), 2)
+                        except:
+                            runtime = "N/A"
                     if '~' in algorithm:
                         pass
                     elif is_cheat(algorithm):
@@ -246,11 +256,11 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                                    or mouseover_text == [""])
                         if alt:
                             mouseover_text = ''#hack_2(mouseover_text) #HACK
-                    mouseover_text = \
-                        [ str(st[0]) + " " + str(st[1]) + "s"
-                          for st
-                          in zip(results[result][algorithm]['score'],
-                                 results[result][algorithm]['time'])]
+                    mouseover_text = [str(st[0]) + " " + str(st[1]) + "s"
+                                      for st in zip(results[result][algorithm]
+                                                    ['score'],
+                                                    results[result][algorithm]
+                                                    ['time'])]
                     # For just the scores, use this:
                     # mouseover_text = results[result][algorithm]['score']
                     alt = True

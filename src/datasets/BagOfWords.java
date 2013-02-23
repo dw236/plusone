@@ -58,7 +58,13 @@ public class BagOfWords {
 			}
 			for (int i = 0; i < count; i++) {
 				if (!stopWords.contains(wordMap.get(wordId))) {
-					document.add(wordMap.get(wordId) + "");
+					String word = wordMap.get(wordId);
+					if (word != null) {
+						Stemmer stemmer = new Stemmer();
+				    	stemmer.add(word.toCharArray(), word.length());
+				    	stemmer.stem();
+						document.add(stemmer.toString().toLowerCase() + "");
+					}
 				}
 			}
 		}

@@ -7,7 +7,8 @@ def main(filename, save):
     """computes cosine similarities for a given experiment
     
     Computes the cosine similarities between matched topics for projector,
-    LDA, and Mallet to the true topics the model uses to generate the data. 
+    LDA, Mallet, and kmeans to the true topics the model uses to generate the
+    data. 
     Writes the similarities to file.
     Also (optionally) saves the learned betas for future use.
     
@@ -19,6 +20,7 @@ def main(filename, save):
     """
     projector_beta = 'projector/data/final.beta'
     lda_beta = 'lda/trained/final.beta'
+    kmeans_beta = 'kmeans/centers'
     real_beta = 'src/datageneration/output/results.pickle'
     mallet_beta = 'Mallet/beta'
     save_dir = 'data'
@@ -39,6 +41,11 @@ def main(filename, save):
                                plot=False, save=save, save_name='mallet', 
                                save_dir=save_dir)[-2]
     mallet_norms = [pair[1] for pair in mallet_labels]
+    print "kmeans"
+    kmeans_labels = match_beta(kmeans_beta, real_beta, metric='cosine',
+                               plot=False, save=save, save_name='kmeans',
+                               save_dir=save_dir)[-2]
+    kmeans_norms = [pair[1] for pair in kmeans_labels]
     print "done"
     
     print "writing to file...",
@@ -52,6 +59,10 @@ def main(filename, save):
         f.write('\n')
         
         for norm in mallet_norms:
+            f.write(str(norm) + ' ')
+        f.write('\n')
+        
+        for norm in kmeans_norms:
             f.write(str(norm) + ' ')
         f.write('\n')
     print "done"

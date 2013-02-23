@@ -2,12 +2,13 @@ package datasets;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Scanner;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +44,12 @@ public class AP {
 				//if (docTf.get(s)*Math.log(numDocs/idf.get(s)) > tfIdfTolerance) {
 				if (idf.get(s) < idf.keySet().size()*0.8 && idf.get(s) > 4
 						&& !stopWords.contains(s)) {
-					savedWordsInDoc.add(s);
+					Stemmer stemmer = new Stemmer();
+			    	stemmer.add(s.toCharArray(), s.length());
+			    	stemmer.stem();
+					for (int rep = 0; rep < docTf.get(s); rep++) {
+						savedWordsInDoc.add(stemmer.toString().toLowerCase());
+					}
 					keptWords.add(s);
 				}
 			}
