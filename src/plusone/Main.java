@@ -626,7 +626,7 @@ public class Main {
 			}
 		}
 		//lda
-		double learnedAlpha;
+		double learnedAlpha = Double.NaN;
 		if (testIsEnabled("lda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"10,30,50"));

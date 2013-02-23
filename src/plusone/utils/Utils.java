@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -160,5 +161,12 @@ public class Utils {
         alphaLine = lines.nextLine();
         String[] splitLine = alphaLine.split(" ");
         return Double.parseDouble(splitLine[1]);
+    }
+
+    public static double readDoubleFromFile(String path) throws IOException {
+        FileInputStream filecontents = new FileInputStream(path);
+        Scanner lines = new Scanner(filecontents);
+        String line = lines.nextLine();
+        return Double.parseDouble(line);
     }
 }

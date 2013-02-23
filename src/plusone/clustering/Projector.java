@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
@@ -14,6 +15,7 @@ import plusone.utils.Indexer;
 import plusone.utils.PaperAbstract;
 import plusone.utils.PlusoneFileWriter;
 import plusone.utils.PredictionPaper;
+import plusone.utils.RunInfo;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.Utils;
@@ -40,6 +42,7 @@ public class Projector extends ClusteringTest {
 	private double[][] betaMatrix;
 	private double learnedAlpha;
 	private boolean synthetic;
+	private double trainSeconds = Double.POSITIVE_INFINITY;
 
 	public Projector(String name) {
 		super(name);
@@ -97,17 +100,25 @@ public class Projector extends ClusteringTest {
         Utils.runCommand("rm projector/data/V", true);
         createProjectorInput("projector/data/documents", trainingSet);
         //uncomment these next three lines to use kmeans.py
-        Utils.runCommand("./run-projector-prepare " + numTopics + " "
-        		+ trainingSet.size() + " " + terms.size(), true);
-        Utils.runCommand("python src/plusone/clustering/kmeans.py " +
-        		"projector/data/projected -k " + 
-        		numTopics + " -m cosine -w projector/data " +
-        		"-i 50 -q", true);
-        Utils.runCommand("./run-projector-train " + numTopics +  " " + 
-        		trainingSet.size() + " " + terms.size(), true);
+//        Utils.runCommand("./run-projector-prepare " + numTopics + " "
+//        		+ trainingSet.size() + " " + terms.size(), true);
+//        Utils.runCommand("python src/plusone/clustering/kmeans.py " +
+//        		"projector/data/projected -k " + 
+//        		numTopics + " -m cosine -w projector/data " +
+//        		"-i 50 -q", true);
+//        Utils.runCommand("./run-projector-train " + numTopics +  " " + 
+//        		trainingSet.size() + " " + terms.size(), true);
         //uncomment to use projector kmeans
-//        while(!Utils.runCommand("./run-projector " + numTopics + " " 
-//            + trainingSet.size() + " " + terms.size(), true));
+        while (!Utils.runCommand("./run-projector " + numTopics + " " 
+            + trainingSet.size() + " " + terms.size(), true));
+        try {
+            trainSeconds = Utils.readDoubleFromFile(
+                    "projector/data/projector_elapsed_seconds");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(
+                    "Projector: couldn't read elapsed time.");
+        }
         //uncomment to use rawProjector
 //        Utils.runCommand("./run-rawProjector " + numTopics + " " + 
 //        			     trainingSet.size() + " " + terms.size(), true);
@@ -117,6 +128,11 @@ public class Projector extends ClusteringTest {
         createProjectorInfo("lda/final.other");
         System.out.println("done.");
 	}
+
+    @Override
+    public double getTrainTime() {
+        return trainSeconds;
+    }
 
     //TODO move this
     /**
@@ -276,7 +292,7 @@ public class Projector extends ClusteringTest {
     }
 
     @Override
-	public double[][] predict(List<PredictionPaper> testDocs) {
+	public double[][] predict(List<PredictionPaper> testDocs, RunInfo testInfo){
 		/*Projector with custom inference:
         this.testSet = testDocs;
 		System.out.print("writing test indices to file in projector/data...");
@@ -293,9 +309,11 @@ public class Projector extends ClusteringTest {
         String testData = "lda/test.dat";
 
         createLdaInputTest(testData, testDocs);
+        long startNanoTime = System.nanoTime();
         Utils.runCommand("lib/lda-c-dist/lda inf " + 
                         " lib/lda-c-dist/settings.txt " + "lda/final " + 
                         testData + " lda/output", false);
+        testInfo.put("testTime", (System.nanoTime() - startNanoTime) * 1.0e-9);
 
         double[][] gammasMatrix = readLdaResultFile("lda/output-gamma.dat",
                     0, false);
