@@ -92,7 +92,7 @@ follows
 	\item[Clustering] Use k-means to cluster the $V_i$'s into $k$ clusters, where in the k-means algorithm the distance between two points $x,y$ is defined as $1-cos(x,y)$.\\
 				      Let $C_1,\ldots,C_k$ be the centers of the $k$ clusters (center in the sense as in euclidean distance).
 	\item[Scale] Scale $C_1,\ldots,C_k$ by the smallest common scalar so that $\delta n$ of $V_1,\ldots,V_n$ are contained in the hull with $C_1,\ldots,C_k$ as vertices. 
-	\item[Whitening] Make all $C_i$ distribution over words: $C_i=C_i+center$, truncate the negative entries in $C_i$ to be $0$, normalize $C_i$ so the sum of entries is $1$.\\
+	\item[Whitening] Make all $C_i$ distribution over words: Map all the $C_i$'s to the original word space, and then set $C_i=C_i+center$, truncate the negative entries in $C_i$ to be $0$, normalize $C_i$ so the sum of entries is $1$.\\
                                             Return $\hat{A}_i=C_i$ be the recovered topics.
 \end{description}
 We illustrate in figure~\ref{fig:subfigures} how our algorithm works
