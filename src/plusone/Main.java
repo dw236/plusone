@@ -626,12 +626,14 @@ public class Main {
 			}
 		}
 		//lda
+		double learnedAlpha;
 		if (testIsEnabled("lda")){
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"10,30,50"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				Lda lda = new Lda("lda", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
+				learnedAlpha = lda.getLearnedAlpha();
 				runClusteringMethod(lda, ks, size, true);
 				handleHeldOutInferenceTests(
 					lda.getName(), lda.getWordTopicMatrix(), ks, size,
@@ -683,7 +685,7 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				projector = new Projector("projector", trainingSet, wordIndexer, 
 								terms, dimensions[dk], trainingIndices, 
-								testIndices);
+								testIndices, learnedAlpha, !generator.equals(""));
 				runClusteringMethod(projector, ks, size, true);
 			}
 		}

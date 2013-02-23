@@ -38,6 +38,8 @@ public class Projector extends ClusteringTest {
 	private Map<PaperAbstract, Integer> trainingIndices;
 	private Map<PaperAbstract, Integer> testIndices;
 	private double[][] betaMatrix;
+	private double learnedAlpha;
+	private boolean synthetic;
 
 	public Projector(String name) {
 		super(name);
@@ -48,7 +50,9 @@ public class Projector extends ClusteringTest {
 			Terms terms, 
 			int numTopics, 
 			Map<PaperAbstract, Integer> trainingIndices,
-			Map<PaperAbstract, Integer> testIndices) {
+			Map<PaperAbstract, Integer> testIndices,
+			double learnedAlpha,
+			boolean synthetic) {
 		this(name + "-" + numTopics);
 		this.name = name;
 		this.trainingSet = trainingSet;		
@@ -57,6 +61,8 @@ public class Projector extends ClusteringTest {
 		this.numTopics=numTopics;
 		this.trainingIndices = trainingIndices;
 		this.testIndices = testIndices;
+		this.learnedAlpha = learnedAlpha;
+		this.synthetic = synthetic;
 		train();
 	}
 
@@ -120,9 +126,13 @@ public class Projector extends ClusteringTest {
     PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
     fileWriter.write("num_topics " + numTopics + " \n");
     fileWriter.write("num_terms " + terms.size() + " \n");
-    fileWriter.write("alpha " + 
-                        readAlpha("src/datageneration/output/final.other") 
-                         + " \n");
+    if (synthetic) {
+	    fileWriter.write("alpha " + 
+	                        readAlpha("src/datageneration/output/final.other") 
+	                         + " \n");
+    } else {
+	    fileWriter.write("alpha " + learnedAlpha + " \n");
+    }
     fileWriter.close();
     }
 
