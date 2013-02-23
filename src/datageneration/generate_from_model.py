@@ -52,7 +52,7 @@ def convert_mallet(filename):
     return np.array(doc_topics)
     
 def generate(topics, words, words_per_doc):
-    num_docs = 1#len(topics)
+    num_docs = len(topics)
     word_cdfs = [util.get_cdf(topic) for topic in words]
     
     docs = []
