@@ -2,22 +2,23 @@
 The Latent Dirichlet Allocation topic model has been tremendously
 influential in the development of methods for analyzing documents, and
 other types of data.  Numerous algorithms for learning such models as
-well as variations of this model have been proposed; see [BleiCACM]
-for a recent survey.  The bulk of these methods are based on inference
-techniques; they proceed by using learning the parameters using
-methods which include from Gibbs sampling, EM, variational methods,
-and modifying the model for easier computation.  The evaluation of the
-methods have proceeded typically along two lines.  One is to train on
-a set of documents and then to evaluate the how well the resulting
-model predicts a test set, typically using perplexity as a measure.
-Another is to use the model as a set of features for some
-classification task, say for example document classification, and apply some
-learning method, say for example, using a support vector machine.
+well as variations of this model have been proposed;
+see \cite{BleiCACM} for a recent survey.  The bulk of these methods
+are based on inference techniques; these methods proceed by using
+learning the parameters using methods which include Gibbs sampling,
+EM, variational methods, and modifying the model for easier
+computation.  The evaluation of the methods have proceeded typically
+along two lines.  One is to train on a set of documents and evaluate
+how well the resulting model predicts a test set, typically using
+perplexity as a measure.  Another is to use the model as a set of
+features for some classification task, say for example document
+classification, and apply some learning method, say for example, using
+a support vector machine.
 
 In this paper, we suggest modifying both the inference approach to
 learning topic models and suggest a different evaluation method.  The
 first yields an improved algorithm for learning LDA, and the second
-allows for better understanding of learning methods. 
+allows for better understanding of topic learning efficacy. 
 
 In terms of inference algorithms, we take the view that the model
 parameters are geometric objects.  That is, topic centers are simply
@@ -27,42 +28,48 @@ from points in space under some noise model.  This view of data has
 long been associated with algorithms such as nearest neigbors or
 $k$-means for classification or summarization.  Unfortunately, as we
 show, $k$-means and nearest neighbors algorithms are inferior to
-existing LDA inference algorithms for LDA generated data.  We combine
-$k$-means, along with dimension reduction, and a scaling step to
-produce an effective algorithm for this type of data.  For real world
-data, our methods remain as effective as LDA algorithms and more
-effective than $k$-means, but fall short of nearest neighbor
+existing LDA inference algorithms for LDA generated data.  We can,
+however, combine $k$-means, along with dimension reduction, and a
+scaling step to produce an effective algorithm for this type of data.
+For real world data, our methods remain as effective as LDA algorithms
+and more effective than $k$-means, but fall short of nearest neighbor
 techniques (as do all topic modelling approaches.) We call refer to
-our algorithm and its variants as Projector.   We note here that recent
-work in \cite{} use linear algebraic methods, which can be viewed to
-some extent as geometric algorithms, have been proved to be effective
-given a polynomial amount of data. XXX - ONLY RELATED WORK?
+our algorithm as the Projector algorithm.  We note here that recent
+work in \cite{AnandLDA} use linear algebraic methods, which can be
+viewed to some extent as geometric algorithms, to give an algorithm
+that provably learns the LDA parameters given a polynomial
+number of examples and polynomial time.
 
-The context in which we do our study is new and we feel is an
-important contribution to empirical practice as it stands today.  We
-formulate the task of predicting a set of dropped out words in a
-document.  This is a natural problem as viewing related words for
-document similarity, or more generally as posing the recommendation
-problem when the ``document'' consists of product purchases.
-Moreover, topic models in general and the Latent Direchlet Allocation
-topic model, in particular, generates documents word by word.  Thus, a
-model's effectiveness for predicting a word from the document is both
-fair and is easy to understand as a raw score and allows for the
-fcomparison to any prediction method whether it is generative or not.
+The context in which we do our evaluation varies from the standard.
+We measure performance on the task of predicting a set of dropped out
+words in a document.  Topic models in general and the Latent Direchlet
+Allocation topic model, in particular, generates documents word by
+word.  Thus, a model's effectiveness for predicting a word from the
+document is both fair and is easy to understand as a raw score and
+allows for the comparison to any prediction method whether it is
+specifies a distribution or not.  We also note that this task is
+interesting in itself; if a document represents a set of products
+bought by a user, predicting a new product is essentially the
+recommendation problem.
 
-Finally, we note that some datasets are more difficult than others for
-all the methods.  Rather than characterize this difficulty using the
-arcane parameters of the LDA model, we suggest that using more natural
-measures is more useful.  In particular, we give an analysis that
-suggests that the typical number topics in a document along with the
-typical number of words in a topic gives a good indication of a
-datasets' difficulty.  
+%% Finally, we note that some datasets are more difficult than others for
+%% all the methods.  Rather than characterize this difficulty using the
+%% arcane parameters of the LDA model, we suggest that using more natural
+%% measures is more useful.  In particular, when a typical document
+%% begins to be sufficiently diffuse in topics or topics have relatively
+%% large support over words, it becomes difficult to improve over the
+%% simple strategy of choosing the most frequent left out word.
 
-Before proceeding, we note that this paper may appear unusual; are we
-proposing an algorithm, analyzing dataset complexity, arguing for more
-informative evaluations, or doing an experimental study of existing
-algorithms?  Indeed, these things go very much together.  The proof
-for a methodology for algorithm development is, after all, an
+Before proceeding, we note that this paper proposes an algorithm,
+argues for more informative evaluations, and does experimental studies
+existing algorithms.  We feel these things go very much together.  The
+proof for a methodology for algorithm development is, after all, an
 effective algorithm.
 
+We proceed with related work in section~\ref{sec:related}, a
+description of the lda model in section~\ref{sec:ldamodel}, the data
+generation process in section~\ref{sec:data}, a description of the
+algorithms we study in section~\ref{sec:algs}, the results of our
+experiments in section~\ref{sec:results}, a bit of analysis in
+section~\ref{sec:analysis}, and conclude in \ref{sec:conclusion}.
 
