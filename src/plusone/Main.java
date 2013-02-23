@@ -304,6 +304,16 @@ public class Main {
 			JSONObject fakeExperimentMallet = new JSONObject();
 			fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
 			allTests.put("~mallet-cosine", fakeExperimentMallet);
+			
+			String[] cosineSimilaritiesKmeans = in.nextLine().split(" ");
+			double cosineSimilarityMeanKmeans = 0;
+			for (String sim : cosineSimilaritiesKmeans) {
+				cosineSimilarityMeanKmeans += Double.parseDouble(sim);
+			}
+			cosineSimilarityMeanKmeans /= cosineSimilaritiesKmeans.length;
+			JSONObject fakeExperimentKmeans = new JSONObject();
+			fakeExperimentKmeans.put("Predicted_Mean", cosineSimilarityMeanKmeans);
+			allTests.put("~kmeans-cosine", fakeExperimentKmeans);
 		}
 	}
 
