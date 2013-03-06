@@ -76,6 +76,8 @@ def generate(topics, words, words_per_doc):
     return docs, doc_topics
     
 def get_matrix(filename):
+    """THIS IS NOT ROBUST
+    """
     if "Mallet" in filename:
         print "converting mallet output from file:", filename
         return convert_mallet(filename)
@@ -134,7 +136,7 @@ def main():
         print "no beta supplied (returning None)"
         return None
     
-    alpha_matrix = get_matrix(args.a)
+    alpha_matrix = convert_mallet(args.a)
     print "read shape: [", np.shape(alpha_matrix), " ]"
     beta_matrix = read_matrix(args.b, log_form=True)
     print "read shape: [", np.shape(beta_matrix), " ]"

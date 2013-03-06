@@ -24,8 +24,9 @@ try:
     from munkres import Munkres, print_matrix, make_cost_matrix
     munkres_imported = True
 except:
-    print "Warning: import munkres failed. Method to match betas will use \
-    stable marriage instead of Hungarian algorithm. Please install munkres."
+    print "Warning: import munkres failed. Method to match betas will use",
+    print "stable marriage instead of Hungarian algorithm.", 
+    print "Please install munkres."
     munkres_imported = False
 
 def poisson(l, max_val=None, min_val=1):
