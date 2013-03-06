@@ -8,7 +8,10 @@ import pickle #HACK--REMOVE ASAP
 #globals
 UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
-                    + ['median', 'sum_squares_words', 'sum_squares_topics']
+                    + ['median', 'sum_squares_words', 'sum_squares_topics'] \
+#                    + ['LSIOld0-15', 'knn-15', 'knn-5', '~kmeans-cosine', '~mallet-cosine', '~lda-cosine', '~projector-cosine']
+#                    + ['Baseline', 'LSI-15', 'LSIOld0-15', 'knn-15', 'knn-5', 'kmeans-15', 'knn-25', 'ldaC', 'ldaT']
+HIDDEN_ALGS = []
 CHEATS = ['ldaC', 'ldaT']
 PARAMS = ['a', 'b']
 STATISTICS = ['sig_topics', 'sig_words']
@@ -183,7 +186,8 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
     #===========================================================================
     algorithm_titles = get_algorithm_names(results['algorithms'], star, short)
     for algorithm in algorithm_titles:
-        f.write('\t\t<th>' + algorithm + '</th>\n')
+        if algorithm not in HIDDEN_ALGS:
+            f.write('\t\t<th>' + algorithm + '</th>\n')
     #===========================================================================
     # write the numerical results
     #===========================================================================
@@ -203,6 +207,8 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                          + hover(str(results[result][statistic]), 
                                  top_three) + '</td>\n')
             for algorithm in algorithm_titles:
+                if algorithm in HIDDEN_ALGS:
+                    continue
                 if results[result].has_key(algorithm):
                     color = Color()
                     to_bold = star and not short
@@ -218,6 +224,9 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                             runtime = round(np.mean(times), 2)
                         except:
                             runtime = "N/A"
+                    """"""
+#                    final_bold = False
+                    """"""
                     if '~' in algorithm:
                         pass
                     elif is_cheat(algorithm):
@@ -230,6 +239,7 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                             color.add('g', 0x04)
                         elif score == scores['best']:
                             color.add('g', 0xff)
+#                            final_bold = not '~' in algorithm
                         elif abs(score - scores['median']) \
                              <= 0.1 * scores['median']:
                             color.add('r', 0xff)
@@ -262,9 +272,18 @@ def write_table(f, results, params, star=False, short=False, disp="s"):
                                                     ['score'],
                                                     results[result][algorithm]
                                                     ['time'])]
-                    #mouseover_text = []
+#                    mouseover_text = []
                     # For just the scores, use this:
                     # mouseover_text = results[result][algorithm]['score']
+                    
+                    """hack"""
+#                    to_bold = False
+#                    if final_bold:
+#                        to_bold = True
+#                    else:
+#                        to_bold = False     
+                    """"""
+                    
                     alt = True
                     in_hover_html = ''
                     if "s" in disp:
