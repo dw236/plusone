@@ -131,13 +131,17 @@ public class Utils {
 	}
 
 	public static void createLdaInfo(String filename, int numTopics, 
-			int numTerms) {
+			int numTerms, boolean synthetic) {
 		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
 	    fileWriter.write("num_topics " + numTopics + " \n");
 	    fileWriter.write("num_terms " + numTerms + " \n");
-	    fileWriter.write("alpha " + 
+	    if (synthetic) {
+	    	fileWriter.write("alpha " + 
 	                        readAlpha("src/datageneration/output/final.other") 
 	                         + " \n");
+	    } else {
+	    	fileWriter.write("alpha " + readAlpha("lda/final.other") + "\n");
+	    }
 	    fileWriter.close();
 	}
 	

@@ -25,6 +25,7 @@ public class Kmeans extends ClusteringTest {
 	private Map<PaperAbstract, Integer> trainingIndices;
 	private Map<PaperAbstract, Integer> testIndices;
 	private double[][] betaMatrix;
+	private boolean synthetic;
 
 	public Kmeans(String name) {
 		super(name);
@@ -35,7 +36,8 @@ public class Kmeans extends ClusteringTest {
 			Terms terms, 
 			int numTopics, 
 			Map<PaperAbstract, Integer> trainingIndices,
-			Map<PaperAbstract, Integer> testIndices) {
+			Map<PaperAbstract, Integer> testIndices,
+			boolean synthetic) {
 		this(name + "-" + numTopics);
 		this.name = name;
 		this.trainingSet = trainingSet;		
@@ -44,6 +46,7 @@ public class Kmeans extends ClusteringTest {
 		this.numTopics=numTopics;
 		this.trainingIndices = trainingIndices;
 		this.testIndices = testIndices;
+		this.synthetic = synthetic;
 		train();
 	}
 	
@@ -59,7 +62,9 @@ public class Kmeans extends ClusteringTest {
 		System.out.print("moving kmeans beta to lda folder...");
         Utils.runCommand("cp kmeans/centers lda", false);
         Utils.runCommand("mv lda/centers lda/final.beta", true);
-        Utils.createLdaInfo("lda/final.other", numTopics, terms.size());
+        Utils.createLdaInfo("kmeans/final.other", numTopics, terms.size(), 
+        		synthetic);
+        Utils.runCommand("cp kmeans/final.other lda", true);
         System.out.println("done.");
 	}
 	

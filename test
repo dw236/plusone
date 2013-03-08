@@ -82,7 +82,7 @@ args=\
  -Dplusone.enableTest.malletLda=true
  -Dplusone.enableTest.malletHldaPred=false
  -Dplusone.enableTest.projector=true
- -Dplusone.enableTest.kmeans=true
+ -Dplusone.enableTest.kmeans=false
  -Dplusone.enableTest.ctm=false
  -Dplusone.enableTest.gibbsLda=false
  -Dplusone.enableTest.knnc=false
@@ -98,7 +98,7 @@ args=\
  -Dplusone.outPath=$out_dir
  -Dplusone.dumpMeta=false
  -Dplusone.randomSeed=9
- -Dplusone.useNewJsonFormat=false
+ -Dplusone.useNewJsonFormat=true
  "
 
 # options to sample cpu

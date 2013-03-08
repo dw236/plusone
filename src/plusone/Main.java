@@ -588,7 +588,7 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				kmeans = new Kmeans("kmeans", trainingSet, wordIndexer, 
 									terms, dimensions[dk], trainingIndices, 
-									testIndices);
+									testIndices, !generator.equals(""));
 				runClusteringMethod(kmeans, ks, size, true);
 			}
 		}
