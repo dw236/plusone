@@ -4,6 +4,7 @@ import plusone.Main;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Random;
 
 public class SVD {
+	final int HELD_OUT_SAMPLES = 10000;
 
 	class Entry{
 		public int docID;
@@ -195,6 +197,27 @@ public class SVD {
 			sigma[k]*=normalize(mu[k]);
 			sigma[k]*=normalize(beta[k]); 
 		}
+	}
+
+	public void renormalizeVecHeldOut(double testWordPercent, double[] x) {
+	    double[] samples = new double[HELD_OUT_SAMPLES];
+	    for (int i = 0; i < HELD_OUT_SAMPLES; ++i) {
+		double sumsqr = 0;
+		for (int j = 0; j < x.length; ++j) {
+		    if (rand.nextDouble() >= testWordPercent)
+			sumsqr += x[j]*x[j];
+		}
+		samples[i] = sumsqr;
+	    }
+	    Arrays.sort(samples);
+	    double norm = Math.sqrt(samples[HELD_OUT_SAMPLES/2]);
+	    for (int j = 0; j < x.length; ++j) x[j] /= norm;
+	}
+
+	public void renormalizeHeldOut(double testWordPercent) {
+	    for (int k = 0; k < DIMENSION; k ++) {
+		renormalizeVecHeldOut(testWordPercent, beta[k]);
+	    }
 	}
 
 

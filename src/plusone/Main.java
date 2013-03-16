@@ -611,8 +611,10 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 
 				lsi = new LSI(dimensions[dk], trainingSet, terms);
+				LSIHO lsiho = new LSIHO(dimensions[dk], trainingSet, terms, testWordPercent);
 
 				runClusteringMethod(lsi, ks, size,false);
+				runClusteringMethod(lsiho, ks, size,false);
 
 				LSIOld0 lsio0 = new LSIOld0(dimensions[dk], trainingSet, terms);
 

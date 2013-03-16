@@ -76,12 +76,12 @@ args=\
  -Dplusone.documentLengthRate=75
  -Dplusone.topicAlpha=0.1
  -Dplusone.enableTest.localCO=false
- -Dplusone.enableTest.lda=true
+ -Dplusone.enableTest.lda=false
  -Dplusone.enableTest.ldaTrained=$ldaTrain
  -Dplusone.enableTest.ldaCheat=$ldaTrain
- -Dplusone.enableTest.malletLda=true
+ -Dplusone.enableTest.malletLda=false
  -Dplusone.enableTest.malletHldaPred=false
- -Dplusone.enableTest.projector=true
+ -Dplusone.enableTest.projector=false
  -Dplusone.enableTest.kmeans=false
  -Dplusone.enableTest.ctm=false
  -Dplusone.enableTest.gibbsLda=false
@@ -98,7 +98,7 @@ args=\
  -Dplusone.outPath=$out_dir
  -Dplusone.dumpMeta=false
  -Dplusone.randomSeed=9
- -Dplusone.useNewJsonFormat=true
+ -Dplusone.useNewJsonFormat=false
  "
 
 # options to sample cpu
