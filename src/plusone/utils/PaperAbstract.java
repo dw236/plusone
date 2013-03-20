@@ -64,18 +64,6 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		}
 	}
 
-	public PaperAbstract(int index, Integer[] inReferences,
-			Integer[] outReferences, int[] tf) {
-		this.index = index;
-		this.inReferences = inReferences;
-		this.outReferences = outReferences;
-
-		this.tf = new HashMap<Integer, Integer>();
-		for (int i = 0; i < tf.length; i++) {
-			this.tf.put(i, tf[i]);
-		}
-	}
-
 	/**
 	 * Constructs a paper abstract.
 	 *

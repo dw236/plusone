@@ -1,7 +1,9 @@
 package plusone.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -16,7 +18,8 @@ public class SVDTest {
         }
 
         public void addPaper(int ... frequencies) {
-            PaperAbstract paper = new PaperAbstract(papers.size(), null, null, frequencies);
+            PaperAbstract paper = new PaperAbstract(papers.size(), null, null,
+                                                    freqMap(frequencies));
             paper.generateTf(0, null, false);
             papers.add(paper);
         }
@@ -28,6 +31,14 @@ public class SVDTest {
         public List<TrainingPaper> asTrainingPapers() {
             return new ArrayList<TrainingPaper>(papers);
         }
+    }
+
+    static Map<Integer, Integer> freqMap(int[] freqArray) {
+        Map<Integer, Integer> freqMap = new HashMap<Integer, Integer>();
+        for (int i = 0; i < freqArray.length; ++i) {
+            if (freqArray[i] > 0) freqMap.put(i, freqArray[i]);
+        }
+        return freqMap;
     }
 
     /**
@@ -101,7 +112,8 @@ public class SVDTest {
         SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
 
         int[] testFrequencies = {1, 0, 1, 0};
-        PaperAbstract testPaper = new PaperAbstract(2, null, null, testFrequencies);
+        PaperAbstract testPaper =
+            new PaperAbstract(2, null, null, freqMap(testFrequencies));
         testPaper.generateTf(0, null, false);
 
         double[] predictions = svd.predict(testPaper);
@@ -123,7 +135,8 @@ public class SVDTest {
         SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
 
         int[] testFrequencies = {0, 1, 0, 0};
-        PaperAbstract testPaper = new PaperAbstract(2, null, null, testFrequencies);
+        PaperAbstract testPaper =
+            new PaperAbstract(2, null, null, freqMap(testFrequencies));
         testPaper.generateTf(0, null, false);
 
         double[] predictions = svd.predict(testPaper);
