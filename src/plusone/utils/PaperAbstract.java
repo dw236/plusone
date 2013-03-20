@@ -112,6 +112,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		Random randGen = Main.getRandomGenerator();
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = test ? new HashMap<Integer, Integer>() : null;
+		norm = 0;
 
 		for (Integer word : tf.keySet()) {
 			if (terms != null)
@@ -147,6 +148,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
 		Random randGen = Main.getRandomGenerator();
+		norm = 0;
 		
 		for (Integer word : tf.keySet()) {
 			if (terms != null)
@@ -236,14 +238,30 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		return outReferences;
 	}
 
+	/**
+	 * The L2 norm of the vector of training word frequencies (those
+	 * returned by <code>getTrainingTf</code>).
+	 */
 	public double getNorm() {
 		return norm;
 	}
 
+	/**
+	 * Returns the value of the <code>test</code> parameter passed to
+	 * <code>generateTf</code> or <code>generateTagTf</code>.  This
+	 * indicates whether this is considered a testing document: that is,
+	 * whether words are held out from the return values of
+	 * <code>getTrainingWords</code> or <code>getTrainingTf</code>.
+	 */
 	public boolean isTest() {
 		return testingTf != null;
 	}
 
+	/**
+	 * Returns the dot product of the word frequency vectors of this
+	 * <code>PaperAbstract</code> instance with another, not including
+	 * held-out words.
+	 */
 	public double similarity(PaperAbstract a) {
 		double sim = 0.0;
 
@@ -255,11 +273,18 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		return sim / (a.getNorm() * norm);
 	}
 
+	/**
+	 * Two paper abstracts are considered equal iff they have the same
+	 * index.  (So it's a good idea to make indices unique.)
+	 */
 	public boolean equals(Object obj) {
 		return obj instanceof PaperAbstract
 				&& this.index == ((PaperAbstract) obj).index;
 	}
 
+	/**
+	 * Sums the training (non-held-out) word vectors of a list of documents.
+	 */
 	public static Map<Integer, Integer> getCombinedTf(List<TrainingPaper> lst) {
 		Map<Integer, Integer> tf = new HashMap<Integer, Integer>();
 		for (TrainingPaper trainPaper : lst) {
