@@ -93,10 +93,11 @@ public class DatasetJSON {
 						}
 						tagsList.add(wordIndexer.fastIndexOf(newTag));
 					}
-					tagMap.put(index-1, tagsList);
+					tagMap.put(p.getIndex(), tagsList);
 				}
 				documents.add(p);
 				paperIndexer.add(p);
+                                assert p.getIndex() == paperIndexer.indexOf(p);
 				try {
 					user = new JSONObject( in.readLine() );
 				} catch (NullPointerException e) {

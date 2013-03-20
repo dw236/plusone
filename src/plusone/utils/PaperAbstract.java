@@ -14,16 +14,15 @@ import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 
 public class PaperAbstract implements TrainingPaper, PredictionPaper {
-
-	public final Integer index;
-	public final Integer[] inReferences;
-	public final Integer[] outReferences;
+	private final Integer index;
+	private final Integer[] inReferences;
+	private final Integer[] outReferences;
 
 	private Map<Integer, Integer> trainingTf;
 	private Map<Integer, Integer> testingTf;
 	private Map<Integer, Integer> tf;
-	public double norm;
-	public int group = 0; // Group # for cross-validation
+	private double norm;
+	private int group = 0; // Group # for cross-validation
 
 	public PaperAbstract(int index, Integer[] inReferences,
 			Integer[] outReferences, Integer[] abstractWords) {
@@ -51,6 +50,22 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		}
 	}
 
+	/**
+	 * Constructs a paper abstract.
+         *
+         * Before using a PaperAbstract in clustering methods, its generateTf
+         * (or generateTagTf) method must be called.
+	 *
+	 * @param index  The index of this paper within a corpus.  Note that
+	 *            two paper abstracts are considered equal if they have the
+	 *            same index.
+         * @param inReferences  A list of indices of papers that refer to this
+         *            paper.
+         * @param outReferences  A list of indices of papers that this paper
+         *            refers to.
+         * @param tf  The number of times every word occurs the document.  Keys
+         *            are words and values are numbers of occurrences.
+	 */
 	public PaperAbstract(int index, Integer[] inReferences,
 			Integer[] outReferences, Map<Integer, Integer> tf) {
 		this.index = index;
@@ -59,10 +74,17 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		this.tf = tf;
 	}
 
+        /**
+         * Set a group number; used for cross-validation.
+         */
 	public void setGroup(int gp) {
 		this.group = gp;
 	}
 
+        /**
+         * Get the group number most recently set with <code>setGroup()</code>;
+         * used for cross-validation.
+         */
 	public int getGroup() {
 		return group;
 	}

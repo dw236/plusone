@@ -42,7 +42,7 @@ public class KNNSimilarityCache {
      */
     private void calculateDistances() {
 	for (PredictionPaper testPaper : testingPapers) {
-	    distanceRank.put(((PaperAbstract)testPaper).index,
+	    distanceRank.put(((PaperAbstract)testPaper).getIndex(),
 			     getTrainingRanks(testPaper));
 	}
     }
@@ -59,7 +59,7 @@ public class KNNSimilarityCache {
 	for (TrainingPaper trainPaper : trainingPapers) {
 	    double sim = ((PaperAbstract)trainPaper)
 		.similarity((PaperAbstract)testPaper);
-	    queue.offer(new ItemAndScore(((PaperAbstract)trainPaper).index, 
+	    queue.offer(new ItemAndScore(((PaperAbstract)trainPaper).getIndex(), 
 					 sim, false));
 	}
 	
@@ -72,10 +72,10 @@ public class KNNSimilarityCache {
 
     public Integer[] getDistance(PredictionPaper testPaper) {
 	Integer[] rank = distanceRank
-	    .get(((PaperAbstract)testPaper).index);
+	    .get(((PaperAbstract)testPaper).getIndex());
 	if (rank == null) {
 	    rank = getTrainingRanks(testPaper);
-	    distanceRank.put(((PaperAbstract)testPaper).index, rank);
+	    distanceRank.put(((PaperAbstract)testPaper).getIndex(), rank);
 	}
 	return rank;
     }

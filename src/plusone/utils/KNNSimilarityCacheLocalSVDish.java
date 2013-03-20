@@ -39,7 +39,7 @@ public class KNNSimilarityCacheLocalSVDish {
      */
     private void calculateDistances() {
 	for (PredictionPaper testPaper : testingPapers) {
-	    distanceRank.put(((PaperAbstract)testPaper).index,
+	    distanceRank.put(((PaperAbstract)testPaper).getIndex(),
 			     getTrainingRanks(testPaper));
 	}
     }
@@ -55,7 +55,7 @@ public class KNNSimilarityCacheLocalSVDish {
 	
 	for (TrainingPaper trainPaper : trainingPapers) {
 	    double sim = svd.similarity(trainPaper.getIndex(), testPaper);
-	    queue.offer(new ItemAndScore(((PaperAbstract)trainPaper).index, 
+	    queue.offer(new ItemAndScore(((PaperAbstract)trainPaper).getIndex(), 
 					 sim, false));
 	}
 	
@@ -68,10 +68,10 @@ public class KNNSimilarityCacheLocalSVDish {
 
     public Integer[] getDistance(PredictionPaper testPaper) {
 	Integer[] rank = distanceRank
-	    .get(((PaperAbstract)testPaper).index);
+	    .get(((PaperAbstract)testPaper).getIndex());
 	if (rank == null) {
 	    rank = getTrainingRanks(testPaper);
-	    distanceRank.put(((PaperAbstract)testPaper).index, rank);
+	    distanceRank.put(((PaperAbstract)testPaper).getIndex(), rank);
 	}
 	return rank;
     }

@@ -96,7 +96,7 @@ public class KNNWithCitation extends KNN {
 		if (count[word] == 0)
 		    wordSet.add(word);
 
-		count[word] += a.getTrainingTf(word) * distance.get(a.index);
+		count[word] += a.getTrainingTf(word) * distance.get(a.getIndex());
 	    }
 	}
 	

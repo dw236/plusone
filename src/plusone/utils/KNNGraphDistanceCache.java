@@ -88,11 +88,11 @@ public class KNNGraphDistanceCache {
 	Set<Integer> doneSet = new HashSet<Integer>();
 
 	for (Integer currentPaper : testPaper.getInReferences()) {
-	    currentQueue.offer(currentPaper);
+	    currentQueue.add(currentPaper);
 	}
 
 	for (Integer currentPaper : testPaper.getOutReferences()) {
-	    currentQueue.offer(currentPaper);
+	    currentQueue.add(currentPaper);
 	}
 
 	for (TrainingPaper trainPaper : trainPapers) {
@@ -116,11 +116,11 @@ public class KNNGraphDistanceCache {
 		doneSet.add(currentPaper);
 		 
 		PaperAbstract paper = paperIndexer.get(currentPaper);
-		for (Integer neighbors : paper.inReferences) {
-		    nextQueue.offer(neighbors);
+		for (Integer neighbors : paper.getInReferences()) {
+		    nextQueue.add(neighbors);
 		}
-		for (Integer neighbors : paper.outReferences) {
-		    nextQueue.offer(neighbors);
+		for (Integer neighbors : paper.getOutReferences()) {
+		    nextQueue.add(neighbors);
 		}
 	    }
 	    d ++;
@@ -162,18 +162,18 @@ public class KNNGraphDistanceCache {
 	    PaperAbstract paper2 = paperIndexer.get(testingIndexer.get(key2));
 
 	    Set<Integer> s1 = new HashSet<Integer>();
-	    for (Integer r : paper1.inReferences) {
+	    for (Integer r : paper1.getInReferences()) {
 		s1.add(r);
 	    }
-	    for (Integer r : paper1.outReferences) {
+	    for (Integer r : paper1.getOutReferences()) {
 		s1.add(r);
 	    }
 
 	    Set<Integer> s2 = new HashSet<Integer>();
-	    for (Integer r : paper2.inReferences) {
+	    for (Integer r : paper2.getInReferences()) {
 		s2.add(r);
 	    }
-	    for (Integer r : paper2.outReferences) {
+	    for (Integer r : paper2.getOutReferences()) {
 		s2.add(r);
 	    }
 
