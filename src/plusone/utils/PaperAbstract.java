@@ -13,6 +13,32 @@ import plusone.Main;
 import plusone.utils.TrainingPaper;
 import plusone.utils.PredictionPaper;
 
+/**
+ * A <code>PaperAbstract</code> instance stores certain information about a
+ * document in a text corpus.  It stores the number of times each word appears
+ * in the document, and a list of incoming references from other documents and
+ * outgoing references to other documents (for example, these could represent
+ * citations).
+ *
+ * Each PaperAbstract must be given a unique index, passed to the constructor;
+ * re-using indices results in undefined behavior.
+ *
+ * A <code>PaperAbstract</code> instance also stores information used for
+ * training and evaluation tasks.  After being constructed, a
+ * <code>PaperAbstract</code>'s <code>generateTf</code> (or
+ * <code>generateTagTf</code>) method must be called, which is passed two
+ * important parameters: a boolean indicating whether this
+ * <code>PaperAbstract</code> instance should be part of the testing set or the
+ * training set, and in the former case, a number <code>testWordPercent</code>
+ * which is a fraction of vocabulary words (or tags, in the case of
+ * <code>generateTagTf</code>) to hold out from the document for testing
+ * purposes.
+ *
+ * Once <code>generateTf</code> has been called, the two methods
+ * <code>getTrainingWords</code>, <code>getTrainingTf</code>,
+ * <code>getTestingWords</code> and <code>getTestingTf</code> can be used to
+ * access the non-held-out and held-out words.
+ */
 public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	private final Integer index;
 	private final Integer[] inReferences;
@@ -52,19 +78,19 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 
 	/**
 	 * Constructs a paper abstract.
-         *
-         * Before using a PaperAbstract in clustering methods, its generateTf
-         * (or generateTagTf) method must be called.
+	 *
+	 * Before using a PaperAbstract in clustering methods, its generateTf
+	 * (or generateTagTf) method must be called.
 	 *
 	 * @param index  The index of this paper within a corpus.  Note that
 	 *            two paper abstracts are considered equal if they have the
 	 *            same index.
-         * @param inReferences  A list of indices of papers that refer to this
-         *            paper.
-         * @param outReferences  A list of indices of papers that this paper
-         *            refers to.
-         * @param tf  The number of times every word occurs the document.  Keys
-         *            are words and values are numbers of occurrences.
+	 * @param inReferences  An array of indices of papers that refer to this
+	 *            paper.
+	 * @param outReferences  An array of indices of papers that this paper
+	 *            refers to.
+	 * @param tf  The number of times every word occurs the document.  Keys
+	 *            are words and values are numbers of occurrences.
 	 */
 	public PaperAbstract(int index, Integer[] inReferences,
 			Integer[] outReferences, Map<Integer, Integer> tf) {
@@ -74,17 +100,17 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		this.tf = tf;
 	}
 
-        /**
-         * Set a group number; used for cross-validation.
-         */
+	/**
+	 * Set a group number; used for cross-validation.
+	 */
 	public void setGroup(int gp) {
 		this.group = gp;
 	}
 
-        /**
-         * Get the group number most recently set with <code>setGroup()</code>;
-         * used for cross-validation.
-         */
+	/**
+	 * Get the group number most recently set with <code>setGroup()</code>;
+	 * used for cross-validation.
+	 */
 	public int getGroup() {
 		return group;
 	}
@@ -154,7 +180,11 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		norm = Math.sqrt(norm);
 	}
 	
-
+	/**
+	 * Returns the number of occurrences of <code>word</code> in this
+	 * documesnt, unless this is a testing document and the word was held
+	 * out, in which case this returns <code>0</code>.
+	 */
 	public Integer getTrainingTf(Integer word) {
 		return trainingTf == null ? 
 				0 : (trainingTf.containsKey(word) ? trainingTf.get(word) : 0);
@@ -167,27 +197,53 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		return ret;
 	}
 
+	/**
+	 * Returns the set of all words that occur at least once in the document
+	 * and were not held out.  (For a training document, this means all
+	 * words.)
+	 */
 	public Set<Integer> getTrainingWords() {
 		return trainingTf.keySet();
 	}
 
+	/**
+	 * If this is a testing document and <code>word</code> was held out,
+	 * returns the number of times <code>word</code> occurrs in the
+	 * document.  Otherwise returns <code>0</code>.
+	 */
 	public Integer getTestingTf(Integer word) {
 		return testingTf == null ? 
 				0 : (testingTf.containsKey(word) ? testingTf.get(word) : 0);
 	}
 
+	/**
+	 * Returns the set of words that were held out from this document.  This
+	 * should only be called if this is a testing document.
+	 */
 	public Set<Integer> getTestingWords() {
 		return testingTf.keySet();
 	}
 
+	/**
+	 * Returns this document's unique index (the <code>index</code>
+	 * parameter passed to the constructor).
+	 */
 	public Integer getIndex() {
 		return index;
 	}
 
+	/**
+	 * Returns an array of indices of papers that refer to this paper (the
+	 * <code>inReferences</code> parameter passed to the constructor).
+	 */
 	public Integer[] getInReferences() {
 		return inReferences;
 	}
 
+	/**
+	 * Returns an array of indices of papers this paper refers to (the
+	 * <code>outReferences</code> parameter passed to the constructor).
+	 */
 	public Integer[] getOutReferences() {
 		return outReferences;
 	}
