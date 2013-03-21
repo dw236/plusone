@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.ejml.simple.SimpleMatrix;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import plusone.Main;
@@ -18,11 +19,13 @@ import static plusone.utils.PaperAbstract.freqMap;
 
 public class PaperAbstractTest {
 	final static double eps = 1e-9;
+	int paperAbstractIndex;
 
-	static PaperAbstract simplePaperAbstract(int ... wordFreqs) {
+	PaperAbstract simplePaperAbstract(int ... wordFreqs) {
 		Integer[] inRefs = {};
 		Integer[] outRefs = {};
-		return new PaperAbstract(0, inRefs, outRefs, freqMap(wordFreqs));
+		return new PaperAbstract(paperAbstractIndex++, inRefs, outRefs,
+								 freqMap(wordFreqs));
 	}
 
 	static Terms.Term[] newTermArray(int numTerms) {
@@ -38,10 +41,15 @@ public class PaperAbstractTest {
 		Main.initRandGen();
 	}
 
-    /**
-     * Tests the constructor that takes a <code>Map&lt;Integer,Integer&gt; tf</code>.
-     */
-    @Test public void mapConstructerInitializesFields() {
+	@Before
+	public void setUp() {
+		paperAbstractIndex = 0;
+	}
+
+	/**
+	 * Tests the constructor that takes a <code>Map&lt;Integer,Integer&gt; tf</code>.
+	 */
+	@Test public void mapConstructerInitializesFields() {
 		int index = 5;
 		Integer[] inRefs = {0, 4, 3};
 		Integer[] outRefs = {3, 5, 1, 9};
@@ -49,12 +57,12 @@ public class PaperAbstractTest {
 		assertEquals(index, (int)pa.getIndex());
 		assertArrayEquals(inRefs, pa.getInReferences());
 		assertArrayEquals(outRefs, pa.getOutReferences());
-    }
+	}
 
-    /**
-     * Tests the constructor that takes a <code>int[] abstractWords</code>.
-     */
-    @Test public void arrayConstructerInitializesFields() {
+	/**
+	 * Tests the constructor that takes a <code>int[] abstractWords</code>.
+	 */
+	@Test public void arrayConstructerInitializesFields() {
 		int index = 5;
 		Integer[] inRefs = {0, 4, 3};
 		Integer[] outRefs = {3, 5, 1, 9};
@@ -64,7 +72,7 @@ public class PaperAbstractTest {
 		assertEquals(index, (int)pa.getIndex());
 		assertArrayEquals(inRefs, pa.getInReferences());
 		assertArrayEquals(outRefs, pa.getOutReferences());
-    }
+	}
 
 	@Test public void getGroupReturnsParamOfSetGroup() {
 		int group = 8;
@@ -362,6 +370,17 @@ public class PaperAbstractTest {
 		assertEquals(expected, PaperAbstract.freqMap(3, 0, 5));
 	}
 
-	// TODO: freqMap
-	// TODO: equals()
+	@Test public void paperAbstractsWithSameIndexAreEqual() {
+		Integer[] empty = {};
+		PaperAbstract pa0 = new PaperAbstract(0, empty, empty, freqMap(1, 1));
+		PaperAbstract pa1 = new PaperAbstract(0, empty, empty, freqMap(2, 3));
+		assertTrue(pa0.equals(pa1));
+	}
+
+	@Test public void paperAbstractsWithDifferentIndicesAreNotEqual() {
+		Integer[] empty = {};
+		PaperAbstract pa0 = new PaperAbstract(0, empty, empty, freqMap(1, 1));
+		PaperAbstract pa1 = new PaperAbstract(1, empty, empty, freqMap(2, 3));
+		assertFalse(pa0.equals(pa1));
+	}
 }
