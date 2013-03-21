@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.ejml.simple.SimpleMatrix;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import plusone.Main;
@@ -16,6 +17,8 @@ import static org.junit.Assert.*;
 import static plusone.utils.PaperAbstract.freqMap;
 
 public class PaperAbstractTest {
+	final static double eps = 1e-9;
+
 	static PaperAbstract simplePaperAbstract(int ... wordFreqs) {
 		Integer[] inRefs = {};
 		Integer[] outRefs = {};
@@ -220,7 +223,7 @@ public class PaperAbstractTest {
 		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
 		Integer[] myTags = {0, 1, 2, 3};
 		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
-						 0, null);
+								0, null);
 		assertTrue(pa.isTest());
 
 		Integer[] expectedTrainingWords = {0, 2, 3};
@@ -240,7 +243,7 @@ public class PaperAbstractTest {
 		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
 		Integer[] myTags = {0, 1, 3};
 		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
-						 1, null);
+								1, null);
 		assertTrue(pa.isTest());
 
 		Integer[] expectedTrainingWords = {2};
@@ -260,7 +263,32 @@ public class PaperAbstractTest {
 		assertEquals(1, (int)pa.getTestingTf(3));
 	}
 
-	// TODO: getTrainingTfAsSimpleMatrixRow
+	@Test public void getTrainingTfAsSimpleMatrixRowCorrectCorrectNonHeldOut() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		pa.generateTf(0, null, true);
+		SimpleMatrix result = pa.getTrainingTfAsSimpleMatrixRow(4);
+		assertEquals(1, result.numRows());
+		assertEquals(4, result.numCols());
+		assertEquals(5, result.get(0, 0), eps);
+		assertEquals(0, result.get(0, 1), eps);
+		assertEquals(3, result.get(0, 2), eps);
+		assertEquals(1, result.get(0, 3), eps);
+	}
+
+	@Test public void getTrainingTfAsSimpleMatrixRowCorrectCorrectTesting() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		Integer[] myTags = {0, 1, 3};
+		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
+								1, null);
+		SimpleMatrix result = pa.getTrainingTfAsSimpleMatrixRow(4);
+		assertEquals(1, result.numRows());
+		assertEquals(4, result.numCols());
+		assertEquals(0, result.get(0, 0), eps);
+		assertEquals(0, result.get(0, 1), eps);
+		assertEquals(3, result.get(0, 2), eps);
+		assertEquals(0, result.get(0, 3), eps);
+	}
+
 	// TODO: getNorm, isTest, similarity, combinedTf, freqMap
 	// TODO: equals()
 }
