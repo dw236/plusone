@@ -289,6 +289,39 @@ public class PaperAbstractTest {
 		assertEquals(0, result.get(0, 3), eps);
 	}
 
-	// TODO: getNorm, isTest, similarity, combinedTf, freqMap
+	@Test public void normIsL2NormOfNonHeldOut() {
+		PaperAbstract pa = simplePaperAbstract(42, 0, 3, 4);
+		Integer[] myTags = {0};
+		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
+								1, null);
+		// norm is sqrt(3^2+4^2)
+		assertEquals(5.0, pa.getNorm(), eps);
+	}
+
+	/**
+	 * We test this separately since <code>generateTf</code> and
+	 * <code>generateTestingTagTf</code> separately implement the norm
+	 * calulation.
+	 */
+	@Test public void normIsL2NormForTraining() {
+		PaperAbstract pa = simplePaperAbstract(0, 5, 12);
+		pa.generateTf(0, null, false);
+		// norm is sqrt(5^2+12^2)
+		assertEquals(13.0, pa.getNorm(), eps);
+	}
+
+	@Test public void similarityIsDotProductOfNonHeldOut() {
+		PaperAbstract pa0 = simplePaperAbstract(42, 0, 3, 4);
+		PaperAbstract pa1 = simplePaperAbstract(8, 5, 12, 0);
+		Integer[] myTags = {0};
+		List<Integer> myTagsList =
+			new ArrayList<Integer>(Arrays.asList(myTags));
+		pa0.generateTestingTagTf(myTagsList, 1, null);
+		pa1.generateTestingTagTf(myTagsList, 1, null);
+		// Ignoring word 0, pa0 has norm 5 and pa1 has norm 13.
+		assertEquals((3.0/5.0*12.0/13.0), pa0.similarity(pa1), eps);
+	}
+
+	// TODO: getCombinedTf, freqMap
 	// TODO: equals()
 }

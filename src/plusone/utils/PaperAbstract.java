@@ -112,7 +112,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		Random randGen = Main.getRandomGenerator();
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = test ? new HashMap<Integer, Integer>() : null;
-		norm = 0;
+		norm = 0.0;
 
 		for (Integer word : tf.keySet()) {
 			if (terms != null)
@@ -144,12 +144,12 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 * @param testWordpercent percent of tags we expect to hold out
 	 * @param terms the terms for the document
 	 */
-    // TODO: document that this considers everything a testing document
-	public void generateTestingTagTf(ArrayList<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
+	// TODO: document that this considers everything a testing document
+	public void generateTestingTagTf(List<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
 		Random randGen = Main.getRandomGenerator();
-		norm = 0;
+		norm = 0.0;
 		
 		for (Integer word : tf.keySet()) {
 			if (terms != null)
@@ -259,9 +259,10 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	}
 
 	/**
-	 * Returns the dot product of the word frequency vectors of this
-	 * <code>PaperAbstract</code> instance with another, not including
-	 * held-out words.
+	 * Returns the dot product of the L2-normalized word frequency vectors of
+	 * this <code>PaperAbstract</code> instance with another, not including
+	 * held-out words.  (The L2 normalization is done after removing the
+	 * held-out words.)
 	 */
 	public double similarity(PaperAbstract a) {
 		double sim = 0.0;
