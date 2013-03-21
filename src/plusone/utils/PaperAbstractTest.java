@@ -347,6 +347,21 @@ public class PaperAbstractTest {
 		assertEquals(2, (int)tf.get(3));
 	}
 
+	@Test public void freqMapNoArgsGivesEmpty() {
+		assertEquals(0, PaperAbstract.freqMap().size());
+	}
+
+	@Test public void freqMapWithZerosGivesEmpty() {
+		assertEquals(0, PaperAbstract.freqMap(0, 0).size());
+	}
+
+	@Test public void freqMapWithNonZerosGivesCorrect() {
+		Map<Integer, Integer> expected = new HashMap<Integer, Integer>();
+		expected.put(0, 3);
+		expected.put(2, 5);
+		assertEquals(expected, PaperAbstract.freqMap(3, 0, 5));
+	}
+
 	// TODO: freqMap
 	// TODO: equals()
 }

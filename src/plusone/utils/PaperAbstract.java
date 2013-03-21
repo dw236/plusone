@@ -300,6 +300,11 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		return tf;
 	}
 
+	/**
+	 * Given an array <code>freqs</code> of frequencies (or each frequency in a
+	 * separate argument), returns a map mapping an index <code>i</code> to
+	 * <code>freqs[i]</code>.
+	 */
 	public static Map<Integer, Integer> freqMap(int ... freqs) {
 		Map<Integer, Integer> freqMap = new HashMap<Integer, Integer>();
 		for (int i = 0; i < freqs.length; ++i) {
