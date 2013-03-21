@@ -104,8 +104,26 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	}
 
 	/**
-	 * Generates tf depending on training or testing. This function must be
-	 * called before we can use this paper in clustering methods.
+	 * Generates the training term frequences for a document, and the testing
+	 * term frequencies if the document is a test document.
+	 *
+	 * For a training document (<code>test == false</code>), the training term
+	 * frequencies are the same frequencies passed to the constructor.
+	 *
+	 * For a testing document (<code>test == true</code>), each word in the
+	 * vocabulary is independently randomly chosen to be either held out
+	 * (probablity <code>testWordPercent</code>) or not.  If a word is held out,
+	 * its training tf is zero and its testing tf is the tf.  Otherwise, the
+	 * testing tf is zero and the training tf is the tf.
+	 *
+	 * This function must be called before we can use this paper in clustering
+	 * methods.
+	 *
+	 * @param testWordPercent  The probability with which to hold out a word.
+	 * @param terms  An array of Terms.Term objects.  If this is not
+	 *            <code>null</code>, then this method updates terms' total
+	 *            (training) count and list of testing or training documents,
+	 *            where appropriate.
 	 */
 	public void generateTf(double testWordpercent, Terms.Term[] terms,
 			boolean test) {
@@ -138,13 +156,16 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	}
 	
 	/**
-	 * A specialized version of generateTf for tagged data
+	 * A specialized version of generateTf which should be called instead of
+	 * generateTf for test documents with tagged data.  It ensures that words
+	 * that are not tags are never held out; words that are tagged are still
+	 * held out with probability <code>testWordPercent</code>.
+	 *
+	 * For a training document with tags, the <code>generateTf</code> method
+	 * should be called instead of this.
 	 * 
-	 * @param myTags the tags for the document
-	 * @param testWordpercent percent of tags we expect to hold out
-	 * @param terms the terms for the document
+	 * @param myTags  The words which are tags and can be held out.
 	 */
-	// TODO: document that this considers everything a testing document
 	public void generateTestingTagTf(List<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
@@ -242,6 +263,9 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	/**
 	 * The L2 norm of the vector of training word frequencies (those
 	 * returned by <code>getTrainingTf</code>).
+	 *
+	 * <code>generateTf</code> or <code>generateTestingTagTf</code> must be
+	 * called before this method.
 	 */
 	public double getNorm() {
 		return norm;
@@ -263,6 +287,9 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 * this <code>PaperAbstract</code> instance with another, not including
 	 * held-out words.  (The L2 normalization is done after removing the
 	 * held-out words.)
+	 *
+	 * <code>generateTf</code> or <code>generateTestingTagTf</code> must be
+	 * called before this method.
 	 */
 	public double similarity(PaperAbstract a) {
 		double sim = 0.0;
