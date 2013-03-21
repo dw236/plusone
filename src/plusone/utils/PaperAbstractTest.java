@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.BeforeClass;
@@ -19,6 +20,14 @@ public class PaperAbstractTest {
 		Integer[] inRefs = {};
 		Integer[] outRefs = {};
 		return new PaperAbstract(0, inRefs, outRefs, freqMap(wordFreqs));
+	}
+
+	static Terms.Term[] newTermArray(int numTerms) {
+		Terms.Term[] terms = new Terms.Term[numTerms];
+		for (int i = 0; i < numTerms; ++i) {
+			terms[i] = new Terms.Term(i);
+		}
+		return terms;
 	}
 
 	@BeforeClass
@@ -117,11 +126,100 @@ public class PaperAbstractTest {
 			assertEquals(0, (int)pa.getTestingTf(i));
 	}
 
-	////////
-	@Test public void generateTagTfWithNoneHeldHasOutCorrectCounts() {
+	/**
+	 * Test that <code>generateTf</code> updates its <code>terms</code>
+	 * parameter when the document is a training document.
+	 */
+	@Test public void generateTfUpdatesNonHeldOutTerms() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		Terms.Term[] terms = newTermArray(4);
+		pa.generateTf(0, terms, false);
+
+		List<PaperAbstract> justPa = new ArrayList<PaperAbstract>();
+		justPa.add(pa);
+		List<PaperAbstract> empty = new ArrayList<PaperAbstract>();
+
+		assertEquals(5, terms[0].totalCount);
+		assertEquals(justPa, terms[0].getDocTrain());
+		assertEquals(empty, terms[0].getDocTest());
+
+		assertEquals(0, terms[1].totalCount);
+		assertEquals(empty, terms[1].getDocTrain());
+		assertEquals(empty, terms[1].getDocTest());
+
+		assertEquals(3, terms[2].totalCount);
+		assertEquals(justPa, terms[2].getDocTrain());
+		assertEquals(empty, terms[2].getDocTest());
+
+		assertEquals(1, terms[3].totalCount);
+		assertEquals(justPa, terms[3].getDocTrain());
+		assertEquals(empty, terms[3].getDocTest());
+	}
+
+	/**
+	 * Test that <code>generateTf</code> updates its <code>terms</code>
+	 * parameter when the document is a testing document and all worsd are held
+	 * out.  It should update the list of testing documents of each term but
+	 * never change the word count.
+	 */
+	@Test public void generateTfUpdatesHeldOutTermDocsButNotCounts() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		Terms.Term[] terms = newTermArray(4);
+		pa.generateTf(1, terms, true);
+
+		List<PaperAbstract> justPa = new ArrayList<PaperAbstract>();
+		justPa.add(pa);
+		List<PaperAbstract> empty = new ArrayList<PaperAbstract>();
+
+		assertEquals(0, terms[0].totalCount);
+		assertEquals(empty, terms[0].getDocTrain());
+		assertEquals(justPa, terms[0].getDocTest());
+
+		assertEquals(0, terms[1].totalCount);
+		assertEquals(empty, terms[1].getDocTrain());
+		assertEquals(empty, terms[1].getDocTest());
+
+		assertEquals(0, terms[2].totalCount);
+		assertEquals(empty, terms[2].getDocTrain());
+		assertEquals(justPa, terms[2].getDocTest());
+
+		assertEquals(0, terms[3].totalCount);
+		assertEquals(empty, terms[3].getDocTrain());
+		assertEquals(justPa, terms[3].getDocTest());
+	}
+
+	/**
+	 * Test that <code>generateTf</code> does not update the term counts for a
+	 * testing document, even for words that are not held out.
+	 */
+	@Test public void generateTfDoesNotUpdateTestCounts() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		Terms.Term[] terms = newTermArray(4);
+		pa.generateTf(0, terms, true);
+
+		for (int i = 0; i < 4; ++i)
+			assertEquals(0, terms[i].totalCount);
+	}
+
+	/**
+	 * Test that <code>generateTestingTagTf</code> does not update the term
+	 * counts.
+	 */
+	@Test public void generateTestingTagTfDoesNotUpdateTestCounts() {
+		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
+		Terms.Term[] terms = newTermArray(4);
+		Integer[] myTags = {0, 1, 2, 3};
+		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
+								0, terms);
+
+		for (int i = 0; i < 4; ++i)
+			assertEquals(0, terms[i].totalCount);
+	}
+
+	@Test public void generateTestingTagTfWithNoneHeldHasOutCorrectCounts() {
 		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
 		Integer[] myTags = {0, 1, 2, 3};
-		pa.generateTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
+		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
 						 0, null);
 		assertTrue(pa.isTest());
 
@@ -138,10 +236,10 @@ public class PaperAbstractTest {
 			assertEquals(0, (int)pa.getTestingTf(i));
 	}
 
-	@Test public void generateTagTfWithAllHeldOutHasCorrectCounts() {
+	@Test public void generateTestingTagTfWithAllHeldOutHasCorrectCounts() {
 		PaperAbstract pa = simplePaperAbstract(5, 0, 3, 1);
 		Integer[] myTags = {0, 1, 3};
-		pa.generateTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
+		pa.generateTestingTagTf(new ArrayList<Integer>(Arrays.asList(myTags)),
 						 1, null);
 		assertTrue(pa.isTest());
 
@@ -162,7 +260,6 @@ public class PaperAbstractTest {
 		assertEquals(1, (int)pa.getTestingTf(3));
 	}
 
-	// TODO: interaction with Term
 	// TODO: getTrainingTfAsSimpleMatrixRow
 	// TODO: getNorm, isTest, similarity, combinedTf, freqMap
 	// TODO: equals()

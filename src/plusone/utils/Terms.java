@@ -9,10 +9,10 @@ public class Terms {
 
     public static class Term implements Comparable {
 	
-    /** 
-     * Warning: doc_train might not do what you think (it can contain
-     * testing documents).  See generateData in PaperAbstract.
-     */
+	/** 
+	 * Warning: doc_train might not do what you think (it can contain
+	 * testing documents).  See generateData in PaperAbstract.
+	 */
 	private List<PaperAbstract> doc_train;
 	private List<PaperAbstract> doc_test;
 	
@@ -26,10 +26,10 @@ public class Terms {
 	
 	//sorts terms by frequency (determined by totalCount)
 	public int compareTo(Object obj) {
-            Term other = (Term)obj;
-            int otherCount = other.totalCount;
-            if (id == other.id && this != obj) throw new RuntimeException("MOO");
-            return (totalCount == otherCount) ? -(id - other.id) : -(totalCount - otherCount);
+	    Term other = (Term)obj;
+	    int otherCount = other.totalCount;
+	    if (id == other.id && this != obj) throw new RuntimeException("MOO");
+	    return (totalCount == otherCount) ? -(id - other.id) : -(totalCount - otherCount);
 	}
 	
 	public void addDoc(PaperAbstract doc, boolean test){
@@ -46,7 +46,7 @@ public class Terms {
 	}
 	
 	public List<PaperAbstract> getDocTrain() { return doc_train; }
-	public List<PaperAbstract> getDocTest() { return doc_train; }
+	public List<PaperAbstract> getDocTest() { return doc_test; }
     }
     
     class TermsEnumerator implements Iterable {

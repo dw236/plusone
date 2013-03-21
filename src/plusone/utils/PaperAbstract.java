@@ -144,7 +144,8 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 * @param testWordpercent percent of tags we expect to hold out
 	 * @param terms the terms for the document
 	 */
-	public void generateTagTf(ArrayList<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
+    // TODO: document that this considers everything a testing document
+	public void generateTestingTagTf(ArrayList<Integer> myTags, double testWordpercent, Terms.Term[] terms) {
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = new HashMap<Integer, Integer>();
 		Random randGen = Main.getRandomGenerator();

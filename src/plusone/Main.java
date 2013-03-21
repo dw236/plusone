@@ -170,7 +170,7 @@ public class Main {
 			}
 	
 			for (PredictionPaper a : testingSet){
-				((PaperAbstract)a).generateTagTf(tagMap.get(a.getIndex()),
+				((PaperAbstract)a).generateTestingTagTf(tagMap.get(a.getIndex()),
 					testWordPercent, terms);
 			}
 		} else {
