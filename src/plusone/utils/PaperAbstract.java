@@ -285,7 +285,8 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	}
 
 	/**
-	 * Sums the training (non-held-out) word vectors of a list of documents.
+	 * Given a list of documents, returns a map which maps a word to the number
+	 * of training documents in which that word is present and not held out.
 	 */
 	public static Map<Integer, Integer> getCombinedTf(List<TrainingPaper> lst) {
 		Map<Integer, Integer> tf = new HashMap<Integer, Integer>();

@@ -322,6 +322,31 @@ public class PaperAbstractTest {
 		assertEquals((3.0/5.0*12.0/13.0), pa0.similarity(pa1), eps);
 	}
 
-	// TODO: getCombinedTf, freqMap
+	/**
+	 * Tests the <code>getCombinedTf</code> method with a list of two
+	 * documents: one training and one testing with some words held out.
+	 */
+	@Test public void combinedTfIgnoresHeldOut() {
+		PaperAbstract pa0 = simplePaperAbstract(2, 1, 0, 3);
+		PaperAbstract pa1 = simplePaperAbstract(4, 0, 8, 12);
+		Integer[] myTags = {0, 2};
+		List<Integer> myTagsList =
+			new ArrayList<Integer>(Arrays.asList(myTags));
+		// pa0 is a training document.
+		pa0.generateTf(0, null, false);
+		// pa1 is a testing document.
+		pa1.generateTestingTagTf(myTagsList, 1, null);
+
+		List<TrainingPaper> papers = new ArrayList<TrainingPaper>();
+		papers.add(pa0);  papers.add(pa1);
+		Map<Integer, Integer> tf = PaperAbstract.getCombinedTf(papers);
+
+		assertEquals(3, tf.size());
+		assertEquals(1, (int)tf.get(0));
+		assertEquals(1, (int)tf.get(1));
+		assertEquals(2, (int)tf.get(3));
+	}
+
+	// TODO: freqMap
 	// TODO: equals()
 }
