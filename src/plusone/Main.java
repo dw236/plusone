@@ -1080,6 +1080,14 @@ public class Main {
 
 	}
 
+	public static void initRandGen(long randSeed) {
+		randGen = new Random(randSeed);
+	}
+
+	public static void initRandGen() {
+		randGen = new Random();
+	}
+
 	/*
 	 * data - args[0]
 	 * train percent - args[1]
@@ -1099,7 +1107,7 @@ public class Main {
 		generator = System.getProperty("plusone.generator");
 		numTopics = Integer.parseInt(System.getProperty("plusone.lda.dimensions"));
 
-		randGen = new Random(randSeed);
+		initRandGen(randSeed);
 		metadataLogger = new MetadataLogger();
 
 		Main main = new Main();

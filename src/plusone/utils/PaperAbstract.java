@@ -29,7 +29,7 @@ import plusone.utils.PredictionPaper;
  * <code>generateTagTf</code>) method must be called, which is passed two
  * important parameters: a boolean indicating whether this
  * <code>PaperAbstract</code> instance should be part of the testing set or the
- * training set, and in the former case, a number <code>testWordPercent</code>
+ * training set, and in the former case, a number <code>testWordpercent</code>
  * which is a fraction of vocabulary words (or tags, in the case of
  * <code>generateTagTf</code>) to hold out from the document for testing
  * purposes.
