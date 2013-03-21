@@ -7,6 +7,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static plusone.utils.PaperAbstract.freqMap;
 
 public class SVDTest {
     final static double eps = 1e-2;
@@ -31,14 +32,6 @@ public class SVDTest {
         public List<TrainingPaper> asTrainingPapers() {
             return new ArrayList<TrainingPaper>(papers);
         }
-    }
-
-    static Map<Integer, Integer> freqMap(int[] freqArray) {
-        Map<Integer, Integer> freqMap = new HashMap<Integer, Integer>();
-        for (int i = 0; i < freqArray.length; ++i) {
-            if (freqArray[i] > 0) freqMap.put(i, freqArray[i]);
-        }
-        return freqMap;
     }
 
     /**
@@ -111,9 +104,8 @@ public class SVDTest {
 
         SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
 
-        int[] testFrequencies = {1, 0, 1, 0};
         PaperAbstract testPaper =
-            new PaperAbstract(2, null, null, freqMap(testFrequencies));
+            new PaperAbstract(2, null, null, freqMap(1, 0, 1, 0));
         testPaper.generateTf(0, null, false);
 
         double[] predictions = svd.predict(testPaper);
@@ -134,9 +126,8 @@ public class SVDTest {
 
         SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
 
-        int[] testFrequencies = {0, 1, 0, 0};
         PaperAbstract testPaper =
-            new PaperAbstract(2, null, null, freqMap(testFrequencies));
+            new PaperAbstract(2, null, null, freqMap(0, 1, 0, 0));
         testPaper.generateTf(0, null, false);
 
         double[] predictions = svd.predict(testPaper);

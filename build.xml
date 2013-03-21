@@ -58,6 +58,9 @@
               <path refid="library.jars"/>
               <path location="${build}"/>
           </classpath>
+          <test name="plusone.utils.PaperAbstractTest">
+              <formatter type="plain" usefile="false"/>
+          </test>
           <test name="plusone.utils.SVDTest">
               <formatter type="plain" usefile="false"/>
           </test>

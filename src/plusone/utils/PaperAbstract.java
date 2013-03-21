@@ -296,4 +296,12 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		}
 		return tf;
 	}
+
+	public static Map<Integer, Integer> freqMap(int ... freqs) {
+		Map<Integer, Integer> freqMap = new HashMap<Integer, Integer>();
+		for (int i = 0; i < freqs.length; ++i) {
+			if (freqs[i] > 0) freqMap.put(i, freqs[i]);
+		}
+		return freqMap;
+	}
 }
