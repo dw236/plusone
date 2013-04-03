@@ -98,7 +98,7 @@ args=\
  -Dplusone.outPath=$out_dir
  -Dplusone.dumpMeta=false
  -Dplusone.randomSeed=9
- -Dplusone.useNewJsonFormat=true
+ -Dplusone.useNewJsonFormat=false
  "
 
 # options to sample cpu

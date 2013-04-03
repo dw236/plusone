@@ -149,9 +149,9 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		if (test && testingTf.isEmpty()) {
 			System.err.println("WARNING: Test document is empty");
 		}
-		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
-			norm += entry.getValue() * entry.getValue();
-		}
+//		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
+//			norm += entry.getValue() * entry.getValue();
+//		}
 		norm = Math.sqrt(norm);
 	}
 	
@@ -185,9 +185,9 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 			}
 		}
 		
-		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
-			norm += entry.getValue() * entry.getValue();
-		}
+//		for (Map.Entry<Integer, Integer> entry : trainingTf.entrySet()) {
+//			norm += entry.getValue() * entry.getValue();
+//		}
 		
 		norm = Math.sqrt(norm);
 	}
