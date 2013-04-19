@@ -45,3 +45,5 @@ Plusone.jar
 projector/data/*
 
 /kmeans/*
+
+/cooccurrence/data
