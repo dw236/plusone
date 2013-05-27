@@ -1,7 +1,6 @@
 We generated datasets from the LDA model for a range of parameters,
 and tested the algorithms discussed in previous section on the
-prediction task. For the LDA algorithm and our Projector algorithm, we
-also have results for the recovery task.  
+prediction task. For the LDA algorithm and our Projector algorithm, we also have results for the recovery task.  
 
 
 \begin{figure}
@@ -25,22 +24,19 @@ also have results for the recovery task.
         }
 
     \end{center}
-    \caption{Results of various algorithms on $16$ generated datasets, with $k=20, n=1000,m=1000,l=75$. Each subfigure has a fixed $sig\_topic$, the plots are result of the prediction task versus $sig\_word$}
+    \caption{Results of various algorithms on $12$ generated datasets, with $k=20, n=1000,m=1000,l=75$. Each subfigure has a fixed $sig\_topic$, the plots are result of the prediction task versus $sig\_word$}
    \label{fig:predictResult}
 \end{figure}
 
-In table~\ref{tab:overall}, we give results for the various algorithms
-on the uniform $\alpha$ and $\beta$ datasets.  Here, we see that
-Projector is the best of all non-cheating algorithms.  In
-table~\ref{tab:cosine}, we give cosine similarity measures for these
-datasets for mallet lda, k-means, and projector.  Typically, we saw
-that topic cosine similarity correlates with prediction performance.
+In table~\ref{tab:overall}, we give results for the various algorithms on the uniform $\alpha$ and $\beta$ datasets. Recall the prediction task is to predict $s=3$ unseen words for each documents, and the numbers shown in the table are the average precisions. Here, we see that Projector is the best of all non-cheating algorithms. 
+
+In table~\ref{tab:cosine}, we give results of the recovery task on these datasets for Mallet LDA, k-means, and Projector. Recall the score for the recovery task is the average weight of the max weight matching between learned topics and real topics, with weights being the cosine similarities. Typically, we saw that topic cosine similarity correlates with prediction performance.
 
 \begin{table*}
 {\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline 
-sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &lda-15 &ldaC &ldaT &malletlda-15 &projector-15 \\
+sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &LDA-15 &LDAC &LDAT &MalletLDA-15 &Projector-15 \\
  \hline 
 5.09  &19.4  &0.21  &0.5  &0.23  &0.46  &0.28  &0.57  &0.54  &0.52  &\textbf{0.54}
   \\
@@ -119,7 +115,7 @@ sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &lda-15 &ldaC &ldaT
 \end{tabular}
 
 }
-\caption{Bold indicates champion non-cheating method for each row.}
+\caption{Results of the prediction task. Bold indicates champion non-cheating method for each row.}
 
 \label{tab:overall}
 \end{table*}
@@ -129,76 +125,75 @@ sig\_topics &sig\_words &Baseline &LSI-15 &kmeans-15 &knn-25 &lda-15 &ldaC &ldaT
 {\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
-sig\_topics &sig\_words &lda-15 &malletlda-15 &projector-15 &~kmeans-cosine &~lda-cosine &~mallet-cosine &~projector-cosine \\
+sig\_topics &sig\_words &LDA-15 &MalletLDA-15 &Projector-15 &~kmeans-cosine &~LDA-cosine &~Mallet-cosine &~Projector-cosine \\
  \hline 
 5.09  &19.4  &0.28  &0.52  &\textbf{0.54}
-  &0.14  &0.62  &0.98  &0.98  \\
+  &0.14  &0.62  &\textbf{0.98}  &\textbf{0.98}  \\
  \hline 
 3.03  &199  &0.06  &0.15  &\textbf{0.18}
-  &0.45  &0.48  &0.67  &0.88  \\
+  &0.45  &0.48  &0.67  &\textbf{0.88}  \\
  \hline 
 5.01  &53.6  &0.12  &0.31  &\textbf{0.32}
-  &0.23  &0.41  &0.94  &0.95  \\
+  &0.23  &0.41  &0.94  &\textbf{0.95}  \\
  \hline 
 1.19  &19.73  &0.73  &0.79  &\textbf{0.82}
-  &0.15  &0.93  &0.99  &1.0  \\
+  &0.15  &0.93  &0.99  &\textbf{1.0}  \\
  \hline 
 7.42  &55  &0.17  &\textbf{0.25}
-  &0.23  &0.23  &0.37  &0.76  &0.73  \\
+  &0.23  &0.23  &0.37  &\textbf{0.76}  &0.73  \\
  \hline 
 1.19  &206.13  &0.27  &0.29  &\textbf{0.32}
-  &0.45  &0.81  &0.83  &0.94  \\
+  &0.45  &0.81  &0.83  &\textbf{0.94}  \\
  \hline 
 2.46  &53.2  &0.49  &0.52  &\textbf{0.54}
-  &0.22  &0.84  &0.97  &0.98  \\
+  &0.22  &0.84  &0.97  &\textbf{0.98}  \\
  \hline 
 7.36  &20.6  &0.22  &\textbf{0.41}
-  &0.4  &0.14  &0.39  &0.98  &0.94  \\
+  &0.4  &0.14  &0.39  &\textbf{0.98}  &0.94  \\
  \hline 
 3.06  &21.53  &0.6  &0.65  &\textbf{0.67}
-  &0.15  &0.91  &0.99  &0.99  \\
+  &0.15  &0.91  &\textbf{0.99}  &\textbf{0.99}  \\
  \hline 
 3.07  &120.4  &0.08  &0.23  &\textbf{0.26}
-  &0.34  &0.49  &0.87  &0.94  \\
+  &0.34  &0.49  &0.87  &\textbf{0.94}  \\
  \hline 
 2.48  &119.53  &0.12  &0.28  &\textbf{0.3}
-  &0.34  &0.59  &0.88  &0.95  \\
+  &0.34  &0.59  &0.88  &\textbf{0.95}  \\
  \hline 
 2.51  &204.33  &0.07  &0.17  &\textbf{0.22}
-  &0.45  &0.49  &0.75  &0.9  \\
+  &0.45  &0.49  &0.75  &\textbf{0.9}  \\
  \hline 
 3.06  &53.53  &0.39  &0.48  &\textbf{0.5}
-  &0.22  &0.75  &0.96  &0.97  \\
+  &0.22  &0.75  &0.96  &\textbf{0.97}  \\
  \hline 
 5.07  &205.67  &0.07  &0.07  &\textbf{0.09}
-  &0.45  &0.46  &0.42  &0.69  \\
+  &0.45  &0.46  &0.42  &\textbf{0.69}  \\
  \hline 
 1.2  &51.6  &0.6  &0.68  &\textbf{0.69}
-  &0.23  &0.84  &0.98  &0.99  \\
+  &0.23  &0.84  &0.98  &\textbf{0.99}  \\
  \hline 
 5.05  &120.87  &0.08  &0.16  &\textbf{0.2}
-  &0.34  &0.41  &0.78  &0.86  \\
+  &0.34  &0.41  &0.78  &\textbf{0.86}  \\
  \hline 
 7.37  &116.53  &\textbf{0.1}
   &\textbf{0.1}
   &\textbf{0.1}
-  &0.33  &0.39  &0.43  &0.58  \\
+  &0.33  &0.39  &0.43  &\textbf{0.58}  \\
  \hline 
 2.5  &19.4  &0.61  &0.68  &\textbf{0.72}
-  &0.14  &0.86  &0.99  &0.99  \\
+  &0.14  &0.86  &\textbf{0.99}  &\textbf{0.99}  \\
  \hline 
 7.39  &208.13  &\textbf{0.08}
-  &0.07  &0.06  &0.46  &0.46  &0.23  &0.41  \\
+  &0.07  &0.06  &\textbf{0.46}  &\textbf{0.46}  &0.23  &0.41  \\
  \hline 
 1.18  &118.07  &0.42  &0.47  &\textbf{0.48}
-  &0.33  &0.84  &0.93  &0.97  \\
+  &0.33  &0.84  &0.93  &\textbf{0.97}  \\
  \hline 
 
 \end{tabular}
 
 }
-\caption{Bold indicates champion results and we use cosine similiarity where matching
-to model topics uses maximum weight matching.}
+\caption{Results on the prediction task(the first $3$ columns) and recovery task (the last $4$ columns). Bold indicates champion results.}
 \label{tab:cosine}
 \end{table*}
 
@@ -211,7 +206,7 @@ times the vocabulary size.
 
 For $\alpha$ chosen so that the topic distribution obeys a power
 law, we present results in table~\ref{tab:pareto}. Here, we see that
-projector again performs robustly well.  We note that 
+Projector again performs robustly well.  We note that 
 the Mallet implementation optimizes over varying values of
 $\alpha$. 
 
@@ -219,7 +214,7 @@ $\alpha$.
 {\small
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
 \hline 
-sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-15 &~lda-cosine &~mallet-cosine &~projector-cosine \\
+sig\_topics &sig\_words &Baseline &LDA-15 &LDAC &LDAT &MalletLDA-15 &Projector-15 &~LDA-cosine &~Mallet-cosine &~Projector-cosine \\
  \hline 
 1.4  &98.73  &{0.12}
   &{0.5}
@@ -227,7 +222,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.52}
   &{0.43}
   &\textbf{0.51}
-  &0.95  &0.8  &0.98  \\
+  &0.95  &0.8  &\textbf{0.98}  \\
  \hline 
 3.59  &203  &{0.06}
   &{0.06}
@@ -235,7 +230,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.15}
   &{0.12}
   &\textbf{0.13}
-  &0.46  &0.65  &0.87  \\
+  &0.46  &0.65  &\textbf{0.87}  \\
  \hline 
 2.29  &52.93  &{0.13}
   &{0.49}
@@ -243,7 +238,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.54}
   &{0.47}
   &\textbf{0.5}
-  &0.91  &0.88  &0.92  \\
+  &0.91  &0.88  &\textbf{0.92}  \\
  \hline 
 3.61  &54.8  &{0.19}
   &{0.19}
@@ -251,7 +246,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.45}
   &{0.35}
   &\textbf{0.43}
-  &0.46  &0.79  &0.98  \\
+  &0.46  &0.79  &\textbf{0.98}  \\
  \hline 
 1.69  &100.8  &{0.08}
   &{0.4}
@@ -259,7 +254,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.45}
   &{0.38}
   &\textbf{0.44}
-  &0.91  &0.87  &0.97  \\
+  &0.91  &0.87  &\textbf{0.97}  \\
  \hline 
 2.29  &202  &{0.06}
   &{0.07}
@@ -267,7 +262,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.22}
   &{0.19}
   &\textbf{0.21}
-  &0.5  &0.73  &0.87  \\
+  &0.5  &0.73  &\textbf{0.87}  \\
  \hline 
 1.38  &204.67  &{0.06}
   &{0.15}
@@ -275,7 +270,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.33}
   &{0.27}
   &\textbf{0.3}
-  &0.58  &0.78  &0.95  \\
+  &0.58  &0.78  &\textbf{0.95}  \\
  \hline 
 3.58  &99.53  &{0.16}
   &{0.16}
@@ -283,7 +278,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.35}
   &{0.27}
   &\textbf{0.33}
-  &0.44  &0.81  &0.9  \\
+  &0.44  &0.81  &\textbf{0.9}  \\
  \hline 
 1.66  &54.2  &{0.1}
   &{0.58}
@@ -291,7 +286,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.6}
   &{0.47}
   &\textbf{0.58}
-  &0.92  &0.89  &0.99  \\
+  &0.92  &0.89  &\textbf{0.99}  \\
  \hline 
 2.27  &97.53  &{0.11}
   &{0.32}
@@ -299,7 +294,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.38}
   &{0.32}
   &\textbf{0.36}
-  &0.88  &0.85  &0.97  \\
+  &0.88  &0.85  &\textbf{0.97}  \\
  \hline 
 1.72  &205.2  &{0.06}
   &{0.08}
@@ -307,7 +302,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.23}
   &{0.19}
   &\textbf{0.23}
-  &0.52  &0.7  &0.94  \\
+  &0.52  &0.7  &\textbf{0.94}  \\
  \hline 
 1.4  &52.87  &{0.12}
   &{0.61}
@@ -315,7 +310,7 @@ sig\_topics &sig\_words &Baseline &lda-15 &ldaC &ldaT &malletlda-15 &projector-1
   &{0.68}
   &{0.6}
   &\textbf{0.64}
-  &0.85  &0.91  &0.92  \\
+  &0.85  &0.91  &\textbf{0.92}  \\
  \hline 
 
 \end{tabular}
@@ -326,7 +321,7 @@ and cosine similarities are included.}
 \label{tab:pareto}
 \end{table*}
 
-Finally, table~\ref{tab:real} contains results for the word prediction
+Finally, table~\ref{tab:real} contains results for the prediction
 task on the standard real world datasets we discussed earlier.
 
 \begin{table*}[ht]
@@ -334,7 +329,7 @@ task on the standard real world datasets we discussed earlier.
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
- &Baseline &LSI-15 &knn-15 &lda-15 &malletlda-15 &projector-15 \\
+ &Baseline &LSI-15 &knn-15 &LDA-15 &MalletLDA-15 &Projector-15 \\
  \hline 
 AP &0.21 &0.3 &0.28 &0.26 &0.26 &0.24 \\
  \hline 
@@ -387,8 +382,8 @@ the number of documents and the average document lengths in the figures above. }
 \label{fig:time-proj-mallet}
 \end{figure}
 
-Figure~\ref{fig:time-proj-mallet}, compares the runtimes of Projector with Mallet
-LDA and suggests that Mallet's runtime increases linearly with respect
+In figure~\ref{fig:time-proj-mallet} we compare the runtimes of Projector with Mallet
+LDA and the result shows that Mallet's runtime increases linearly with respect
 to average document length and the number of documents.  Projector appears sublinear
 in each, which suggests that the our timings are influenced by fixed
 startup costs.  Not shown, is Mallet's better scaling with respect

@@ -1,53 +1,55 @@
 \subsection{Previous Methods.}
 
-We method produces a word distribution for teach test document and
-outputs the most frequently unseen words in this distribution.
+We adapt the methods to generate a  word distribution for each test document, and output the $s$ most likely unseen words according to this distribution.
 
 \begin{itemize}
 
 \item
-{\bf Baseline:} uses the training set word distribution. 
+{\bf Baseline:} The word distribution for every test document is the distribution over words in the training set. 
 
 \item
 {\bf KNN:} KNN finds the $k$ most similar training documents to a
 testing document, where similarity is defined as the cosine between
 the two documents as vectors in the word space. For a testing
-document, KNN predicts the $s$ unseen words that are most frequent in
-its $k$ closest training documents. Notice baseline is just KNN with
+document, KNN uses the distribution over words in
+its $k$ closest training documents to predict. Notice baseline is just KNN with
 $k$ equal to the number of training documents.
 
 
 \item
-{\bf LDA:} Davide Blei's implementation \cite{LDAcode} based of
-variational EM uses an ``estimation'' phase to train a topic model on
-the training data.  Then use the ``inference'' routine to infer a
-topic distribution for a test document which than uses the topic
-definitions to produce a word distribution for the document.
+{\bf LDA:} It is $NP$-hard to find the maximum likelihood fit to the LDA model,
+so in practice, the prevailing approach to learn LDA model is local
+search. We adopted the algorithm implemented by Blei \cite{LDAcode}
+using variational EM (see \cite{Blei2003a}).
+
+The LDA algorithm has two procedures,{\em "estimation"} and {\em "inference"}. {\em "estimation"} takes a collection of documents as
+input, and outputs estimated model parameters for the corpus, in
+particular the estimated term-topic matrix. {\em "inference'} takes a
+collection of documents as well as a LDA model, and outputs an
+inferred topic mixture for each document. For our prediction task, we
+use the estimated term-topic matrix of the training set and the topic
+mixture for each testing document to estimate the most likely unseen
+words.
 
 \item
-{K-means:} Uses $k$-means with cosine similaritly to produce
-a topic matrix, and uses LDA inference to produce a word
-distibution for each test document. 
+{\bf LDA(MALLET)} We also experiment with another implementation of LDA in Mallet \cite{McCallumMALLET} using fast Gibbs sampling \cite{MimnoSparse}. The implementation in Mallet follows a similar {\em "estimation"} and {\em "inference"} workflow.
 
-\item
-{\bf LDA(MALLET)} Uses the implementation of LDA in Mallet
-based on Gibbs sampling \cite{McCallumMALLET}
 
 \item {\bf LDAT, LDAC} For generated LDA datasets, we have two
   "cheating" algorithms as benchmarks. LDAT knows the real term-topic
-  matrix $A$ of the model and uses the ``inference'' routine to find a
+  matrix $A$ of the model and uses the {\em "inference"} routine to find a
   word distribution for each document.  LDAC knows the real
   term-document matrix $M$ for each testing document, and uses the
   real word distribution for a test document.  LDAC is the best we can
   do given sampling noise.
 
-\item {\bf LSI}.  Computes the best rank $k$ subspace approximation of the document-word
-matrix.  Then projects test document into the subspace to find a word distribution.
+\item
+{\bf K-means:} We partition the training documents using $k$-means, with $1-\cos(w,w')$ as the distance between documents $w$ and $w'$.
+We use the $k$ cluster centers as the term-topic matrix, and uses the {\em "inference"} procedure of BLei's LDA implementation to produce a word
+distibution for each test document. 
 
-\item {\bf Projector}. We have two versions of Projector which
-is described below which produces a topic word matrix.  Then
-LDA inference is used on each test document to produce
-a word distribution. 
+\item {\bf LSI}.  We compute the best rank-$k$ subspace approximation of the document-word
+matrix for the training set. For each test document, we project it onto the subspace, and get a word distribution by shifting and normalizing its projection. 
 
 \end{itemize}
 
@@ -79,8 +81,7 @@ is computationally more efficient than the LDA algorithm, and has a
 clear geometric interpretation, but doesn't recover the topics as
 distributions of words. We aim to start from the subspace computed by
 SVD, and use some straightforward operation to construct the
-topics. Our algorithm is based on geometric intuition of the documents
-as points in the high dimensional word space. The algorithm is as
+topics. The algorithm is as
 follows
 \begin{description}
 	\item[Input] $\hat{M}$: observed distributions of training documents, $k$: number of topics, $\delta$: algorithm parameter
@@ -95,14 +96,19 @@ follows
 	\item[Whitening] Make all $C_i$ distribution over words: Map all the $C_i$'s to the original word space, and then set $C_i=C_i+center$, truncate the negative entries in $C_i$ to be $0$, normalize $C_i$ so the sum of entries is $1$.\\
                                             Return $\hat{A}_i=C_i$ be the recovered topics.
 \end{description}
-We illustrate in figure~\ref{fig:subfigures} how our algorithm works
+We illustrate in figure~\ref{fig:projectorVis} how our algorithm works
 using the a visualization on two datasets with $k=3$
-topics. Notice after the {\em Shift} step, we want to find the best
-$(k-1)$-dimensional subspace since the columns from the topic-document
-matrix are from the $(k-1)$-simplex.
+topics.
 
-\begin{figure}[h]
-     \begin{center}
+
+The design of our algorithm is based on geometric intuitions of the documents
+as points in the high dimensional word space. With LDA as the underlying generative model, if we consider each document as its true underlying distribution over words without the sampling noise, they reside in the $(k-1)$-simplex subspace with the $k$ topics as vertices. Our {\em Shift} and {\em SVD} steps aim to approximatley find this $(k-1)$-dimensional subspace.
+
+After projecting all documents onto the subspace, the projected points lie approximately inside the convex hull of the $k$ topics. The origin also lies inside the convex hull, and the $k$ topics are along the pointy directions. We heuristically find the pointy directions using $k$-means with distances defined based on cosine similarity. 
+
+Documents are convex combinations of the topics. The more interior points have more balanced weights on a relatively large number of topics, while points further away from the origin have large portion from a few topics, and the vertices are pure topics. The {\em Scale} step exploits this intuition by starting from the cluster centers, which gives the pointy directions, and pushing the centers away from the origin to find a convex hull approximately contains all the documents. As long as there is a slightly stronger presence of one topic in a cluster center, the scaling will amplify this topic. Finally we do some post processing to get valid distributions over words using the corners. 
+\begin{figure}[h]  
+   \begin{center}
 
         \subfigure[$\alpha=0.1,\beta=0.25,k=3$]{
 
@@ -122,16 +128,14 @@ matrix are from the $(k-1)$-simplex.
         }
 
     \end{center}
-{\small
     \caption{Illustration of Projector. The left figures are the $V_i$'s after the SVD step. In the right figures, the black 'o's at the ends of dotted lines are the real topic, black $\times$ are the $C_i$'s before scaling, black $\diamond$ are $C_i$'s after scaling, and black $\Box$ are the recovered $\hat{A}_i$'s. All points in the plot are after shifting and projected on the SVD subspace. }
-}
-   \label{fig:subfigures}
+\label{fig:projectorVis}
 \end{figure}
 
 
 We use estimated $\hat{A}$ and the inference procedure of the LDA
 algorithm to predict words for testing documents. We use the inference
-procedure of LDA since LDAT also uses it, and then we can attribute
+procedure of LDA since LDAT also uses it, so we can attribute
 the performance difference between LDAT and Projector to the quality
 of $\hat{A}$ compared to the real topics.
 
