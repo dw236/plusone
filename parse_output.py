@@ -61,7 +61,7 @@ def parse(filename, show=False, external=True):
             util.show()
         else:
             util.savefig(filename + '.pdf')
-    
+
     return names, scores, data[TEST][0], data[PARAMS], data[DATA]
 
 def main():

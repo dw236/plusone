@@ -20,7 +20,7 @@ def main(filename, save):
     """
     projector_beta = 'projector/data/final.beta'
     lda_beta = 'lda/trained/final.beta'
-    kmeans_beta = 'kmeans/centers'
+#    kmeans_beta = 'kmeans/centers'
     real_beta = 'src/datageneration/output/results.pickle'
     mallet_beta = 'Mallet/beta'
     save_dir = 'data'
@@ -41,11 +41,11 @@ def main(filename, save):
                                plot=False, save=save, save_name='mallet', 
                                save_dir=save_dir)[-2]
     mallet_norms = [pair[1] for pair in mallet_labels]
-    print "kmeans"
-    kmeans_labels = match_beta(kmeans_beta, real_beta, metric='cosine',
-                               plot=False, save=save, save_name='kmeans',
-                               save_dir=save_dir)[-2]
-    kmeans_norms = [pair[1] for pair in kmeans_labels]
+#    print "kmeans"
+#    kmeans_labels = match_beta(kmeans_beta, real_beta, metric='cosine',
+#                               plot=False, save=save, save_name='kmeans',
+#                               save_dir=save_dir)[-2]
+#    kmeans_norms = [pair[1] for pair in kmeans_labels]
     print "done"
     
     print "writing to file...",
@@ -62,9 +62,9 @@ def main(filename, save):
             f.write(str(norm) + ' ')
         f.write('\n')
         
-        for norm in kmeans_norms:
-            f.write(str(norm) + ' ')
-        f.write('\n')
+#        for norm in kmeans_norms:
+#            f.write(str(norm) + ' ')
+#        f.write('\n')
     print "done"
 
 if __name__ == '__main__':

@@ -283,7 +283,7 @@ public class Main {
 			cosineSimilarityMean /= cosineSimilarities.length; 
 			JSONObject fakeExperiment = new JSONObject();
 			fakeExperiment.put("Predicted_Mean", cosineSimilarityMean);
-			allTests.put("~projector-cosine", fakeExperiment);
+			allTests.put("~~projector-cosine", fakeExperiment);
 			
 			String[] cosineSimilaritiesLDA = in.nextLine().split(" ");
 			double cosineSimilarityMeanLDA = 0;
@@ -293,18 +293,21 @@ public class Main {
 			cosineSimilarityMeanLDA /= cosineSimilaritiesLDA.length; 
 			JSONObject fakeExperimentLDA = new JSONObject();
 			fakeExperimentLDA.put("Predicted_Mean", cosineSimilarityMeanLDA);
-			allTests.put("~lda-cosine", fakeExperimentLDA);
-			
+			allTests.put("~~lda-cosine", fakeExperimentLDA);
+			if (testIsEnabled("malletLda")){
 			String[] cosineSimilaritiesMallet = in.nextLine().split(" ");
 			double cosineSimilarityMeanMallet = 0;
 			for (String sim : cosineSimilaritiesMallet) {
 				cosineSimilarityMeanMallet += Double.parseDouble(sim);
 			}
+			
+			
 			cosineSimilarityMeanMallet /= cosineSimilaritiesMallet.length; 
 			JSONObject fakeExperimentMallet = new JSONObject();
 			fakeExperimentMallet.put("Predicted_Mean", cosineSimilarityMeanMallet);
-			allTests.put("~mallet-cosine", fakeExperimentMallet);
-			
+			allTests.put("~~mallet-cosine", fakeExperimentMallet);
+			}
+			if (testIsEnabled("kmeans")){
 			String[] cosineSimilaritiesKmeans = in.nextLine().split(" ");
 			double cosineSimilarityMeanKmeans = 0;
 			for (String sim : cosineSimilaritiesKmeans) {
@@ -313,7 +316,8 @@ public class Main {
 			cosineSimilarityMeanKmeans /= cosineSimilaritiesKmeans.length;
 			JSONObject fakeExperimentKmeans = new JSONObject();
 			fakeExperimentKmeans.put("Predicted_Mean", cosineSimilarityMeanKmeans);
-			allTests.put("~kmeans-cosine", fakeExperimentKmeans);
+			allTests.put("~~kmeans-cosine", fakeExperimentKmeans);
+			}
 		}
 	}
 
@@ -614,9 +618,9 @@ public class Main {
 
 				runClusteringMethod(lsi, ks, size,false);
 
-				LSIOld0 lsio0 = new LSIOld0(dimensions[dk], trainingSet, terms);
-
-				runClusteringMethod(lsio0, ks, size,false);
+//				LSIOld0 lsio0 = new LSIOld0(dimensions[dk], trainingSet, terms);
+//
+//				runClusteringMethod(lsio0, ks, size,false);
 			}
 		}
 		//PLSI
@@ -694,8 +698,7 @@ public class Main {
 			"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				projector = new Projector("projector", trainingSet, wordIndexer, 
-								terms, dimensions[dk], trainingIndices, 
-								testIndices, learnedAlpha, !generator.equals(""));
+								terms, dimensions[dk], !generator.equals(""));
 				runClusteringMethod(projector, ks, size, true);
 			}
 		}
@@ -705,7 +708,7 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				Lda ldaTrained = new Lda("ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
+				Lda ldaTrained = new Lda("~ldaT", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaTrained, ks, size, true);
 				handleHeldOutInferenceTests(
@@ -719,7 +722,7 @@ public class Main {
 			int[] dimensions = parseIntList(System.getProperty("plusone.lda.dimensions", 
 					"20"));
 			for (int dk = 0; dk < dimensions.length; dk ++) {
-				Lda ldaCheat = new Lda("ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
+				Lda ldaCheat = new Lda("~ldaC", trainingSet, wordIndexer, terms, dimensions[dk],
 						trainingIndices, testIndices);
 				runClusteringMethod(ldaCheat, ks, size, true);
 			}

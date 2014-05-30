@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
 
+import org.ejml.simple.SimpleMatrix;
+
+
 public class SVD {
 
 	class Entry{
@@ -32,35 +35,44 @@ public class SVD {
 	protected double[][] mu;
 	protected double[][] beta;
 	protected double[] sigma;
-	public int numTerms;
+	protected boolean subtractMean;
+	double[] centroid;
+	private int numTerms;
+	private int numDocs;
 	private Random rand=new Random();
+	boolean shift=false;
 	final long svdTimeNano;
 
 	/* Set to true to bring back an old bug. */
 	protected boolean oldBehavior0 = false;
 
-	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms) {
+	public SVD(int DIMENSION, List<TrainingPaper> trainingSet, int numTerms, boolean shift) {
 
 		this.DIMENSION = DIMENSION;
 		this.trainingSet = trainingSet;
 		this.numTerms = numTerms;
+		this.numDocs=trainingSet.size();
+		this.shift=shift;
 
 		long startNanoTime = System.nanoTime();
 		System.out.println("[SVD] training with " + DIMENSION + 
 				" dimension.");
 
-		mu = new double[DIMENSION][trainingSet.size()];
+		mu = new double[DIMENSION][numDocs];
 		beta = new double[DIMENSION][numTerms];
 		sigma = new double[DIMENSION];
-		DocTerm = new LinkedList[trainingSet.size()];
+		centroid=new double[numTerms];
+		DocTerm = new LinkedList[numDocs];
 		TermDoc = new LinkedList[numTerms];
-		for (int i = 0; i < trainingSet.size(); i ++) {
+		for (int i = 0; i < numDocs; i ++) {
 			TrainingPaper doc = trainingSet.get(i);
+			int length=doc.getTrainingLength();
 			DocTerm[i] = new LinkedList<Entry>();
 
 			for (Integer word : doc.getTrainingWords()) {
-				Entry temp = new Entry(i, word, doc.getTrainingTf(word));
+				Entry temp = new Entry(i, word, ((double)doc.getTrainingTf(word))/length);
 				DocTerm[i].add(temp);
+				centroid[word]+=((double)doc.getTrainingTf(word))/length/numDocs;
 				if (TermDoc[word] == null){
 					TermDoc[word] = new LinkedList<Entry>();
 				}
@@ -73,8 +85,11 @@ public class SVD {
 		svdTimeNano = System.nanoTime() - startNanoTime;
 		System.out.format("[SVD] took %.3f seconds.\n",
 				  svdTimeNano/1.0e9);
+		
 	}
-
+	public double[] getCentroid(){
+		return this.centroid;
+	}
 	public long getSVDTimeNano() {
 	    return svdTimeNano;
 	}
@@ -101,6 +116,12 @@ public class SVD {
 		}
 		return result;
 	}
+	public double sum(double[] a){
+		double result=0;
+		for (double v : a)
+			result+=v;
+		return result;
+	}
 
 	public void powerMethod(double[] x, double[] y, int k){
 		for (int j = 0; j < y.length; j ++)
@@ -109,11 +130,13 @@ public class SVD {
 		double xnorm;
 		double ynorm;
 		double diff = dotProduct(x, x) * dotProduct(y, y);
-
+		double xsum=0;
 		boolean converge = false;
 		while (!converge){
 			double[] subtract = new double[k+1];
 			xnorm = dotProduct(x, x);
+			if (shift)
+				xsum=sum(x);
 			if (xnorm <= 0.0001)
 				break;
 			
@@ -127,6 +150,8 @@ public class SVD {
 						value += t.value * x[t.docID];
 					}
 				}
+				if (shift)
+					value-=centroid[i]*xsum;
 				for (int j = 0; j < k; j ++)
 					value -= beta[j][i] * sigma[j] * subtract[j];
 
@@ -141,6 +166,10 @@ public class SVD {
 			for (int i = 0; i < k; i ++){
 				subtract[i] = dotProduct(beta[i], y);
 			}
+			double xshift=0;
+			if (shift)
+				xshift=dotProduct(y,centroid);
+				
 			for (int i = 0; i < x.length; i ++){
 				double value = 0;
 				for (Entry t : DocTerm[i]) {
@@ -148,6 +177,8 @@ public class SVD {
 				}
 				for (int j = 0; j < k; j ++)
 					value -= mu[j][i] * sigma[j] * subtract[j];
+				if (shift)
+					value-=xshift;
 				x[i] = value / ynorm;
 			}
 
@@ -186,15 +217,24 @@ public class SVD {
 			for(int i=0;i<mu[k].length;i++)
 				mu[k][i]=rand.nextDouble();
 			//make it orthogonal to previous vectors
+			double sum=0;
+			if (shift){
+				sum=this.sum(mu[k]);
+				for (int i=0;i<mu[k].length;i++)
+					mu[k][i]-=sum/mu[k].length;
+				}
 			for (int i = 0; i < k; i ++) {
 				orthog(mu[i],  mu[k]);
 			}
+
 			powerMethod(mu[k], beta[k], k);
 
 			sigma[k] = 1;
 			sigma[k]*=normalize(mu[k]);
 			sigma[k]*=normalize(beta[k]); 
+
 		}
+	
 	}
 
 
@@ -253,6 +293,13 @@ public class SVD {
 	
 	public double[] getSingularValues() {
 		return sigma;
+	}
+	
+	public double[][] getU() {
+		return beta;
+	}
+	public double[][] getV(){
+		return mu;
 	}
 
     /**

@@ -8,9 +8,10 @@ import org.ejml.simple.SimpleMatrix;
  */
 public interface PaperIF {
     public Integer getIndex();
-    public Integer getTrainingTf(Integer word);
+    public int getTrainingTf(Integer word);
     public SimpleMatrix getTrainingTfAsSimpleMatrixRow(int vocabSize);
     public Set<Integer> getTrainingWords();
     public Integer[] getInReferences();
     public Integer[] getOutReferences();
+    public int getTrainingLength();
 }

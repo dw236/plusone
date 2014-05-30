@@ -44,7 +44,7 @@ public class SVDTest {
         corpus.addPaper(0, 0, 2, 0, 0);
         corpus.addPaper(0, 0, 0, 7, 0);
 
-        SVD svd = new SVD(2, corpus.asTrainingPapers(), 5);
+        SVD svd = new SVD(2, corpus.asTrainingPapers(), 5,false);
 
         double[] expectedSingularValues = {7, 5};
         assertArrayEquals(expectedSingularValues, svd.getSingularValues(), eps);
@@ -61,7 +61,7 @@ public class SVDTest {
         corpus.addPaper(0, 0, 0, 0, 5, 0);
         corpus.addPaper(0, 0, 0, 0, 6, 0);
 
-        SVD svd = new SVD(4, corpus.asTrainingPapers(), 6);
+        SVD svd = new SVD(4, corpus.asTrainingPapers(), 6,false);
 
         /* We expect the following topics:
          *   [0, 0, 0  , 0  , 1, 0]  sigma = sqrt(61)
@@ -102,7 +102,7 @@ public class SVDTest {
         corpus.addPaper(1000, 1000, 0, 0);
         corpus.addPaper(0, 0, 1, 1);
 
-        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
+        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4,false);
 
         PaperAbstract testPaper =
             new PaperAbstract(2, null, null, freqMap(1, 0, 1, 0));
@@ -124,7 +124,7 @@ public class SVDTest {
         corpus.addPaper(1, 1, 1, 0);
         corpus.addPaper(0, 1, 1, 2);
 
-        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4);
+        SVD svd = new SVD(2, corpus.asTrainingPapers(), 4,false);
 
         PaperAbstract testPaper =
             new PaperAbstract(2, null, null, freqMap(0, 1, 0, 0));

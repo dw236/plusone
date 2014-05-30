@@ -47,10 +47,10 @@ public class Lda extends ClusteringTest {
 	 */
 	public Lda(String variant) {
 		super(variant);
-		if (variant.substring(0, 4).equals("ldaT")) {
+		if (variant.substring(0, 4).equals("~ldaT")) {
 			this.trainCheat = true;
 			this.testCheat = false;
-		} else if (variant.substring(0,4).equals("ldaC")) {
+		} else if (variant.substring(0,4).equals("~ldaC")) {
 			this.trainCheat = true;
 			this.testCheat = true;
 		} else if (variant.substring(0, 4).equals("proj")) {

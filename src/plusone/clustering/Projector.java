@@ -11,11 +11,16 @@ import java.util.*;
 
 import org.ejml.simple.SimpleMatrix;
 
+import Jama.Matrix;
+import Jama.QRDecomposition;
+
 import plusone.utils.Indexer;
 import plusone.utils.PaperAbstract;
 import plusone.utils.PlusoneFileWriter;
 import plusone.utils.PredictionPaper;
 import plusone.utils.RunInfo;
+import plusone.utils.SVD;
+import plusone.utils.Kmeans;
 import plusone.utils.Terms;
 import plusone.utils.TrainingPaper;
 import plusone.utils.Utils;
@@ -37,12 +42,19 @@ public class Projector extends ClusteringTest {
 	private Indexer<String> wordIndexer;
 	private Terms terms;
 	private int numTopics;
-	private Map<PaperAbstract, Integer> trainingIndices;
-	private Map<PaperAbstract, Integer> testIndices;
-	private double[][] betaMatrix;
-	private double learnedAlpha;
+	private int numTerms;
+	private Matrix betaMatrix;
+	private double[][] beta;
+
+	private int numDoc;
+	private Random rand=new Random();
+    protected SVD svd;
+    private Kmeans kmeans;
 	private boolean synthetic;
 	private double trainSeconds = Double.POSITIVE_INFINITY;
+	private long projectorTime;
+	private final double ALPHA=0.9;
+	
 
 	public Projector(String name) {
 		super(name);
@@ -52,81 +64,138 @@ public class Projector extends ClusteringTest {
 			Indexer<String> wordIndexer,
 			Terms terms, 
 			int numTopics, 
-			Map<PaperAbstract, Integer> trainingIndices,
-			Map<PaperAbstract, Integer> testIndices,
-			double learnedAlpha,
 			boolean synthetic) {
 		this(name + "-" + numTopics);
 		this.name = name;
-		this.trainingSet = trainingSet;		
+		this.trainingSet = trainingSet;
+		numDoc=trainingSet.size();
 		this.wordIndexer = wordIndexer;
 		this.terms = terms;
 		this.numTopics=numTopics;
-		this.trainingIndices = trainingIndices;
-		this.testIndices = testIndices;
-		this.learnedAlpha = learnedAlpha;
 		this.synthetic = synthetic;
+		numTerms=terms.size();
 		train();
+	}
+	
+	private double normalize(double[] x) {
+		double lengthx = 0;
+		for (int i = 0; i < x.length; i ++)
+			lengthx += x[i] * x[i];
+		lengthx = Math.sqrt(lengthx);
+
+		for (int i = 0; i < x.length; i ++)
+			x[i] /= lengthx;
+
+		return lengthx;
 	}
 
 	/**
 	 * Runs the MATLAB program found in projector/predictTopics.m
 	 */
 	private void train() {
+		long startNanoTime = System.nanoTime();
+		System.out.println("Projector: svd step");
+		svd = new SVD(numTopics-1, trainingSet, numTerms,true);
+		Matrix projMatrix=(new Matrix(svd.getV())).transpose();
+		double[][] docProj=projMatrix.getArray();
+		double[] sigma=svd.getSingularValues();
+		
+		
+		for (int i=0;i<sigma.length;i++)
+			for (int j=0;j<numDoc;j++){
+				docProj[j][i]*=sigma[i];
+			}
+		
+		System.out.println("Projector: kmeans step");
+		kmeans = new Kmeans(docProj,numTopics, numTopics-1, 
+				"cluster", "cosine", 20);
+		kmeans.runKmeans();
+		
+		System.out.println("Projector: scaling step");
+		
+		double[][] centers=kmeans.getCenters();
+		double[][] hyperplane=new double[numTopics][numTopics-1];
+		double[] bounds = new double[numTopics];
+		
+		double[][] X=new double[numTopics-1][numTopics-2];
+		
+		for (int i=0;i<numTopics;i++){
+			for (int j=0;j<numTopics-2;j++)
+				for (int l=0;l<numTopics-1;l++)
+					X[l][j]=centers[j+((i<=j+1)?2:1)][l]-centers[(i==0)?1:0][l];
+			Matrix XMatrix=new Matrix(X);
+			QRDecomposition QR=new QRDecomposition(XMatrix);
+			double[][] normal= new double[1][numTopics-1];
+			for (int j=0;j<numTopics-1;j++)
+				normal[0][j]=rand.nextDouble();
+			Matrix nrml=new Matrix(normal);
+			normal=nrml.minusEquals(
+					nrml.times(QR.getQ()).times(QR.getQ().transpose())).getArray();
+			normalize(normal[0]);
+			for (int j=0;j<numTopics-1;j++){
+				hyperplane[i][j]=normal[0][j];
+				bounds[i]+=hyperplane[i][j]*centers[(i==0)?1:0][j];
+			}
+			if (bounds[i]<0){
+				bounds[i]*=-1;
+				for (int j=0;j<numTopics-1;j++)
+					hyperplane[i][j]*=-1;
+			}
+			double test=0;
+			for (int j=0;j<numTopics-1;j++)
+				test+=hyperplane[i][j]*centers[i][j];
+			if (test>0)
+				System.out.println("not a well defined convex hull!");			
+		}
+		double[][] scaleMatrix=projMatrix.times((new Matrix(hyperplane)).transpose()).getArray();
+		int omit=(int)(this.numDoc*(1-ALPHA));
+		PriorityQueue<Double> scales =new PriorityQueue<Double>(omit+1);
+		for (int i=0;i<numDoc;i++){
+			double nearestHP=scaleMatrix[i][0]/bounds[0];
+			for (int j=1;j<numTopics;j++)
+				nearestHP=Math.max(nearestHP, scaleMatrix[i][j]/bounds[j]);
+			if (scales.size()<(omit+1))
+				scales.add(nearestHP);
+			else if (nearestHP>scales.peek()){
+				scales.poll();
+				scales.add(nearestHP);
+			}
+		}
+		double scale=Math.max(scales.poll(),1);
+		Matrix centersMatrix=(new Matrix(centers)).timesEquals(scale);
+		
+		System.out.println("Projector: recover topics");
+		betaMatrix=centersMatrix.times(new Matrix(svd.getU()));
+		beta=betaMatrix.getArray();
+		double[] centroid = svd.getCentroid();
+		for (int i=0;i<numTopics;i++){
+			double norm1=0;
+			for (int j=0;j<this.numTerms;j++){
+				beta[i][j]=Math.max(0, beta[i][j]+centroid[j]);
+				norm1+=beta[i][j];
+			}
+			
+			for (int j=0;j<this.numTerms;j++)				
+				beta[i][j]=beta[i][j]/norm1;
+			
+		}
+
+		System.out.println("cleaning out projector folder for training...");
+		
 		if (!new File("projector/data").exists()) {
             new File("projector/data").mkdir();
         }
-		//Use the commented block for the custom inference: 
-        /*System.out.println("We are getting beta from the projector");
-		System.out.println("cleaning out projector folder for training...");
-		Utils.runCommand("rm projector/data/documents", false);
-		Utils.runCommand("rm projector/data/test_documents", false);
 		Utils.runCommand("rm projector/data/final.beta", false);
-		Utils.runCommand("rm projector/data/predictions", false);
-		createProjectorInput("projector/data/documents", trainingSet);
-		while(!Utils.runCommand("./run-projector " + numTopics + " " 
-				+ trainingSet.size() + " " + terms.size(), true));
-		betaMatrix = readMatrix("projector/data/final.beta", true);
-		System.out.print("replacing trained beta with projector beta...");
-		Utils.runCommand("cp projector/data/final.beta lda", false);
-		System.out.println("done.");*/
-        System.out.println("We are getting beta from the projector");
-        System.out.println("cleaning out projector folder for training...");
-        Utils.runCommand("rm projector/data/documents", true);
-        Utils.runCommand("rm projector/data/final.beta", true);
-        Utils.runCommand("rm projector/data/centroid", true);
-        Utils.runCommand("rm projector/data/labels", true);
-        Utils.runCommand("rm projector/data/projected", true);
-        Utils.runCommand("rm projector/data/V", true);
-        createProjectorInput("projector/data/documents", trainingSet);
-        //uncomment these next three lines to use kmeans.py
-//        Utils.runCommand("./run-projector-prepare " + numTopics + " "
-//        		+ trainingSet.size() + " " + terms.size(), true);
-//        Utils.runCommand("python src/plusone/clustering/kmeans.py " +
-//        		"projector/data/projected -k " + 
-//        		numTopics + " -m cosine -w projector/data " +
-//        		"-i 50 -q", true);
-//        Utils.runCommand("./run-projector-train " + numTopics +  " " + 
-//        		trainingSet.size() + " " + terms.size(), true);
-        //uncomment to use projector kmeans
-        while (!Utils.runCommand("./run-projector " + numTopics + " " 
-            + trainingSet.size() + " " + terms.size(), true));
-        try {
-            trainSeconds = Utils.readDoubleFromFile(
-                    "projector/data/projector_elapsed_seconds");
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(
-                    "Projector: couldn't read elapsed time.");
-        }
-        //uncomment to use rawProjector
-//        Utils.runCommand("./run-rawProjector " + numTopics + " " + 
-//        			     trainingSet.size() + " " + terms.size(), true);
-        betaMatrix = readMatrix("projector/data/final.beta", true);
-        System.out.print("replacing trained beta with projector beta...");
-        Utils.runCommand("cp projector/data/final.beta lda", false);
-        createProjectorInfo("lda/final.other");
+		writeBeta("projector/data/final.beta",true);
+		
+		this.projectorTime=System.nanoTime()- startNanoTime;
+		System.out.format("[Projector] took %.3f seconds.\n",
+				  projectorTime/1.0e9);
+		
+		
+
         System.out.println("done.");
+        
 	}
 
     @Override
@@ -134,154 +203,19 @@ public class Projector extends ClusteringTest {
         return trainSeconds;
     }
 
-    //TODO move this
-    /**
-     * creates the final.other file required for lda inference
-     */
-    private void createProjectorInfo(String filename) {
-    PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-    fileWriter.write("num_topics " + numTopics + " \n");
-    fileWriter.write("num_terms " + terms.size() + " \n");
-    if (synthetic) {
-	    fileWriter.write("alpha " + 
-	                        readAlpha("src/datageneration/output/final.other") 
-	                         + " \n");
-    } else {
-	    fileWriter.write("alpha " + learnedAlpha + " \n");
-    }
-    fileWriter.close();
-    }
 
-    /**
-    * Reads in the value of alpha from a *.other file, contained in the LDA output
-    * 
-    * @param filename the path to a *.other file
-    * @return the numerical value of alpha
-    */
-    private double readAlpha(String filename) {
-        FileInputStream filecontents = null;
-            try {
-                filecontents = new FileInputStream(filename);
-            } catch (FileNotFoundException e) {
-                System.out.println("Couldn't read LDA alpha");
-                e.printStackTrace();
-        }
-        Scanner lines = new Scanner(filecontents);
-        String alphaLine = lines.nextLine();
-        alphaLine = lines.nextLine();
-        alphaLine = lines.nextLine();
-        String[] splitLine = alphaLine.split(" ");
-        return Double.parseDouble(splitLine[1]);
-    }
-
-    /**
-	 * Creates a file containing the documents to be used for training
-	 * 
-	 * @param filename
-	 * 		The name of the file to be created
-	 * @param papers
-	 * 		The list of documents to be used for training
-	 */
-	private void createProjectorInput(String filename, List<TrainingPaper> papers) {
-		System.out.print("creating projector input: " + filename + " ... ");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-		for (TrainingPaper paper : papers) {
-			for (int word : paper.getTrainingWords()) {
-				for (int i=0; i<paper.getTrainingTf(word); i++) {
-					fileWriter.write(word + " ");
-				}
-			}
-			fileWriter.write("\n");
-		}
-		fileWriter.close();
-		System.out.println("done.");
-	}
-	
-	/**
-	 * Creates a file containing the documents to be used for testing
-	 * 
-	 * @param filename
-	 * 		The name of the file to be created
-	 * @param papers
-	 * 		The list of documents to be used for testing
-	 */
-	private void createProjectorInputTest(String filename,
-			List<PredictionPaper> papers) {
-		System.out.print("creating projector test input: " 
-				+ filename + " ... ");
-		PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
-		for (PredictionPaper paper : papers) {
-			for (int word : paper.getTrainingWords()) {
-				for (int i=0; i<paper.getTrainingTf(word); i++) {
-					fileWriter.write(word + " ");
-				}
-			}
-			fileWriter.write("\n");
-		}
-		fileWriter.close();
-		System.out.println("done.");
-	}
-	
-	/**
-	 * Reads in a file and interprets it as a matrix (each line is a row,
-	 * each entry is a column)
-	 * 
-	 * @param filename
-	 * 		Name of the file to be read
-	 * @param exp
-	 * 		Flag to exponentiate entries
-	 * @return
-	 * 		double[][] array containing the read matrix
-	 */
-	private double[][] readMatrix(String filename, boolean exp) {
-		List<String[]> gammas = new ArrayList<String[]>();
-		double[][] results = null;
-		
-		try {
-			FileInputStream fstream = new FileInputStream(filename);
-			DataInputStream in = new DataInputStream(fstream);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
-			String strLine;
-
-			while ((strLine = br.readLine()) != null) {
-				gammas.add(strLine.trim().split(" "));
-			}
-
-			results = new double[gammas.size()][];
-			for (int i = 0; i < gammas.size(); i++) {
-				results[i] = new double[gammas.get(i).length];
-				for (int j = 0; j < gammas.get(i).length; j++) {
-					results[i][j] = new Double(gammas.get(i)[j]);
-					if (exp)
-						results[i][j] = Math.exp(results[i][j]);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return results;
-	}
-    /**
-    * Takes a list of PaperAbstract documents and writes them to file according
-    * to the format specified by lda-c-dist
-    * 
-    * @param filename  name of the file to be created (will be overwritten
-    *                  if it already exists)
-    * @param papers    list of papers to be written to file 
-    */
-    private void createLdaInputTest(String filename, List<PredictionPaper> papers) {
-
-        System.out.print("creating lda test input in file: " 
+    private void writeBeta(String filename,boolean takingLog){
+        System.out.print("Output Projector learned topics in file: " 
         + filename + " ... ");
 
         PlusoneFileWriter fileWriter = new PlusoneFileWriter(filename);
 
-        for (PredictionPaper paper : papers) {
-            fileWriter.write(paper.getTrainingWords().size() + " ");
-
-            for (int word : paper.getTrainingWords()) {
-                fileWriter.write(word + ":" + paper.getTrainingTf(word) + " ");
+        for (int i=0;i<numTopics;i++) {
+            for (int j=0;j<numTerms;j++) {
+            	if (takingLog)
+                	fileWriter.write((Math.log(beta[i][j]+Double.MIN_VALUE))+(j==numTerms-1?"":" "));
+            	else
+            		fileWriter.write(beta[i][j]+(j==numTerms-1?"":" "));
             }
             fileWriter.write("\n");
         }
@@ -290,95 +224,25 @@ public class Projector extends ClusteringTest {
 
     System.out.println("done.");
     }
-
     @Override
 	public double[][] predict(List<PredictionPaper> testDocs, RunInfo testInfo){
-		/*Projector with custom inference:
-        this.testSet = testDocs;
-		System.out.print("writing test indices to file in projector/data...");
-		Utils.writeIndices("projector/data/testIndices", testDocs, testIndices);
-		System.out.println("done.");
-		createProjectorInputTest("projector/data/test_documents", testDocs);
-		
-		while(!Utils.runCommand("./run-projector-inference " + numTopics + " " 
-				+ testSet.size() + " " + terms.size(), true));
-		
-		return readMatrix("projector/data/predictions", false);*/
+		double[][] testDocsArray=new double[testDocs.size()]
+                [terms.size()];
+		int i=0;
+		for (PredictionPaper paper:testDocs){
+			
+			for (Integer word : paper.getTrainingWords())
+				testDocsArray[i][word] = paper.getTrainingTf(word);
+			i++;
+			}
 
-        //LDA inference:
-        String testData = "lda/test.dat";
-
-        createLdaInputTest(testData, testDocs);
-        long startNanoTime = System.nanoTime();
-        Utils.runCommand("lib/lda-c-dist/lda inf " + 
-                        " lib/lda-c-dist/settings.txt " + "lda/final " + 
-                        testData + " lda/output", false);
-        testInfo.put("testTime", (System.nanoTime() - startNanoTime) * 1.0e-9);
-
-        double[][] gammasMatrix = readLdaResultFile("lda/output-gamma.dat",
-                    0, false);
-        double alpha = readAlpha("lda/final.other");
-        for (int i=0; i<gammasMatrix.length; i++) {
-            for (int j=0; j<gammasMatrix[i].length; j++) {
-                gammasMatrix[i][j] -= alpha;
-            }
-        }
-        SimpleMatrix gammas = new SimpleMatrix(gammasMatrix);
-        SimpleMatrix beta = new SimpleMatrix(betaMatrix);
-        SimpleMatrix probabilities = gammas.mult(beta);
-
-        double[][] result = new double[probabilities.numRows()]
-                            [probabilities.numCols()];
-        for (int row=0; row<probabilities.numRows(); row++) {
-            for (int col=0; col<probabilities.numCols(); col++) {
-                result[row][col] = probabilities.get(row, col);
-            }
-        }
-        return result;
-    }
+    	double[][] scores=(betaMatrix.solveTranspose(new Matrix(testDocsArray))).transpose()
+    			.times(betaMatrix).getArray();
+    			
+    	return scores;
+    	
+    	
     
-    /**
-	 * Takes a file output by lda-c-dist and stores it in a matrix.
-	 * 
-	 * @param filename	file to be read
-	 * @param start		TODO use for start (typically 0)
-	 * @param exp		whether to exponentiate the read entries
-	 * @return	a double[][] (matrix) with the contents of filename 
-	 */
-	private double[][] readLdaResultFile(String filename, int start, 
-			boolean exp) {
-		List<String[]> gammas = new ArrayList<String[]>();
-		double[][] results = null;
-		
-		try {
-			FileInputStream fstream = new FileInputStream(filename);
-			DataInputStream in = new DataInputStream(fstream);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
-			String strLine;
-
-			int c = 0;
-			while ((strLine = br.readLine()) != null) {
-				if (c >= start) {
-					gammas.add(strLine.trim().split(" "));
-				}
-				c++;
-			}
-
-			results = new double[gammas.size()][];
-			for (int i = 0; i < gammas.size(); i++) {
-				results[i] = new double[gammas.get(i).length];
-				for (int j = 0; j < gammas.get(i).length; j++) {
-					results[i][j] = new Double(gammas.get(i)[j]);
-					if (exp)
-						results[i][j] = Math.exp(results[i][j]);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return results;
-	}
+    }
 	
 }

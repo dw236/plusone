@@ -48,6 +48,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	private Map<Integer, Integer> testingTf;
 	private Map<Integer, Integer> tf;
 	private double norm;
+	private int trainingLength;
 	private int group = 0; // Group # for cross-validation
 
 	public PaperAbstract(int index, Integer[] inReferences,
@@ -127,6 +128,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 */
 	public void generateTf(double testWordpercent, Terms.Term[] terms,
 			boolean test) {
+		trainingLength=0;
 		Random randGen = Main.getRandomGenerator();
 		trainingTf = new HashMap<Integer, Integer>();
 		testingTf = test ? new HashMap<Integer, Integer>() : null;
@@ -141,6 +143,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 				testingTf.put(word, freq);
 			} else {
 				trainingTf.put(word, freq);
+				trainingLength+=freq;
 				norm += freq * freq;
 				if (!test && terms != null)
 					terms[word].totalCount += tf.get(word);
@@ -171,6 +174,7 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 		testingTf = new HashMap<Integer, Integer>();
 		Random randGen = Main.getRandomGenerator();
 		norm = 0.0;
+		trainingLength=0;
 		
 		for (Integer word : tf.keySet()) {
 			if (terms != null)
@@ -197,15 +201,19 @@ public class PaperAbstract implements TrainingPaper, PredictionPaper {
 	 * documesnt, unless this is a testing document and the word was held
 	 * out, in which case this returns <code>0</code>.
 	 */
-	public Integer getTrainingTf(Integer word) {
+	public int getTrainingTf(Integer word) {
 		return trainingTf == null ? 
-				0 : (trainingTf.containsKey(word) ? trainingTf.get(word) : 0);
+				0 : (trainingTf.containsKey(word) ? trainingTf.get(word): 0);
 	}
-
+	
+	public int getTrainingLength(){
+		return trainingLength;
+	}
+	
 	public SimpleMatrix getTrainingTfAsSimpleMatrixRow(int vocabSize) {
 		SimpleMatrix ret = new SimpleMatrix(1, vocabSize);
 		for (int word = 0; word < vocabSize; ++word)
-			ret.set(0, word, getTrainingTf(word));
+			ret.set(0, word, ((double)getTrainingTf(word)));
 		return ret;
 	}
 

@@ -49,8 +49,8 @@ args=\
  -Dplusone.testWordPercents=0.3
  -Dplusone.trainPercents=0.5
  -Dplusone.generator=$generator
- -Dplusone.kValues=3
- -Dplusone.closestKValues=5,15,25
+ -Dplusone.kValues=2
+ -Dplusone.closestKValues=5,15
  -Dplusone.closestKSVDishValues=5,10,25,50,100,250,500
  -Dplusone.svdDimensions=$numTopics
  -Dplusone.plsi.dimensions=$numTopics
@@ -82,7 +82,7 @@ args=\
  -Dplusone.enableTest.malletLda=true
  -Dplusone.enableTest.malletHldaPred=false
  -Dplusone.enableTest.projector=true
- -Dplusone.enableTest.kmeans=true
+ -Dplusone.enableTest.kmeans=false
  -Dplusone.enableTest.ctm=false
  -Dplusone.enableTest.gibbsLda=false
  -Dplusone.enableTest.knnc=false
@@ -109,4 +109,4 @@ args=\
 # -Xmx4096m
 
 #java -agentlib:hprof=cpu=samples -Xmx4096m -cp Plusone.jar:lib/jars/ejml-0.17.jar $args plusone.Main
-java -Xmx4096m -cp Plusone.jar:lib/jars/json.jar:lib/jars/ejml-0.17.jar:lib/jars/gson-1.7.1.jar:lib/colt-1.2.0.jar:lib/commons-lang-2.6.jar:lib/jars/mallet.jar:lib/jars/mallet-deps.jar $args plusone.Main
+java -Xmx4096m -cp Plusone.jar:lib/jars/json.jar:lib/jars/ejml-0.17.jar:lib/jars/gson-1.7.1.jar:lib/colt-1.2.0.jar:lib/commons-lang-2.6.jar:lib/jars/mallet.jar:lib/jars/mallet-deps.jar:lib/jars/Jama-1.0.2.jar $args plusone.Main

@@ -5,7 +5,7 @@ export basedir=$PWD
 #Generator
 generator="lda"
 #Number of topics
-klist=(15) #(3 5 10 15 20 30)
+klist=(10 15) #(3 5 10 15 20 30)
 #Number of docs
 nlist=(1000) #1500 2000 2500)
 #Number of words per document
@@ -13,9 +13,9 @@ llist=(75) #(75 100 150 250 350)
 #Vocab size
 mlist=(1000) #(500 1000 1500 2000)
 #Alpha
-alist=(0.01 0.1 0.15 0.4 1.0) #0.001=1, 0.065=2, 0.15=3, 0.255=4 (0.001 0.065 0.15 0.255)
+alist=(0.1 0.4) #0.001=1, 0.065=2, 0.15=3, 0.255=4 (0.001 0.065 0.15 0.255)
 #Beta
-blist=(0.0175 0.05 0.125 0.25) #0.3375=250, 0.455=300, 1.455=500 (0.3375 0.455 1.455)
+blist=(0.0175 0.25) #0.3375=250, 0.455=300, 1.455=500 (0.3375 0.455 1.455)
 #Number of tests to run for each corpus generated
 numTests=1
 #Flag for plotting output
@@ -122,15 +122,14 @@ do
                         done
                     done
                 done
+		if $table; then
+		    cd $basedir
+		    python parse_batch.py data/k$k.n$n.l$l.m$m
+		fi
             done
         done
     done
 done
-
-if $table; then
-    cd $basedir
-    python parse_batch.py data
-fi
 
 if $plot; then
     cd $basedir

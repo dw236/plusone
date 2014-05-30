@@ -9,7 +9,7 @@ UNIVERSALS = ['k', 'n', 'l', 'm']
 HIDDEN = UNIVERSALS + ['a', 'b'] \
                     + ['median', 'sum_squares_words', 'sum_squares_topics'] \
                     #+ ['LSI-5', 'LSI-10', 'knn-5', 'knn-10']
-CHEAT = ['ldaC', 'ldaT']
+CHEAT = ['~ldaC', '~ldaT']
 
 class Algorithms(object):
     algorithms = UNIVERSALS
@@ -111,7 +111,9 @@ def write_table(f, results):
     #=======================================================================
     for algorithm in sorted(results[0][2]):
         if algorithm not in HIDDEN:
-            f.write('\t\t<th>' + algorithm + '</th>\n')
+            name = algorithm[1:] if algorithm.startswith("~") else algorithm
+            name = name[1:] if name.startswith("~") else name
+            f.write('\t\t<th>' + name + '</th>\n')
     f.write('\t</tr>\n')
     #=======================================================================
     # write the numerical results
@@ -124,16 +126,22 @@ def write_table(f, results):
         for datum in result[4]:
             if datum not in HIDDEN:
                 f.write('\t\t<td>' + str(result[4][datum]) + '</td>\n')
-        scores = [result[2][algorithm]['Predicted_Mean'] \
-                  for algorithm in sorted(result[2])]
-        if any([any([cheat in algorithm for cheat in CHEAT]) \
-                for algorithm in result[2]]):
-            best_score_no_cheats = max(scores[:-2]) #ASSUMES ldaC15 and ldaT15 ARE LAST
-        else:
-            best_score_no_cheats = max(scores)
-        best_cheating = max(scores[-2:]) #best score of cheating algorithms
-        worst_score = min(scores)
-        median_score = np.median(scores)
+        predict_scores=[]
+        topic_cosine=[]
+        best_cheating=0
+        for ind, elem in enumerate(result[0]):
+            if not any([elem.startswith(cheat) for cheat in CHEAT]):
+                if elem.endswith("-cosine"):
+                   topic_cosine.append(result[1][ind])
+                else:
+                    predict_scores.append(result[1][ind])
+            else:
+                best_cheating=max(result[1][ind],best_cheating)
+                
+        best_scores =[max(predict_scores), max(topic_cosine)]
+        worst_score =[min(predict_scores), min(topic_cosine)]
+        median_score = [np.median(predict_scores),np.median(topic_cosine)]
+        
         for algorithm in sorted(result[2]):
             if algorithm not in HIDDEN:
                 score = result[2][algorithm]['Predicted_Mean']
@@ -144,7 +152,8 @@ def write_table(f, results):
                 #highlight the best and worst score
                 color = Color()
                 to_bold = False
-                if round(score, 2) == round(best_score_no_cheats, 2) \
+                group = 1 if algorithm.endswith("-cosine") else 0
+                if round(score,2) ==round(best_scores[group],2) \
                 and not any([cheat in algorithm for cheat in CHEAT]):
                     color.add('g', 0xff)
                     to_bold = True 
@@ -153,11 +162,11 @@ def write_table(f, results):
                     color.add('b', 0xFF)
                     color.add('g', 0x06)
                     to_bold = True
-                elif round(score, 2) == round(worst_score, 2):
+                elif round(score, 2) == round(worst_score[group], 2):
                     color.add('r', 0xFF)
                     color.add('g', 0x04)
                     to_bold = True
-                elif round(score, 2) == round(median_score, 2):
+                elif round(score, 2) == round(median_score[group], 2):
                     color.add('r', 0xff)
                     color.add('g', 0xff)
                 if hoverList is None or hoverList == []:

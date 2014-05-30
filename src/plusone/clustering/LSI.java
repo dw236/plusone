@@ -47,7 +47,7 @@ public class LSI extends ClusteringTest {
 	this.DIMENSION = DIMENSION;
 	numTerms=terms.size();
 
-	svd = new SVD(DIMENSION, trainingSet, numTerms);
+	svd = new SVD(DIMENSION, trainingSet, numTerms,false);
     }
     @Override
     public double[] predict(PredictionPaper testPaper, RunInfo testInfo) {
