@@ -70,8 +70,8 @@ public class MakeJSON {
 				hm.put(users, pairList);
 				users++;
 			}
-			JSONObject json = new JSONObject(); //change
-			JSONObject[] userArray = new JSONObject[hm.keySet().size()]; //change
+//			JSONObject json = new JSONObject(); //change
+//			JSONObject[] userArray = new JSONObject[hm.keySet().size()]; //change
 		    for( Integer name : hm.keySet() ) {
 		    	JSONObject user = new JSONObject();
 		    	user.put( "id",  name );
@@ -85,11 +85,11 @@ public class MakeJSON {
 		    	
 		    	user.put( "items", itemsJSON );
 		    	user.put( "scores", scoresJSON );
-		    	userArray[name] = user; //change
-		    	//out.println( user );
+		    //	userArray[name] = user; //change
+		    	out.println( user );
 		    }
-		    json.put("users", userArray); //change
-		    out.println( json.toString() ); //change
+		 //   json.put("users", userArray); //change
+		 //   out.println( json.toString() ); //change
 	    	out.close();
 		} else {
 			HashMap<Integer,ArrayList<Integer>> hm = new HashMap<Integer,ArrayList<Integer>>();
@@ -108,8 +108,8 @@ public class MakeJSON {
 				hm.put(users, itemList);
 				users++;
 			}
-			JSONObject json = new JSONObject(); //change
-			JSONObject[] userArray = new JSONObject[hm.keySet().size()]; //change
+//			JSONObject json = new JSONObject(); //change
+//			JSONObject[] userArray = new JSONObject[hm.keySet().size()]; //change
 		    for( Integer name : hm.keySet() ) {
 		    	JSONObject user = new JSONObject();
 		    	user.put( "id",  name );
@@ -120,11 +120,11 @@ public class MakeJSON {
 		    	}
 		    	
 		    	user.put( "items", itemsJSON );
-		    	userArray[name] = user; //change
-		    	//out.println(user);
+//		    	userArray[name] = user; //change
+		    	out.println(user);
 		    }
-		    json.put("users", userArray); //change
-		    out.println( json.toString() ); //change
+		   // json.put("users", userArray); //change
+		   // out.println( json.toString() ); //change
 		    out.close();
 		}
 		System.out.println("Done!");
