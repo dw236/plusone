@@ -137,7 +137,9 @@ def write_table(f, results):
                     predict_scores.append(result[1][ind])
             else:
                 best_cheating=max(result[1][ind],best_cheating)
-                
+        # No topic cosine similarity measure for real data
+        if not topic_cosine:
+           topic_cosine.append(0)
         best_scores =[max(predict_scores), max(topic_cosine)]
         worst_score =[min(predict_scores), min(topic_cosine)]
         median_score = [np.median(predict_scores),np.median(topic_cosine)]
