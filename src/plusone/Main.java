@@ -351,6 +351,7 @@ public class Main {
 		if (generator.equals("")) {
 			//Real data
 			parameters.put("k", numTopics);
+			dataList.put("file",dataFile);
 		} else {
 			//Synthetic data
 			putInfo(parameters, dataList);
@@ -699,6 +700,8 @@ public class Main {
 			for (int dk = 0; dk < dimensions.length; dk ++) {
 				projector = new Projector("projector", trainingSet, wordIndexer, 
 								terms, dimensions[dk], !generator.equals(""));
+				if (Boolean.getBoolean("plusone.useLDAinference"))
+					projector.useLDAinference(learnedAlpha);
 				runClusteringMethod(projector, ks, size, true);
 			}
 		}
@@ -1098,7 +1101,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		dataFile = System.getProperty("plusone.dataFile", "med.out");
+		dataFile = System.getProperty("plusone.dataFile", "med.json");
 
 		if (!new File(dataFile).exists()) {
 			System.out.println("Data file does not exist.");
