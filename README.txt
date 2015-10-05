@@ -46,8 +46,32 @@ to run an experiment on real data, you will first need to convert it to a .json 
 
 ./test DATASET GENERATOR NUMTOPICS
 
-if the dataset was generated according to the lda model, supply the argument "lda" to GENERATOR. Otherwise, supply "none."
+if the dataset was generated according to the lda model, supply the argument "lda" to GENERATOR. Otherwise, supply ""
 -------------------------------------------------------------------------------------
+Parse Output
+
+Put all the experiment*.json output files in a directory with name dir_name, and call
+python parse_batch.py f [dir_name] -t [out_name] -o [T/F]
+
+All the .json files in dir_name starts with "experiment" will be processed, and the output table will be added to out_name (default: data/test.html), with -o the flag to overwrite the output file or not.
+
+Example:
+python parse_batch.py data -t result.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Support
 
 please direct any questions you may have to support@plusone.com

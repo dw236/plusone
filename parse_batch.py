@@ -14,9 +14,9 @@ CHEAT = ['~ldaC', '~ldaT']
 class Algorithms(object):
     algorithms = UNIVERSALS
 
-def generate_html(dir, overwrite=False):
+def generate_html(dir, outFile, overwrite=False):
     """Reads every experiment json file in dir (*experiment*.json), and
-    writes a summary in html to data/test.html.  Overwrites the file if
+    writes a summary in html to outFile (default data/test.html).  Overwrites the file if
     overwrite is true, and appends to it otherwise.
     """
     filenames = os.listdir(dir)
@@ -32,7 +32,7 @@ def generate_html(dir, overwrite=False):
     print "processed", files_found, "files"
     
     overwrite = 'w' if overwrite else 'a'
-    with open('data/test.html', overwrite) as f:
+    with open(outFile, overwrite) as f:
         f.write('<script src="sorttable.js"></script>\n')
         f.write('<head> <style type="text/css"> '
                 + css() + ' </style></head>\n')
@@ -268,15 +268,17 @@ def main():
     in parentheses)")
     parser.add_argument('f', metavar='directory', action="store", 
                         help="directory containing json files to be read")
+    parser.add_argument('-t', metavar='output file', action="store", default="data/test.html", help="name of the file to output the table (default= data/test.html")
     parser.add_argument('-o', action="store_true", default=False,
                         help="flag to overwrite existing table (False)")
-    
+
     args = parser.parse_args()
     print "reading experiment files from directory:", args.f
+    print "table of results in file: ", args.t
     if args.o:
         print "overwriting existing table with new results"
     
-    return generate_html(args.f, args.o)
+    return generate_html(args.f, args.t, args.o)
 
 if __name__ == '__main__':
     results = main()
